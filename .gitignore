@@ -51,6 +51,7 @@ data
 # Docker: 本地覆盖配置（含敏感密码，不提交）
 docker/.env
 docker/.env.local
+docker/.secrets/
 # Docker: 运行时数据目录
 docker/app/
 docker/mysql/data/
@@ -61,3 +62,4 @@ keystone-common/build/
 .claude/
 *.tar
 *.zip
+__pycache__

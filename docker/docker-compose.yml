@@ -19,8 +19,11 @@ services:
     environment:
       TZ: UTC
       LANG: en_US.UTF-8
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-12345}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/.database_password
       MYSQL_DATABASE: ${MYSQL_DATABASE:-keystone}
+    secrets:
+      - source: database_password
+        target: .database_password
     volumes:
       - ./mysql/conf/my.cnf:/etc/my.cnf
       - mysql-data:/var/lib/mysql
@@ -30,7 +33,7 @@ services:
     networks:
       - keystone
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=${MYSQL_ROOT_PASSWORD:-12345}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root --password=\"$$(cat /run/secrets/.database_password)\""]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -45,7 +48,7 @@ services:
     restart: unless-stopped
     command: >
       redis-server /etc/redis/redis.conf
-      --requirepass ${REDIS_PASSWORD:-12345}
+      --aclfile /run/secrets/.redis.acl
       --appendonly no
       --maxmemory ${REDIS_MAXMEMORY:-512mb}
       --maxmemory-policy ${REDIS_MAXMEMORY_POLICY:-allkeys-lru}
@@ -54,13 +57,16 @@ services:
     volumes:
       - redis-data:/data
       - ./redis/config/redis.conf:/etc/redis/redis.conf
+    secrets:
+      - source: redis_acl
+        target: .redis.acl
     ports:
       - "${REDIS_BIND_HOST:-127.0.0.1}:${REDIS_HOST_PORT:-6379}:6379"
     mem_limit: ${REDIS_CONTAINER_MEM_LIMIT:-512m}
     networks:
       - keystone
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-12345}", "ping"]
+      test: ["CMD-SHELL", "redis-cli ping 2>&1 | grep -E 'PONG|NOAUTH'"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -82,12 +88,15 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-keystone}?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-12345}
-      KEYSTONE_DATASOURCE_PASSWORD_ENCRYPTION_ENABLED: ${KEYSTONE_DATASOURCE_PASSWORD_ENCRYPTION_ENABLED:-false}
-      KEYSTONE_DATASOURCE_ENCRYPT_KEY: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY:-}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-}
+      SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/.database_password.enc
+      KEYSTONE_DATASOURCE_PASSWORD_ENCRYPTION_ENABLED: ${KEYSTONE_DATASOURCE_PASSWORD_ENCRYPTION_ENABLED:-true}
+      KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE: /run/secrets/.database_password.key
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-12345}
+      SPRING_DATA_REDIS_PASSWORD_FILE: /run/secrets/.redis_password.enc
+      KEYSTONE_REDIS_PASSWORD_ENCRYPTION_ENABLED: ${KEYSTONE_REDIS_PASSWORD_ENCRYPTION_ENABLED:-true}
+      KEYSTONE_REDIS_ENCRYPT_KEY_FILE: /run/secrets/.redis_password.key
       TOKEN_SECRET: ${TOKEN_SECRET:-sdhfkjshBN6rr32df38}
       KEYSTONE_RSA_PRIVATE_KEY: ${KEYSTONE_RSA_PRIVATE_KEY:?KEYSTONE_RSA_PRIVATE_KEY is required}
       DRUID_USERNAME: ${DRUID_USERNAME:-keystone}
@@ -107,3 +116,26 @@ services:
       - ./app/logs:/app/logs
       - ./app/data:/app/data
       - ./app/config:/app/config
+    secrets:
+      - source: database_password_enc
+        target: .database_password.enc
+      - source: database_password_key
+        target: .database_password.key
+      - source: redis_password_enc
+        target: .redis_password.enc
+      - source: redis_password_key
+        target: .redis_password.key
+
+secrets:
+  database_password:
+    file: ${DATABASE_PASSWORD_FILE:-./.secrets/.database_password}
+  database_password_enc:
+    file: ./.secrets/.database_password.enc
+  database_password_key:
+    file: ./.secrets/.database_password.key
+  redis_acl:
+    file: ./.secrets/.redis.acl
+  redis_password_enc:
+    file: ./.secrets/.redis_password.enc
+  redis_password_key:
+    file: ./.secrets/.redis_password.key
