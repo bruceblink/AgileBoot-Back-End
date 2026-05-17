@@ -133,13 +133,13 @@ cp .env.example .env
 后端 `/login` 使用 RSA 私钥解密密码，建议统一使用仓库内的 Python 脚本生成密钥对：
 
 ```bash
-python scripts/generate_rsa_keypair.py
+python scripts/secret_tool.py generate-rsa
 ```
 
 可选指定长度：
 
 ```bash
-python scripts/generate_rsa_keypair.py --bits 3072
+python scripts/secret_tool.py generate-rsa --bits 3072
 ```
 
 输出说明：
