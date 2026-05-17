@@ -4,7 +4,7 @@
 keystone:
   file-base-dir: ${KEYSTONE_FILE_BASE_DIR:D:/keystone-dev}
   # 开发环境默认提供一把示例 RSA 私钥，便于本地联调登录。
-  # 如需更换，可执行：python scripts/generate_rsa_keypair.py
+  # 如需更换，可执行：python scripts/secret_tool.py generate-rsa
   rsaPrivateKey: ${KEYSTONE_RSA_PRIVATE_KEY:MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAKHoeQr6sIzfsUDMIdXK2FNzqnG+vnnUrTsJGF1f82MJ10cC5Aw53/ntHl+IjCBU0R8KwPVwjJLoDwhaPgO0ktHa3b0l6E+mqIVIniE20Nws3E0mJhFwJC/IxB7JAg8TkuNzflzvZjAO1ACwgkKGxq7Iutz4TocLeCfUkObXwc1fAgMBAAECgYAWwCzqDwnp8bDdkxGaEhPNvi4QJ6ZqRilFZ2TGEiqIGyTl9JEI6sT/QIOJFw3hqSltfDxbAMKwDe221b9rE9+hZhE2rrpwcTKuehob9Z8CObYeUHR9HG7Qb2tYRElvSCWo74iz2zajXAvJLjIE4MPuPYqXC5zOabH+EJ/eaOzVwQJBANmRkMlb+qzp1GWuqFMHP+5MeYhFwUHVX7fxKNA24oHldX8zjPIZ6d3vaRfliTvxOaz1T80acvJkkb7zHBmaW38CQQC+gfF8Lg+nvBY/S3wfOPL8FcntP16jdFhNNZmbOxq72ZmCfl5Zk5cYNBc4rDSrd9Sj4TkLLug+wrK6Wr117P4hAkBOVxnZR2NVy8SM8HzvmJauiZ7hMKzLtbcHlrBpeLnKqALM0JUZv7b0EPa4ghAOI2fvHU2kvrdRDGFmbkdZ+LilAkBnX8eT5MKl+A/yZJmDr7laRNB/poVKGNXZf55Md3P4Pwlnn/6+iLHSdmGrZPZnnOyLyKjVgqyPccLeEGMCXIlBAkAt2OMwss16OH2x79OcfBrabU5iCVbDHg56JYGbWP8KcPfvspxtL/4TdACRsa+yCMcI6L29Q4wn791SEEnE834a}
   auth:
     # 本地开发默认使用本地账号密码登录，避免依赖外部 Keylo 服务。
@@ -27,6 +27,7 @@ spring:
         master:
           url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:33066/keystone?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
           username: ${SPRING_DATASOURCE_USERNAME:root}
+          password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:}
           password: ${SPRING_DATASOURCE_PASSWORD:12345}
   
   flyway:
@@ -44,6 +45,7 @@ spring:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
+      password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:}
       password: ${SPRING_DATA_REDIS_PASSWORD:12345}
 
 logging:

@@ -1,12 +1,14 @@
 package app.keystone.infrastructure.config.datasource;
 
+import app.keystone.infrastructure.security.SecretValueDecryptor;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 import javax.crypto.Cipher;
-import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
@@ -25,12 +27,11 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
     private static final String PROPERTY_SOURCE_NAME = "KeystoneDataSourcePasswordDecrypt";
     private static final String ENC_PREFIX = "ENC(";
     private static final String ENC_SUFFIX = ")";
-    private static final String SECRET_V1_PREFIX = "secret:v1:aes-256-gcm";
-    private static final int GCM_TAG_BITS = 128;
-    private static final int GCM_NONCE_BYTES = 12;
-
     private static final Pattern DATA_SOURCE_PASSWORD_KEY = Pattern.compile(
         "^spring\\.datasource(\\.dynamic\\.datasource\\.[^.]+)?\\.password$"
+    );
+    private static final Pattern DATA_SOURCE_PASSWORD_FILE_KEY = Pattern.compile(
+        "^spring\\.datasource(\\.dynamic\\.datasource\\.[^.]+)?\\.password-file$"
     );
 
     @Override
@@ -44,10 +45,7 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
             return;
         }
 
-        String encryptKey = environment.getProperty("keystone.datasource.password-encryption.encrypt-key");
-        if (encryptKey == null || encryptKey.trim().isEmpty()) {
-            encryptKey = environment.getProperty("KEYSTONE_DATASOURCE_ENCRYPT_KEY");
-        }
+        String encryptKey = resolveEncryptKey(environment);
 
         MutablePropertySources propertySources = environment.getPropertySources();
         Map<String, Object> decryptedMap = new LinkedHashMap<>();
@@ -58,11 +56,11 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
                 continue;
             }
             for (String propertyName : enumerablePropertySource.getPropertyNames()) {
-                if (!DATA_SOURCE_PASSWORD_KEY.matcher(propertyName).matches()) {
+                PasswordValue passwordValue = resolvePasswordValue(environment, propertyName);
+                if (passwordValue == null) {
                     continue;
                 }
-
-                String value = environment.getProperty(propertyName);
+                String value = passwordValue.value();
                 if (!isEncryptedValue(value)) {
                     continue;
                 }
@@ -76,9 +74,10 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
 
                 try {
                     String decrypted = decryptValue(value, encryptKey);
-                    decryptedMap.put(propertyName, decrypted);
+                    decryptedMap.put(passwordValue.targetPropertyName(), decrypted);
                 } catch (Exception ex) {
-                    throw new IllegalStateException("Failed to decrypt datasource password for property: " + propertyName, ex);
+                    throw new IllegalStateException(
+                        "Failed to decrypt datasource password for property: " + passwordValue.targetPropertyName(), ex);
                 }
             }
         }
@@ -93,40 +92,83 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
             return false;
         }
         String trimmed = value.trim();
-        return trimmed.startsWith(SECRET_V1_PREFIX) || (trimmed.startsWith(ENC_PREFIX) && trimmed.endsWith(ENC_SUFFIX));
+        return SecretValueDecryptor.isSecretV1(trimmed)
+            || (trimmed.startsWith(ENC_PREFIX) && trimmed.endsWith(ENC_SUFFIX));
+    }
+
+    private static String resolveEncryptKey(ConfigurableEnvironment environment) {
+        String encryptKey = firstText(
+            environment.getProperty("keystone.datasource.password-encryption.encrypt-key"),
+            environment.getProperty("KEYSTONE_DATASOURCE_ENCRYPT_KEY")
+        );
+        if (encryptKey != null) {
+            return encryptKey;
+        }
+
+        String encryptKeyFile = firstText(
+            environment.getProperty("keystone.datasource.password-encryption.encrypt-key-file"),
+            environment.getProperty("KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE")
+        );
+        if (encryptKeyFile == null) {
+            return null;
+        }
+
+        try {
+            return Files.readString(Path.of(encryptKeyFile.trim())).trim();
+        } catch (Exception ex) {
+            throw new IllegalStateException("Database password encrypt key file cannot be read: " + encryptKeyFile, ex);
+        }
+    }
+
+    private static PasswordValue resolvePasswordValue(ConfigurableEnvironment environment, String propertyName) {
+        if (DATA_SOURCE_PASSWORD_KEY.matcher(propertyName).matches()) {
+            return new PasswordValue(propertyName, environment.getProperty(propertyName));
+        }
+
+        if (DATA_SOURCE_PASSWORD_FILE_KEY.matcher(propertyName).matches()
+            || "SPRING_DATASOURCE_PASSWORD_FILE".equals(propertyName)) {
+            String passwordFile = environment.getProperty(propertyName);
+            if (passwordFile == null || passwordFile.trim().isEmpty()) {
+                return null;
+            }
+            try {
+                return new PasswordValue(targetPasswordProperty(propertyName),
+                    Files.readString(Path.of(passwordFile.trim())).trim());
+            } catch (Exception ex) {
+                throw new IllegalStateException("Database encrypted password file cannot be read: " + passwordFile, ex);
+            }
+        }
+
+        return null;
+    }
+
+    private static String targetPasswordProperty(String filePropertyName) {
+        if ("SPRING_DATASOURCE_PASSWORD_FILE".equals(filePropertyName)) {
+            return "spring.datasource.dynamic.datasource.master.password";
+        }
+        return filePropertyName.substring(0, filePropertyName.length() - "-file".length());
+    }
+
+    private static String firstText(String... values) {
+        for (String value : values) {
+            if (value != null && !value.trim().isEmpty()) {
+                return value.trim();
+            }
+        }
+        return null;
+    }
+
+    private record PasswordValue(String targetPropertyName, String value) {
     }
 
     private static String decryptValue(String value, String encryptKey) throws Exception {
         String trimmed = value.trim();
-        if (trimmed.startsWith(SECRET_V1_PREFIX)) {
-            return decryptSecretV1(encryptKey, trimmed);
+        if (SecretValueDecryptor.isSecretV1(trimmed)) {
+            return SecretValueDecryptor.decryptSecretV1(trimmed, encryptKey);
         }
 
         String encryptedBody = trimmed.substring(ENC_PREFIX.length(), trimmed.length() - ENC_SUFFIX.length());
         return decryptAesBase64(buildLegacyAesKey(encryptKey), encryptedBody);
-    }
-
-    private static String decryptSecretV1(String encryptKey, String encryptedValue) throws Exception {
-        String[] parts = encryptedValue.split(":");
-        if (parts.length != 5
-            || !"secret".equals(parts[0])
-            || !"v1".equals(parts[1])
-            || !"aes-256-gcm".equals(parts[2])) {
-            throw new IllegalArgumentException(
-                "Database password must use format secret:v1:aes-256-gcm:<nonce_base64>:<ciphertext_base64>");
-        }
-
-        byte[] nonce = Base64.getDecoder().decode(parts[3]);
-        if (nonce.length != GCM_NONCE_BYTES) {
-            throw new IllegalArgumentException("AES-GCM nonce must be 12 bytes");
-        }
-
-        byte[] ciphertextAndTag = Base64.getDecoder().decode(parts[4]);
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(decodeSecretKey(encryptKey), "AES"),
-            new GCMParameterSpec(GCM_TAG_BITS, nonce));
-        byte[] decrypted = cipher.doFinal(ciphertextAndTag);
-        return new String(decrypted, StandardCharsets.UTF_8);
     }
 
     private static String decryptAesBase64(byte[] key, String encryptedBase64) throws Exception {
@@ -134,25 +176,6 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"));
         byte[] decrypted = cipher.doFinal(Base64.getDecoder().decode(encryptedBase64));
         return new String(decrypted, StandardCharsets.UTF_8);
-    }
-
-    private static byte[] decodeSecretKey(String encryptKey) {
-        String trimmed = encryptKey.trim();
-        try {
-            byte[] decoded = Base64.getDecoder().decode(trimmed);
-            if (decoded.length == 32) {
-                return decoded;
-            }
-        } catch (IllegalArgumentException ignored) {
-            // Fall through to raw 32-byte key support.
-        }
-
-        byte[] raw = trimmed.getBytes(StandardCharsets.UTF_8);
-        if (raw.length == 32) {
-            return raw;
-        }
-
-        throw new IllegalArgumentException("encrypt key must be 32 bytes or standard base64 for 32 bytes");
     }
 
     private static byte[] buildLegacyAesKey(String encryptKey) {

@@ -1,2 +1,3 @@
 org.springframework.boot.env.EnvironmentPostProcessor=\
-app.keystone.infrastructure.config.datasource.EncryptedDataSourcePasswordEnvironmentPostProcessor
+app.keystone.infrastructure.config.datasource.EncryptedDataSourcePasswordEnvironmentPostProcessor,\
+app.keystone.infrastructure.config.redis.EncryptedRedisPasswordEnvironmentPostProcessor
