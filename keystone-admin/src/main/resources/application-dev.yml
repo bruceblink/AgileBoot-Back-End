@@ -53,3 +53,10 @@ logging:
     app.keystone: debug
   file:
     path: ${LOG_PATH:D:/logs/keystone-dev}
+
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_ENABLED:true}
+  swagger-ui:
+    # 生产环境默认关闭 Swagger UI。显式开启后仍需要 Keystone 登录认证。
+    enabled: ${SPRINGDOC_ENABLED:true}
