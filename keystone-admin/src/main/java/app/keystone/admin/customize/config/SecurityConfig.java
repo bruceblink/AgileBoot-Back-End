@@ -135,8 +135,8 @@ public class SecurityConfig {
                     ).anonymous()
                     .requestMatchers("/login/rsa-public-key").permitAll()
                     .requestMatchers("/druid/**").authenticated()
-                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**").authenticated()
-                    .requestMatchers("/v3/api-docs", "/v3/api-docs/**").authenticated()
+                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
+                    .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/", "/*.html", "/*.css", "/*.js", "/profile/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/**/*.html", "/**/*.css", "/**/*.js").permitAll();
                 auth.anyRequest().authenticated();
