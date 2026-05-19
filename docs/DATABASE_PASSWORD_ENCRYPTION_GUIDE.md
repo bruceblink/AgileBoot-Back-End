@@ -10,35 +10,31 @@
 secret:v1:aes-256-gcm:<nonce_base64>:<ciphertext_base64>
 ```
 
-Keystone 启动时会在对应开关开启后自动识别并解密该格式，然后注入数据源或 Spring Data Redis。
+Keystone 启动时会解密该格式，然后注入数据源或 Spring Data Redis。
 
-兼容说明：旧 `ENC(...)` AES/ECB 密文仍可解密，但不再推荐新部署使用。
+安全约束：数据库密码和 Redis 密码只支持 `secret:v1:aes-256-gcm` 密文或密文文件，不支持明文密码，也不再支持旧 `ENC(...)` AES/ECB 格式。
 
 支持的密码配置键：
 
-- `spring.datasource.password`
 - `spring.datasource.dynamic.datasource.<name>.password`
 - `spring.datasource.password-file`
 - `spring.datasource.dynamic.datasource.master.password-file`
-- `spring.data.redis.password`
 - `spring.data.redis.password-file`
+
+其中 `password` 属性也必须填入 `secret:v1:aes-256-gcm` 密文，不能填明文。推荐优先使用 `password-file`。
 
 ## 2. 启用配置
 
 在基础配置中已提供以下参数：
 
-- `keystone.datasource.password-encryption.enabled`
 - `keystone.datasource.password-encryption.encrypt-key`
 - `keystone.datasource.password-encryption.encrypt-key-file`
-- `keystone.redis.password-encryption.enabled`
 - `keystone.redis.password-encryption.encrypt-key`
 - `keystone.redis.password-encryption.encrypt-key-file`
 
 推荐通过文件路径注入 key，而不是把 key 字符串写入 `.env`：
 
-- `KEYSTONE_DATASOURCE_PASSWORD_ENCRYPTION_ENABLED=true`
 - `KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE=/run/secrets/.database_password.key`
-- `KEYSTONE_REDIS_PASSWORD_ENCRYPTION_ENABLED=true`
 - `KEYSTONE_REDIS_ENCRYPT_KEY_FILE=/run/secrets/.redis_password.key`
 - `SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/.database_password.enc`
 - `SPRING_DATA_REDIS_PASSWORD_FILE=/run/secrets/.redis_password.enc`
@@ -113,10 +109,8 @@ secret:v1:aes-256-gcm:...
 ### 4.1 Docker Compose 环境变量
 
 ```yaml
-KEYSTONE_DATASOURCE_PASSWORD_ENCRYPTION_ENABLED: true
 KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE: /run/secrets/.database_password.key
 SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/.database_password.enc
-KEYSTONE_REDIS_PASSWORD_ENCRYPTION_ENABLED: true
 KEYSTONE_REDIS_ENCRYPT_KEY_FILE: /run/secrets/.redis_password.key
 SPRING_DATA_REDIS_PASSWORD_FILE: /run/secrets/.redis_password.enc
 ```
@@ -129,11 +123,9 @@ spring:
     dynamic:
       datasource:
         master:
-          password: ${SPRING_DATASOURCE_PASSWORD:12345}
           password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:}
   data:
     redis:
-      password: ${SPRING_DATA_REDIS_PASSWORD:12345}
       password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:}
 ```
 
@@ -141,16 +133,18 @@ spring:
 
 1. 启动报错提示缺少密钥
    - 检查是否设置了 `KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE` 或 `KEYSTONE_REDIS_ENCRYPT_KEY_FILE`。
-   - 检查 `KEYSTONE_DATASOURCE_PASSWORD_ENCRYPTION_ENABLED` 是否为 `true`。
+   - 如果配置了 `password-file`，必须同时配置对应的 `encrypt-key-file`。
 
 2. 启动后数据库认证失败
    - 确认密钥与生成密文时使用的密钥完全一致。
    - 确认数据库或 Redis 实际密码与密文中的明文一致。
+   - 如果日志出现 `using password: NO`，说明没有配置 `SPRING_DATASOURCE_PASSWORD_FILE` 或 `spring.datasource.dynamic.datasource.master.password-file`。
 
 3. 解密失败
    - 确认密文没有被截断。
    - 确认密钥是 32 字节或标准 base64 编码后的 32 字节。
    - 确认密文格式以 `secret:v1:aes-256-gcm:` 开头。
+   - 确认没有使用明文密码或旧 `ENC(...)` 格式。
 
 ## 6. 安全建议
 

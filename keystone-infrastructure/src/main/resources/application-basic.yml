@@ -52,8 +52,8 @@ spring:
         master:
           url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/keystone?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
           username: ${SPRING_DATASOURCE_USERNAME:root}
-          # 支持 secret:v1:aes-256-gcm 密文，开启 keystone.datasource.password-encryption.enabled 后自动解密
-          password: ${SPRING_DATASOURCE_PASSWORD:12345}
+          # 仅支持 secret:v1:aes-256-gcm 密文或密文文件。
+          # 配置后会在启动期解密并注入到数据源 password。
           password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:}
       druid:
         initialSize: 5
@@ -74,8 +74,8 @@ spring:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
-      # 支持 secret:v1:aes-256-gcm 密文，开启 keystone.redis.password-encryption.enabled 后自动解密
-      password: ${SPRING_DATA_REDIS_PASSWORD:12345}
+      # 仅支持 secret:v1:aes-256-gcm 密文或密文文件。
+      # 配置后会在启动期解密并注入到 Redis password。
       password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:}
       timeout: 10s
       lettuce:
@@ -187,16 +187,12 @@ keystone:
   rsaPrivateKey: ${KEYSTONE_RSA_PRIVATE_KEY}
   datasource:
     password-encryption:
-      # 是否启用数据库密码 secret:v1:aes-256-gcm 自动解密
-      enabled: ${KEYSTONE_DATASOURCE_PASSWORD_ENCRYPTION_ENABLED:false}
-      # AES-256 key；生产环境建议使用 KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE 指向 .secrets 文件
+      # AES-256 key；生产环境建议使用 KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE 指向 secret 文件
       encrypt-key: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY:}
       encrypt-key-file: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE:}
   redis:
     password-encryption:
-      # 是否启用 Redis password secret:v1:aes-256-gcm 自动解密
-      enabled: ${KEYSTONE_REDIS_PASSWORD_ENCRYPTION_ENABLED:false}
-      # AES-256 key，建议通过 KEYSTONE_REDIS_ENCRYPT_KEY_FILE 指向 .secrets 文件
+      # AES-256 key，建议通过 KEYSTONE_REDIS_ENCRYPT_KEY_FILE 指向 secret 文件
       encrypt-key: ${KEYSTONE_REDIS_ENCRYPT_KEY:}
       encrypt-key-file: ${KEYSTONE_REDIS_ENCRYPT_KEY_FILE:}
   frontend:

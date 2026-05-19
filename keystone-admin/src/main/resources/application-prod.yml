@@ -8,10 +8,23 @@ keystone:
     keylo:
       enabled: true
       base-url: http://10.17.17.7:2345
+  datasource:
+    password-encryption:
+      encrypt-key-file: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE:/run/secrets/.database_password.key}
+  redis:
+    password-encryption:
+      encrypt-key-file: ${KEYSTONE_REDIS_ENCRYPT_KEY_FILE:/run/secrets/.redis_password.key}
 
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
+    dynamic:
+      datasource:
+        master:
+          password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:/run/secrets/.database_password.enc}
+  data:
+    redis:
+      password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:/run/secrets/.redis_password.enc}
 
 logging:
   level:
