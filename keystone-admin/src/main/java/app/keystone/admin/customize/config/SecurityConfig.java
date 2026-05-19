@@ -16,6 +16,8 @@ import app.keystone.infrastructure.user.web.SystemLoginUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -61,6 +63,8 @@ public class SecurityConfig {
      * 跨域过滤器
      */
     private final CorsFilter corsFilter;
+
+    private final Environment environment;
 
 
     /**
@@ -134,10 +138,15 @@ public class SecurityConfig {
                         "/login", "/login/keylo", "/register", "/getConfig", "/health", "/captchaImage"
                     ).anonymous()
                     .requestMatchers("/login/rsa-public-key").permitAll()
-                    .requestMatchers("/druid/**").authenticated()
-                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**").authenticated()
-                    .requestMatchers("/v3/api-docs", "/v3/api-docs/**").authenticated()
-                    .requestMatchers(HttpMethod.GET, "/", "/*.html", "/*.css", "/*.js", "/profile/**").permitAll()
+                    .requestMatchers("/druid/**").authenticated();
+                if (isSwaggerAuthenticationRequired()) {
+                    auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**").authenticated()
+                        .requestMatchers("/v3/api-docs", "/v3/api-docs/**").authenticated();
+                } else {
+                    auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll();
+                }
+                auth.requestMatchers(HttpMethod.GET, "/", "/*.html", "/*.css", "/*.js", "/profile/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/**/*.html", "/**/*.css", "/**/*.js").permitAll();
                 auth.anyRequest().authenticated();
             })
@@ -153,5 +162,8 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
+    boolean isSwaggerAuthenticationRequired() {
+        return environment.acceptsProfiles(Profiles.of("prod"));
+    }
 
 }

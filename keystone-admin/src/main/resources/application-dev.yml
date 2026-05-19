@@ -11,10 +11,10 @@ keystone:
     mode: ${KEYSTONE_AUTH_MODE:mixed}
     keylo:
       enabled: ${KEYSTONE_AUTH_KEYLO_ENABLED:true}
-      base-url: ${KEYLO_BASE_URL:http://localhost:2345}
-      issuer-uri: ${KEYLO_ISSUER_URI:http://localhost:2345}
+      base-url: ${KEYLO_BASE_URL:http://10.17.17.7:2345}
+      issuer-uri: ${KEYLO_ISSUER_URI:http://10.17.17.7:2345}
       trusted-issuers: ${KEYLO_TRUSTED_ISSUERS:keylo}
-      jwk-set-uri: ${KEYLO_JWK_SET_URI:http://localhost:2345/.well-known/jwks.json}
+      jwk-set-uri: ${KEYLO_JWK_SET_URI:http://10.17.17.7:2345/.well-known/jwks.json}
       audiences: ${KEYLO_AUDIENCES:admin-backend,sys_test}
       provisioning:
         enabled: ${KEYLO_PROVISIONING_ENABLED:true}
@@ -25,7 +25,7 @@ spring:
     dynamic:
       datasource:
         master:
-          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:33066/keystone?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://10.17.17.7:33066/keystone?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
           username: ${SPRING_DATASOURCE_USERNAME:root}
           password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:}
           password: ${SPRING_DATASOURCE_PASSWORD:12345}
@@ -42,7 +42,7 @@ spring:
 
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      host: ${SPRING_DATA_REDIS_HOST:10.17.17.7}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
       password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:}
@@ -53,3 +53,10 @@ logging:
     app.keystone: debug
   file:
     path: ${LOG_PATH:D:/logs/keystone-dev}
+
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_ENABLED:true}
+  swagger-ui:
+    # 生产环境默认关闭 Swagger UI。显式开启后仍需要 Keystone 登录认证。
+    enabled: ${SPRINGDOC_ENABLED:true}
