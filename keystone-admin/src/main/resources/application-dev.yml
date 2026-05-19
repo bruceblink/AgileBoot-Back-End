@@ -8,9 +8,9 @@ keystone:
   rsaPrivateKey: ${KEYSTONE_RSA_PRIVATE_KEY:MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAKHoeQr6sIzfsUDMIdXK2FNzqnG+vnnUrTsJGF1f82MJ10cC5Aw53/ntHl+IjCBU0R8KwPVwjJLoDwhaPgO0ktHa3b0l6E+mqIVIniE20Nws3E0mJhFwJC/IxB7JAg8TkuNzflzvZjAO1ACwgkKGxq7Iutz4TocLeCfUkObXwc1fAgMBAAECgYAWwCzqDwnp8bDdkxGaEhPNvi4QJ6ZqRilFZ2TGEiqIGyTl9JEI6sT/QIOJFw3hqSltfDxbAMKwDe221b9rE9+hZhE2rrpwcTKuehob9Z8CObYeUHR9HG7Qb2tYRElvSCWo74iz2zajXAvJLjIE4MPuPYqXC5zOabH+EJ/eaOzVwQJBANmRkMlb+qzp1GWuqFMHP+5MeYhFwUHVX7fxKNA24oHldX8zjPIZ6d3vaRfliTvxOaz1T80acvJkkb7zHBmaW38CQQC+gfF8Lg+nvBY/S3wfOPL8FcntP16jdFhNNZmbOxq72ZmCfl5Zk5cYNBc4rDSrd9Sj4TkLLug+wrK6Wr117P4hAkBOVxnZR2NVy8SM8HzvmJauiZ7hMKzLtbcHlrBpeLnKqALM0JUZv7b0EPa4ghAOI2fvHU2kvrdRDGFmbkdZ+LilAkBnX8eT5MKl+A/yZJmDr7laRNB/poVKGNXZf55Md3P4Pwlnn/6+iLHSdmGrZPZnnOyLyKjVgqyPccLeEGMCXIlBAkAt2OMwss16OH2x79OcfBrabU5iCVbDHg56JYGbWP8KcPfvspxtL/4TdACRsa+yCMcI6L29Q4wn791SEEnE834a}
   auth:
     # 本地开发默认使用本地账号密码登录，避免依赖外部 Keylo 服务。
-    mode: ${KEYSTONE_AUTH_MODE:mixed}
+    mode: ${KEYSTONE_AUTH_MODE:local}
     keylo:
-      enabled: ${KEYSTONE_AUTH_KEYLO_ENABLED:true}
+      enabled: ${KEYSTONE_AUTH_KEYLO_ENABLED:false}
       base-url: ${KEYLO_BASE_URL:http://10.17.17.7:2345}
       issuer-uri: ${KEYLO_ISSUER_URI:http://10.17.17.7:2345}
       trusted-issuers: ${KEYLO_TRUSTED_ISSUERS:keylo}
@@ -39,7 +39,7 @@ spring:
 
   flyway:
     # 开发环境显式覆盖 basic 中的 Flyway 配置，避免本地启动时自动迁移。
-    enabled: false
+    enabled: true
     baseline-on-migrate: true
     validate-on-migrate: true
     out-of-order: false
@@ -49,7 +49,7 @@ spring:
 
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:10.17.17.7}
+      host: ${SPRING_DATA_REDIS_HOST:10.17.17.74}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
       password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:docker/.secrets/.redis_password.enc}

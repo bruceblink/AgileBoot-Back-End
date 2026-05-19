@@ -145,7 +145,7 @@ keystone:
     mode: ${KEYSTONE_AUTH_MODE:local}
     keylo:
       enabled: ${KEYSTONE_AUTH_KEYLO_ENABLED:false}
-      base-url: ${KEYLO_BASE_URL:http://127.0.0.1:2345}
+      base-url: ${KEYLO_BASE_URL:http://keylo:2345}
       issuer-uri: ${KEYLO_ISSUER_URI:${keystone.auth.keylo.base-url}}
       trusted-issuers: ${KEYLO_TRUSTED_ISSUERS:${keystone.auth.keylo.issuer-uri}}
       jwk-set-uri: ${KEYLO_JWK_SET_URI:${keystone.auth.keylo.base-url}/.well-known/jwks.json}

@@ -4,10 +4,9 @@
 keystone:
   file-base-dir: /app/data
   auth:
-    mode: mixed
+    mode: local
     keylo:
-      enabled: true
-      base-url: http://10.17.17.7:2345
+      enabled: false
   datasource:
     password-encryption:
       encrypt-key-file: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE:/run/secrets/.database_password.key}
