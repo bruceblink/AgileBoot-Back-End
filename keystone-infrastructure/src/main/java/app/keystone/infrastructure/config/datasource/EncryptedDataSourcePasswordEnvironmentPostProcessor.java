@@ -1,15 +1,11 @@
 package app.keystone.infrastructure.config.datasource;
 
 import app.keystone.infrastructure.security.SecretValueDecryptor;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
@@ -20,13 +16,11 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
 /**
- * 支持数据库密码配置使用 ENC(...) 的启动期自动解密。
+ * Decrypts datasource password secrets before dynamic datasource binds properties.
  */
 public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
     private static final String PROPERTY_SOURCE_NAME = "KeystoneDataSourcePasswordDecrypt";
-    private static final String ENC_PREFIX = "ENC(";
-    private static final String ENC_SUFFIX = ")";
     private static final Pattern DATA_SOURCE_PASSWORD_KEY = Pattern.compile(
         "^spring\\.datasource(\\.dynamic\\.datasource\\.[^.]+)?\\.password$"
     );
@@ -36,15 +30,6 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        boolean enabled = environment.getProperty(
-            "keystone.datasource.password-encryption.enabled",
-            Boolean.class,
-            false
-        );
-        if (!enabled) {
-            return;
-        }
-
         String encryptKey = resolveEncryptKey(environment);
 
         MutablePropertySources propertySources = environment.getPropertySources();
@@ -61,8 +46,11 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
                     continue;
                 }
                 String value = passwordValue.value();
-                if (!isEncryptedValue(value)) {
-                    continue;
+                if (!SecretValueDecryptor.isSecretV1(value)) {
+                    throw new IllegalStateException(
+                        "Datasource password must use secret:v1:aes-256-gcm format when encryption is enabled: "
+                            + passwordValue.targetPropertyName()
+                    );
                 }
 
                 foundEncryptedPassword = true;
@@ -85,15 +73,6 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
         if (foundEncryptedPassword && !decryptedMap.isEmpty()) {
             propertySources.addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, decryptedMap));
         }
-    }
-
-    private static boolean isEncryptedValue(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return false;
-        }
-        String trimmed = value.trim();
-        return SecretValueDecryptor.isSecretV1(trimmed)
-            || (trimmed.startsWith(ENC_PREFIX) && trimmed.endsWith(ENC_SUFFIX));
     }
 
     private static String resolveEncryptKey(ConfigurableEnvironment environment) {
@@ -162,28 +141,7 @@ public class EncryptedDataSourcePasswordEnvironmentPostProcessor implements Envi
     }
 
     private static String decryptValue(String value, String encryptKey) throws Exception {
-        String trimmed = value.trim();
-        if (SecretValueDecryptor.isSecretV1(trimmed)) {
-            return SecretValueDecryptor.decryptSecretV1(trimmed, encryptKey);
-        }
-
-        String encryptedBody = trimmed.substring(ENC_PREFIX.length(), trimmed.length() - ENC_SUFFIX.length());
-        return decryptAesBase64(buildLegacyAesKey(encryptKey), encryptedBody);
-    }
-
-    private static String decryptAesBase64(byte[] key, String encryptedBase64) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"));
-        byte[] decrypted = cipher.doFinal(Base64.getDecoder().decode(encryptedBase64));
-        return new String(decrypted, StandardCharsets.UTF_8);
-    }
-
-    private static byte[] buildLegacyAesKey(String encryptKey) {
-        byte[] keyBytes = encryptKey.getBytes(StandardCharsets.UTF_8);
-        byte[] aesKey = new byte[16];
-        int copyLength = Math.min(keyBytes.length, aesKey.length);
-        System.arraycopy(keyBytes, 0, aesKey, 0, copyLength);
-        return aesKey;
+        return SecretValueDecryptor.decryptSecretV1(value.trim(), encryptKey);
     }
 
     @Override

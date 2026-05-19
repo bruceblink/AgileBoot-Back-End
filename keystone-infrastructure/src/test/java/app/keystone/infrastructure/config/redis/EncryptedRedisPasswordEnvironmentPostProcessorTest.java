@@ -1,6 +1,7 @@
 package app.keystone.infrastructure.config.redis;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,7 +16,6 @@ class EncryptedRedisPasswordEnvironmentPostProcessorTest {
     void decryptsSecretV1RedisPassword() {
         StandardEnvironment environment = new StandardEnvironment();
         environment.getPropertySources().addFirst(new MapPropertySource("test", Map.of(
-            "keystone.redis.password-encryption.enabled", "true",
             "keystone.redis.password-encryption.encrypt-key", "oN06GRBVOr2G8lFxKisSmnONozK0Ru8z9Og2q7Bsbww=",
             "spring.data.redis.password",
             "secret:v1:aes-256-gcm:Mq+2ogeNoFKYIQYe:ZXSfffeenjQZTYXIRWJpH2xaBZgiRBAiuv4qVpzIZMrZy/B/rw=="
@@ -36,7 +36,6 @@ class EncryptedRedisPasswordEnvironmentPostProcessorTest {
         Files.writeString(keyFile, "oN06GRBVOr2G8lFxKisSmnONozK0Ru8z9Og2q7Bsbww=");
         StandardEnvironment environment = new StandardEnvironment();
         environment.getPropertySources().addFirst(new MapPropertySource("test", Map.of(
-            "keystone.redis.password-encryption.enabled", "true",
             "keystone.redis.password-encryption.encrypt-key-file", keyFile.toString(),
             "spring.data.redis.password-file", passwordFile.toString()
         )));
@@ -44,5 +43,17 @@ class EncryptedRedisPasswordEnvironmentPostProcessorTest {
         new EncryptedRedisPasswordEnvironmentPostProcessor().postProcessEnvironment(environment, null);
 
         assertEquals("python-rust-db-secret", environment.getProperty("spring.data.redis.password"));
+    }
+
+    @Test
+    void rejectsPlainTextRedisPasswordWhenEncryptionEnabled() {
+        StandardEnvironment environment = new StandardEnvironment();
+        environment.getPropertySources().addFirst(new MapPropertySource("test", Map.of(
+            "keystone.redis.password-encryption.encrypt-key", "oN06GRBVOr2G8lFxKisSmnONozK0Ru8z9Og2q7Bsbww=",
+            "spring.data.redis.password", "plain-password"
+        )));
+
+        assertThrows(IllegalStateException.class,
+            () -> new EncryptedRedisPasswordEnvironmentPostProcessor().postProcessEnvironment(environment, null));
     }
 }

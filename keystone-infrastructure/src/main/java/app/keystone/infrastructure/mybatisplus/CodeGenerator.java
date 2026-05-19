@@ -2,6 +2,7 @@ package app.keystone.infrastructure.mybatisplus;
 
 import app.keystone.common.core.base.BaseController;
 import app.keystone.common.core.base.BaseEntity;
+import app.keystone.infrastructure.security.SecretValueDecryptor;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.generator.FastAutoGenerator;
@@ -17,6 +18,8 @@ import com.baomidou.mybatisplus.generator.engine.VelocityTemplateEngine;
 import com.baomidou.mybatisplus.generator.fill.Column;
 import com.baomidou.mybatisplus.generator.fill.Property;
 import com.baomidou.mybatisplus.generator.keywords.MySqlKeyWordsHandler;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import lombok.Data;
 
 /**
@@ -45,7 +48,10 @@ public class CodeGenerator {
             throw new IllegalStateException("SPRING_DATASOURCE_URL is required");
         }
         String username = System.getenv().getOrDefault("SPRING_DATASOURCE_USERNAME", "root");
-        String password = System.getenv().getOrDefault("SPRING_DATASOURCE_PASSWORD", "12345");
+        String password = resolveEncryptedPassword(
+            System.getenv("SPRING_DATASOURCE_PASSWORD_FILE"),
+            System.getenv("KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE")
+        );
 
         CodeGenerator generator = CodeGenerator.builder()
             .databaseUrl(databaseUrl)
@@ -61,6 +67,26 @@ public class CodeGenerator {
             .build();
 
         generator.generateCode();
+    }
+
+    private static String resolveEncryptedPassword(String passwordFile, String encryptKeyFile) {
+        if (passwordFile == null || passwordFile.isBlank()) {
+            throw new IllegalStateException("SPRING_DATASOURCE_PASSWORD_FILE is required");
+        }
+        if (encryptKeyFile == null || encryptKeyFile.isBlank()) {
+            throw new IllegalStateException("KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE is required");
+        }
+        try {
+            String encryptedPassword = Files.readString(Path.of(passwordFile.trim())).trim();
+            String encryptKey = Files.readString(Path.of(encryptKeyFile.trim())).trim();
+            if (!SecretValueDecryptor.isSecretV1(encryptedPassword)) {
+                throw new IllegalStateException(
+                    "Datasource password must use secret:v1:aes-256-gcm format: " + passwordFile);
+            }
+            return SecretValueDecryptor.decryptSecretV1(encryptedPassword, encryptKey);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to decrypt datasource password for code generator", ex);
+        }
     }
 
     public void generateCode() {
