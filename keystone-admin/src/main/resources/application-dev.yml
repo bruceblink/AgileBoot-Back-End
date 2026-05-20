@@ -18,6 +18,7 @@ keystone:
       audiences: ${KEYLO_AUDIENCES:admin-backend,sys_test}
       provisioning:
         enabled: ${KEYLO_PROVISIONING_ENABLED:true}
+        admin-client-secret: cli-admin-root#312
   datasource:
     password-encryption:
       encrypt-key: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY:}
