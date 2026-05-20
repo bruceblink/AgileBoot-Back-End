@@ -21,6 +21,14 @@ spring:
       datasource:
         master:
           password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:/run/secrets/.database_password.enc}
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    out-of-order: false
+    locations:
+      - classpath:db/migrate/common
+      - classpath:db/migrate/mysql
   data:
     redis:
       username: ${SPRING_DATA_REDIS_USERNAME:keystone}
