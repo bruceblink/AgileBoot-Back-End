@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -139,12 +138,12 @@ public class SecurityConfig {
                     ).anonymous()
                     .requestMatchers("/login/rsa-public-key").permitAll()
                     .requestMatchers("/druid/**").authenticated();
-                if (isSwaggerAuthenticationRequired()) {
-                    auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**").authenticated()
-                        .requestMatchers("/v3/api-docs", "/v3/api-docs/**").authenticated();
-                } else {
+                if (isSwaggerEnabled()) {
                     auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**").permitAll();
+                } else {
+                    auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**").authenticated()
+                        .requestMatchers("/v3/api-docs", "/v3/api-docs/**").authenticated();
                 }
                 auth.requestMatchers(HttpMethod.GET, "/", "/*.html", "/*.css", "/*.js", "/profile/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/**/*.html", "/**/*.css", "/**/*.js").permitAll();
@@ -162,8 +161,10 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-    boolean isSwaggerAuthenticationRequired() {
-        return environment.acceptsProfiles(Profiles.of("prod"));
+    boolean isSwaggerEnabled() {
+        Boolean apiDocsEnabled = environment.getProperty("springdoc.api-docs.enabled", Boolean.class, false);
+        Boolean swaggerUiEnabled = environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class, false);
+        return apiDocsEnabled && swaggerUiEnabled;
     }
 
 }
