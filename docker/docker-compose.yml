@@ -92,6 +92,7 @@ services:
       KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE: /run/secrets/.database_password.key
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_USERNAME: keystone
       SPRING_DATA_REDIS_PASSWORD_FILE: /run/secrets/.redis_password.enc
       KEYSTONE_REDIS_ENCRYPT_KEY_FILE: /run/secrets/.redis_password.key
       TOKEN_SECRET: ${TOKEN_SECRET:-sdhfkjshBN6rr32df38}

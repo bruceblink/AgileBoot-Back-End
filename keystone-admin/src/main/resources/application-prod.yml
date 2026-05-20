@@ -23,6 +23,7 @@ spring:
           password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:/run/secrets/.database_password.enc}
   data:
     redis:
+      username: ${SPRING_DATA_REDIS_USERNAME:keystone}
       password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:/run/secrets/.redis_password.enc}
 
 logging:

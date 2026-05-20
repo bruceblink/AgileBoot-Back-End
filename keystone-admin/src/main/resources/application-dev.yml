@@ -11,10 +11,10 @@ keystone:
     mode: ${KEYSTONE_AUTH_MODE:local}
     keylo:
       enabled: ${KEYSTONE_AUTH_KEYLO_ENABLED:false}
-      base-url: ${KEYLO_BASE_URL:http://10.17.17.7:2345}
-      issuer-uri: ${KEYLO_ISSUER_URI:http://10.17.17.7:2345}
+      base-url: ${KEYLO_BASE_URL:http://10.17.17.74:2345}
+      issuer-uri: ${KEYLO_ISSUER_URI:http://10.17.17.74:2345}
       trusted-issuers: ${KEYLO_TRUSTED_ISSUERS:keylo}
-      jwk-set-uri: ${KEYLO_JWK_SET_URI:http://10.17.17.7:2345/.well-known/jwks.json}
+      jwk-set-uri: ${KEYLO_JWK_SET_URI:http://10.17.17.74:2345/.well-known/jwks.json}
       audiences: ${KEYLO_AUDIENCES:admin-backend,sys_test}
       provisioning:
         enabled: ${KEYLO_PROVISIONING_ENABLED:true}
@@ -51,6 +51,7 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:10.17.17.74}
       port: ${SPRING_DATA_REDIS_PORT:6379}
+      username: ${SPRING_DATA_REDIS_USERNAME:keystone}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
       password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:docker/.secrets/.redis_password.enc}
 
