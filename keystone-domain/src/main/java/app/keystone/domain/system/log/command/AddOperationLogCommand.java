@@ -1,8 +1,8 @@
 package app.keystone.domain.system.log.command;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import java.util.Date;
 import lombok.Data;
 
 /**
@@ -50,7 +50,9 @@ public class AddOperationLogCommand {
     @Schema(description = "错误消息")
     private String errorStack;
 
-    @Schema(description = "操作时间，不传则使用服务端当前时间")
-    private Date operationTime;
+    @Size(max = 40)
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$")
+    @Schema(description = "操作时间，UTC时间，格式：yyyy-MM-dd HH:mm:ss，不传则使用服务端当前时间")
+    private String operationTime;
 
 }

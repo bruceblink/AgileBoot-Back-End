@@ -21,6 +21,10 @@ import app.keystone.domain.system.log.db.SysOperationLogService;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,6 +39,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class LogApplicationService {
+
+    private static final DateTimeFormatter UTC_DATE_TIME_FORMATTER =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final SysLoginInfoService loginInfoService;
 
@@ -65,7 +72,8 @@ public class LogApplicationService {
     public void addOperationLog(AddOperationLogCommand command, SystemLoginUser loginUser, String requestIp,
         String currentRequestUrl, String currentRequestMethod) {
         SysOperationLogEntity entity = new SysOperationLogEntity();
-        BeanUtils.copyProperties(command, entity);
+        BeanUtils.copyProperties(command, entity, "operationTime");
+        entity.setOperationTime(parseOperationTime(command.getOperationTime()));
         fillDefaultOperationLogFields(entity, loginUser, requestIp, currentRequestUrl, currentRequestMethod);
         operationLogService.save(entity);
     }
@@ -99,6 +107,18 @@ public class LogApplicationService {
             return RequestMethodEnum.valueOf(requestMethod).getValue();
         } catch (Exception e) {
             return RequestMethodEnum.UNKNOWN.getValue();
+        }
+    }
+
+    private Date parseOperationTime(String operationTime) {
+        if (StringUtils.isBlank(operationTime)) {
+            return null;
+        }
+        try {
+            LocalDateTime localDateTime = LocalDateTime.parse(operationTime, UTC_DATE_TIME_FORMATTER);
+            return Date.from(localDateTime.toInstant(ZoneOffset.UTC));
+        } catch (DateTimeParseException e) {
+            return null;
         }
     }
 
