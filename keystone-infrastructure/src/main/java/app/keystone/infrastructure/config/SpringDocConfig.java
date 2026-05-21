@@ -1,10 +1,8 @@
 package app.keystone.infrastructure.config;
 
 import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
@@ -39,13 +37,9 @@ public class SpringDocConfig {
             .servers(List.of(new Server().url("/api").description("Frontend API proxy")))
             .info(new Info().title("Keystone 后台管理系统")
                 .description("Keystone API")
-                .version("v3.2.0")
-                .license(new License().name("MIT 3.0").url("https://github.com/bruceblink/Keystone")))
+                .version("v3.2.0"))
             .components(new Components().addSecuritySchemes(SECURITY_SCHEME_NAME,
-                new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
-            .externalDocs(new ExternalDocumentation()
-                .description("Keystone 后台管理系统接口文档")
-                .url("https://juejin.cn/column/7159946528827080734"));
+                new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
     }
 
     @Bean
