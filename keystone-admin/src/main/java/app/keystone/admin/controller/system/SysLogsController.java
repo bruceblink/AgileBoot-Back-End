@@ -7,16 +7,21 @@ import app.keystone.common.core.page.PageDTO;
 import app.keystone.common.utils.poi.CustomExcelUtil;
 import app.keystone.domain.common.command.BulkOperationCommand;
 import app.keystone.domain.system.log.LogApplicationService;
+import app.keystone.domain.system.log.command.AddOperationLogCommand;
 import app.keystone.domain.system.log.dto.LoginLogDTO;
 import app.keystone.domain.system.log.query.LoginLogQuery;
 import app.keystone.domain.system.log.dto.OperationLogDTO;
 import app.keystone.domain.system.log.query.OperationLogQuery;
 import app.keystone.admin.customize.aop.accessLog.AccessLog;
 import app.keystone.common.enums.common.BusinessTypeEnum;
+import app.keystone.infrastructure.user.AuthenticationUtils;
+import app.keystone.infrastructure.user.web.SystemLoginUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +29,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -74,6 +81,16 @@ public class SysLogsController extends BaseController {
     public ResponseDTO<PageDTO<OperationLogDTO>> operationLogs(OperationLogQuery query) {
         PageDTO<OperationLogDTO> pageDTO = logApplicationService.getOperationLogList(query);
         return ResponseDTO.ok(pageDTO);
+    }
+
+    @Operation(summary = "新增操作日志", description = "客户端主动写入操作日志")
+    @PostMapping("/operationLogs")
+    public ResponseDTO<Void> addOperationLog(@Valid @RequestBody AddOperationLogCommand command,
+        HttpServletRequest request) {
+        SystemLoginUser loginUser = AuthenticationUtils.getSystemLoginUser();
+        logApplicationService.addOperationLog(command, loginUser, request.getRemoteAddr(), request.getRequestURI(),
+            request.getMethod());
+        return ResponseDTO.ok();
     }
 
 //    @GetMapping("/download")
