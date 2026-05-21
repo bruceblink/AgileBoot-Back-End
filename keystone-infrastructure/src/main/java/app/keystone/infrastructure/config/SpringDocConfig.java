@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import java.util.List;
 import java.util.Set;
 import org.springdoc.core.customizers.OpenApiCustomizer;
@@ -35,6 +36,7 @@ public class SpringDocConfig {
     @Bean
     public OpenAPI keystoneApi() {
         return new OpenAPI()
+            .servers(List.of(new Server().url("/api").description("Frontend API proxy")))
             .info(new Info().title("Keystone 后台管理系统")
                 .description("Keystone API")
                 .version("v3.2.0")
