@@ -1,5 +1,6 @@
 package app.keystone.infrastructure.config;
 
+import app.keystone.common.config.KeystoneConfig;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -32,12 +33,12 @@ public class SpringDocConfig {
     );
 
     @Bean
-    public OpenAPI keystoneApi() {
+    public OpenAPI keystoneApi(KeystoneConfig keystoneConfig) {
         return new OpenAPI()
             .servers(List.of(new Server().url("/api").description("Frontend API proxy")))
             .info(new Info().title("Keystone 后台管理系统")
                 .description("Keystone API")
-                .version("v3.2.0"))
+                .version(keystoneConfig.getVersion()))
             .components(new Components().addSecuritySchemes(SECURITY_SCHEME_NAME,
                 new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
     }
