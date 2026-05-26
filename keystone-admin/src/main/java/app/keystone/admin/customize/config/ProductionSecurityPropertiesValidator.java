@@ -37,6 +37,9 @@ public class ProductionSecurityPropertiesValidator implements ApplicationRunner 
     @Value("${keystone.rsaPrivateKey:}")
     private String rsaPrivateKey;
 
+    @Value("${keystone.auth.mode:local}")
+    private String authMode = "local";
+
     @Override
     public void run(ApplicationArguments args) {
         if (!isProdProfile()) {
@@ -46,7 +49,6 @@ public class ProductionSecurityPropertiesValidator implements ApplicationRunner 
         List<String> errors = new ArrayList<>();
         validateTokenSecret(errors);
         validateRsaPrivateKey(errors);
-        validateDruidPassword(errors);
         validateKeylo(errors);
         validateKeyloProvisioning(errors);
 
@@ -89,38 +91,13 @@ public class ProductionSecurityPropertiesValidator implements ApplicationRunner 
         }
     }
 
-    private void validateDruidPassword(List<String> errors) {
-        if (!isDruidEnabled()) {
+    private void validateKeylo(List<String> errors) {
+        if (!isKeyloAuthMode()) {
             return;
         }
-        String druidPassword = firstText(
-            environment.getProperty("spring.datasource.druid.statViewServlet.login-password"),
-            environment.getProperty("spring.datasource.dynamic.druid.stat-view-servlet.login-password"),
-            environment.getProperty("spring.datasource.druid.stat-view-servlet.login-password")
-        );
-        if (!StringUtils.hasText(druidPassword)) {
-            missing(errors, "spring.datasource.druid.stat-view-servlet.login-password", "DRUID_PASSWORD",
-                "required when Druid monitor is enabled");
-        }
-    }
-
-    private boolean isDruidEnabled() {
-        return environment.getProperty("spring.datasource.druid.statViewServlet.enabled", Boolean.class,
-            environment.getProperty("spring.datasource.dynamic.druid.stat-view-servlet.enabled", Boolean.class,
-                environment.getProperty("spring.datasource.druid.stat-view-servlet.enabled", Boolean.class, true)));
-    }
-
-    private String firstText(String... values) {
-        for (String value : values) {
-            if (StringUtils.hasText(value)) {
-                return value;
-            }
-        }
-        return null;
-    }
-
-    private void validateKeylo(List<String> errors) {
         if (!keyloProperties.isEnabled()) {
+            missing(errors, "keystone.auth.keylo.enabled", "KEYSTONE_AUTH_KEYLO_ENABLED",
+                "required when Keystone auth mode is " + authMode);
             return;
         }
         if (!StringUtils.hasText(keyloProperties.getBaseUrl())) {
@@ -143,6 +120,10 @@ public class ProductionSecurityPropertiesValidator implements ApplicationRunner 
             missing(errors, "keystone.auth.keylo.credential-verify-url", "KEYLO_CREDENTIAL_VERIFY_URL",
                 "required when Keylo credential login is enabled");
         }
+    }
+
+    private boolean isKeyloAuthMode() {
+        return !"local".equalsIgnoreCase(authMode);
     }
 
     private List<String> trustedAudiences() {

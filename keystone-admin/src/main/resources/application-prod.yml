@@ -4,9 +4,9 @@
 keystone:
   file-base-dir: /app/data
   auth:
-    mode: local
+    mode: ${KEYSTONE_AUTH_MODE:mixed}
     keylo:
-      enabled: false
+      enabled: ${KEYSTONE_AUTH_KEYLO_ENABLED:true}
   datasource:
     password-encryption:
       encrypt-key-file: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE:/run/secrets/.database_password.key}

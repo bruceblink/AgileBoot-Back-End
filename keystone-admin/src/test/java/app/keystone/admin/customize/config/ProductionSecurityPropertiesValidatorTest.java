@@ -24,6 +24,7 @@ class ProductionSecurityPropertiesValidatorTest {
         ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
             environment, keyloProperties, provisioningProperties);
         setField(validator, "tokenSecret", "sdhfkjshBN6rr32df38");
+        setField(validator, "rsaPrivateKey", "production-rsa-private-key");
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> validator.run(null));
 
@@ -35,7 +36,6 @@ class ProductionSecurityPropertiesValidatorTest {
     void run_shouldPass_whenProdSecurityPropertiesAreConfigured() throws Exception {
         MockEnvironment environment = new MockEnvironment();
         environment.setActiveProfiles("prod");
-        environment.setProperty("spring.datasource.dynamic.druid.stat-view-servlet.login-password", "strong-druid-password");
         KeyloProperties keyloProperties = new KeyloProperties();
         keyloProperties.setEnabled(true);
         keyloProperties.setBaseUrl("http://keylo");
@@ -50,8 +50,63 @@ class ProductionSecurityPropertiesValidatorTest {
             environment, keyloProperties, provisioningProperties);
         setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
         setField(validator, "rsaPrivateKey", "production-rsa-private-key");
+        setField(validator, "authMode", "mixed");
 
         assertDoesNotThrow(() -> validator.run(null));
+    }
+
+    @Test
+    void run_shouldNotRequireDruidPassword_whenProdDruidMonitorIsEnabled() throws Exception {
+        MockEnvironment environment = new MockEnvironment();
+        environment.setActiveProfiles("prod");
+        environment.setProperty("spring.datasource.dynamic.druid.stat-view-servlet.enabled", "true");
+        KeyloProperties keyloProperties = configuredKeyloProperties();
+        KeyloUserProvisioningProperties provisioningProperties = new KeyloUserProvisioningProperties();
+        provisioningProperties.setEnabled(false);
+        ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
+            environment, keyloProperties, provisioningProperties);
+        setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
+        setField(validator, "rsaPrivateKey", "production-rsa-private-key");
+        setField(validator, "authMode", "mixed");
+
+        assertDoesNotThrow(() -> validator.run(null));
+    }
+
+    @Test
+    void run_shouldSkipKeyloValidation_whenProdAuthModeIsLocal() throws Exception {
+        MockEnvironment environment = new MockEnvironment();
+        environment.setActiveProfiles("prod");
+        KeyloProperties keyloProperties = new KeyloProperties();
+        keyloProperties.setEnabled(true);
+        KeyloUserProvisioningProperties provisioningProperties = new KeyloUserProvisioningProperties();
+        provisioningProperties.setEnabled(false);
+        ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
+            environment, keyloProperties, provisioningProperties);
+        setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
+        setField(validator, "rsaPrivateKey", "production-rsa-private-key");
+        setField(validator, "authMode", "local");
+
+        assertDoesNotThrow(() -> validator.run(null));
+    }
+
+    @Test
+    void run_shouldRequireKeyloEnabled_whenProdAuthModeUsesKeylo() throws Exception {
+        MockEnvironment environment = new MockEnvironment();
+        environment.setActiveProfiles("prod");
+        KeyloProperties keyloProperties = new KeyloProperties();
+        keyloProperties.setEnabled(false);
+        KeyloUserProvisioningProperties provisioningProperties = new KeyloUserProvisioningProperties();
+        provisioningProperties.setEnabled(false);
+        ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
+            environment, keyloProperties, provisioningProperties);
+        setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
+        setField(validator, "rsaPrivateKey", "production-rsa-private-key");
+        setField(validator, "authMode", "mixed");
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> validator.run(null));
+
+        assertTrue(exception.getMessage().contains("keystone.auth.keylo.enabled"));
+        assertTrue(exception.getMessage().contains("KEYSTONE_AUTH_KEYLO_ENABLED"));
     }
 
     @Test
@@ -88,6 +143,7 @@ class ProductionSecurityPropertiesValidatorTest {
             environment, keyloProperties, provisioningProperties);
         setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
         setField(validator, "rsaPrivateKey", "production-rsa-private-key");
+        setField(validator, "authMode", "mixed");
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> validator.run(null));
 
@@ -121,6 +177,18 @@ class ProductionSecurityPropertiesValidatorTest {
 
         assertTrue(exception.getMessage().contains("keystone.rsaPrivateKey"));
         assertTrue(exception.getMessage().contains("KEYSTONE_RSA_PRIVATE_KEY"));
+    }
+
+    private KeyloProperties configuredKeyloProperties() {
+        KeyloProperties keyloProperties = new KeyloProperties();
+        keyloProperties.setEnabled(true);
+        keyloProperties.setBaseUrl("http://keylo");
+        keyloProperties.setIssuerUri("http://keylo");
+        keyloProperties.setTrustedIssuers(List.of("keylo", "http://keylo"));
+        keyloProperties.setJwkSetUri("http://keylo/.well-known/jwks.json");
+        keyloProperties.setAudiences(List.of("admin-backend"));
+        keyloProperties.setCredentialVerifyUrl("http://keylo/v1/auth/token");
+        return keyloProperties;
     }
 
     private void setField(Object target, String fieldName, Object value) throws Exception {
