@@ -86,6 +86,26 @@ Remove-Item -LiteralPath docker/.secrets/.database_password
 
 Redis 不需要明文密码文件。Redis 容器读取 `.redis.acl`，其中只保存密码 SHA-256 hash；Keystone 运行期读取 `.redis_password.enc` 和 `.redis_password.key`。
 
+`.redis.acl` 必须同时覆盖 Keystone 的缓存读写和监控接口所需命令。最小示例：
+
+```text
+user default off
+user keystone on #<redis-password-sha256> ~* +@read +@write +@connection +@scripting +info
+```
+
+其中 `+info` 用于 `/monitor/cacheInfo` 调用 Redis `INFO` 命令读取运行状态。如果缺少该权限，接口会报错：
+
+```text
+NOPERM User keystone has no permissions to run the 'info' command
+```
+
+已有部署更新 `docker/.secrets/.redis.acl` 后，需要让 Redis 重新加载 ACL；Docker Compose 场景可直接重启 Redis 和 Keystone：
+
+```bash
+cd docker
+docker compose restart redis sys_manage_backend
+```
+
 也保留 Java 工具类：
 
 - `app.keystone.infrastructure.security.DataSourcePasswordEncryptor`
