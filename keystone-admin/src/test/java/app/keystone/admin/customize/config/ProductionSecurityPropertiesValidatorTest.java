@@ -136,6 +136,7 @@ class ProductionSecurityPropertiesValidatorTest {
         KeyloUserProvisioningProperties provisioningProperties = new KeyloUserProvisioningProperties();
         provisioningProperties.setEnabled(true);
         provisioningProperties.setCreateUserUrl("");
+        provisioningProperties.setResetPasswordUrlTemplate("");
         provisioningProperties.setAdminTokenUrl("");
         provisioningProperties.setAdminClientId("");
         provisioningProperties.setAdminClientSecret("");
@@ -154,6 +155,7 @@ class ProductionSecurityPropertiesValidatorTest {
         assertTrue(message.contains("keystone.auth.keylo.trusted-issuers"));
         assertTrue(message.contains("KEYLO_AUDIENCES"));
         assertTrue(message.contains("KEYLO_CREATE_USER_URL"));
+        assertTrue(message.contains("KEYLO_RESET_PASSWORD_URL_TEMPLATE"));
         assertTrue(message.contains("KEYLO_ADMIN_TOKEN_URL"));
         assertTrue(message.contains("KEYLO_ADMIN_CLIENT_ID"));
         assertTrue(message.contains("KEYLO_ADMIN_CLIENT_SECRET"));

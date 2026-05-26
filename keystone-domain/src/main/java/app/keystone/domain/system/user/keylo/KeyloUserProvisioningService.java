@@ -4,10 +4,12 @@ import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.common.utils.jackson.JacksonUtil;
 import app.keystone.domain.system.user.command.AddUserCommand;
+import java.net.URLEncoder;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -86,6 +88,56 @@ public class KeyloUserProvisioningService {
         }
     }
 
+    public void resetPassword(String keyloUserId, String newPassword) {
+        if (!properties.isEnabled() || StringUtils.isBlank(keyloUserId)) {
+            return;
+        }
+
+        if (StringUtils.isBlank(properties.getResetPasswordUrlTemplate())) {
+            log.warn("Keylo password reset skipped because reset-password URL is not configured, keyloUserId={}",
+                keyloUserId);
+            return;
+        }
+
+        if (StringUtils.isBlank(properties.getAdminTokenUrl())
+            || StringUtils.isBlank(properties.getAdminClientId())
+            || StringUtils.isBlank(properties.getAdminClientSecret())) {
+            throw new ApiException(ErrorCode.Business.LOGIN_KEYLO_CONFIG_MISSING);
+        }
+
+        Map<String, Object> body = new HashMap<>();
+        body.put(properties.getPasswordField(), newPassword);
+
+        try {
+            String adminAccessToken = getAdminAccessToken();
+            HttpResponse<String> response = sendPostJson(
+                resetPasswordUrl(keyloUserId),
+                JacksonUtil.to(body),
+                Map.of(properties.getAuthHeaderName(), "Bearer " + adminAccessToken),
+                properties.getTimeoutMillis()
+            );
+
+            int statusCode = response.statusCode();
+            String responseBody = response.body();
+            if (statusCode < 200 || statusCode >= 300) {
+                log.error("Keylo password reset failed, userId={}, status={}, response={}", keyloUserId,
+                    statusCode, responseBody);
+                throw new ApiException(ErrorCode.Business.LOGIN_KEYLO_PROVISION_FAILED, "HTTP " + statusCode);
+            }
+
+            String error = JacksonUtil.getAsString(responseBody, "error");
+            if (StringUtils.isNotBlank(error)) {
+                String message = JacksonUtil.getAsString(responseBody, "message");
+                throw new ApiException(ErrorCode.Business.LOGIN_KEYLO_PROVISION_FAILED,
+                    StringUtils.defaultIfBlank(message, error));
+            }
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ApiException(e, ErrorCode.Business.LOGIN_KEYLO_PROVISION_FAILED, e.getMessage());
+        }
+    }
+
     private String getAdminAccessToken() {
         Map<String, Object> tokenBody = new HashMap<>();
         tokenBody.put("client_id", properties.getAdminClientId());
@@ -146,6 +198,12 @@ public class KeyloUserProvisioningService {
         }
 
         return JacksonUtil.getAsString(responseBody, fieldName);
+    }
+
+    private String resetPasswordUrl(String keyloUserId) {
+        return properties.getResetPasswordUrlTemplate()
+            .replace("{userId}", URLEncoder.encode(keyloUserId, StandardCharsets.UTF_8))
+            .replace("{user_id}", URLEncoder.encode(keyloUserId, StandardCharsets.UTF_8));
     }
 
     private String resolveSubject(AddUserCommand command) {

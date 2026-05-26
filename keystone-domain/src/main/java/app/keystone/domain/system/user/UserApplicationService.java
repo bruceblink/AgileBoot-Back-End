@@ -167,6 +167,7 @@ public class UserApplicationService {
     public void resetUserPassword(ResetPasswordCommand command) {
         UserModel userModel = userModelFactory.loadById(command.getUserId());
 
+        keyloUserProvisioningService.resetPassword(userModel.getExternalUserId(), command.getPassword());
         userModel.resetPassword(command.getPassword());
         userModel.updateById();
 

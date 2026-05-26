@@ -157,6 +157,10 @@ public class ProductionSecurityPropertiesValidator implements ApplicationRunner 
             missing(errors, "keystone.auth.keylo.provisioning.create-user-url", "KEYLO_CREATE_USER_URL",
                 "required when Keylo provisioning is enabled");
         }
+        if (!StringUtils.hasText(keyloProvisioningProperties.getResetPasswordUrlTemplate())) {
+            missing(errors, "keystone.auth.keylo.provisioning.reset-password-url-template",
+                "KEYLO_RESET_PASSWORD_URL_TEMPLATE", "required when Keylo provisioning is enabled");
+        }
         if (!StringUtils.hasText(keyloProvisioningProperties.getAdminTokenUrl())) {
             missing(errors, "keystone.auth.keylo.provisioning.admin-token-url", "KEYLO_ADMIN_TOKEN_URL",
                 "required when Keylo provisioning is enabled");
