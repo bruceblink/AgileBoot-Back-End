@@ -50,14 +50,6 @@ public class TokenService {
     @Value("${token.secret}")
     private String secret;
 
-    /**
-     * 自动刷新token的时间，当过期时间不足autoRefreshTime的值的时候，会触发刷新用户登录缓存的时间
-     * 比如这个值是20,   用户是8点登录的， 8点半缓存会过期， 当过8.10分的时候，就少于20分钟了，便触发
-     * 刷新登录用户的缓存时间
-     */
-    @Value("${token.autoRefreshTime}")
-    private long autoRefreshTime;
-
     @Value("${token.expirationSeconds:1800}")
     private long expirationSeconds;
 
@@ -114,7 +106,8 @@ public class TokenService {
     public String createTokenAndPutUserInCache(SystemLoginUser loginUser) {
         loginUser.setCachedKey(UUID.randomUUID().toString());
 
-        redisCache.loginUserCache.set(loginUser.getCachedKey(), loginUser);
+        redisCache.loginUserCache.set(loginUser.getCachedKey(), loginUser, tokenCacheTimeoutSeconds(),
+            TimeUnit.SECONDS);
         try {
             occupyLoginAccount(loginUser);
         } catch (RuntimeException e) {
@@ -127,20 +120,6 @@ public class TokenService {
             Token.LOGIN_USER_ID, loginUser.getUserId(),
             Token.LOGIN_USERNAME, loginUser.getUsername()
         ));
-    }
-
-    /**
-     * 当超过20分钟，自动刷新token
-     * @param loginUser 登录用户
-     */
-    public void refreshToken(SystemLoginUser loginUser) {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime > loginUser.getAutoRefreshCacheTime()) {
-            loginUser.setAutoRefreshCacheTime(currentTime + TimeUnit.MINUTES.toMillis(autoRefreshTime));
-            // 根据uuid将loginUser存入缓存
-            redisCache.loginUserCache.set(loginUser.getCachedKey(), loginUser);
-            redisCache.loginAccountCache.set(loginAccountCacheId(loginUser), loginUser.getCachedKey());
-        }
     }
 
     public void removeLoginUser(SystemLoginUser loginUser) {
@@ -189,14 +168,15 @@ public class TokenService {
         String accountId = loginAccountCacheId(loginUser);
         String existingCachedKey = redisCache.loginAccountCache.getObjectOnlyInCacheById(accountId);
         if (existingCachedKey != null) {
-            SystemLoginUser existingLoginUser = redisCache.loginUserCache.getObjectOnlyInCacheById(existingCachedKey);
+            SystemLoginUser existingLoginUser = redisCache.loginUserCache.getObjectOnlyInRedisById(existingCachedKey);
             if (existingLoginUser != null) {
                 throw new ApiException(Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN);
             }
             redisCache.loginAccountCache.delete(accountId);
         }
 
-        boolean occupied = redisCache.loginAccountCache.setIfAbsent(accountId, loginUser.getCachedKey());
+        boolean occupied = redisCache.loginAccountCache.setIfAbsent(accountId, loginUser.getCachedKey(),
+            tokenCacheTimeoutSeconds(), TimeUnit.SECONDS);
         if (!occupied) {
             throw new ApiException(Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN);
         }
@@ -230,6 +210,13 @@ public class TokenService {
         }
         Object username = claims.get(Token.LOGIN_USERNAME);
         return username == null ? null : username.toString();
+    }
+
+    private int tokenCacheTimeoutSeconds() {
+        if (expirationSeconds <= 0 || expirationSeconds > Integer.MAX_VALUE) {
+            throw new IllegalStateException("token.expirationSeconds must be between 1 and " + Integer.MAX_VALUE);
+        }
+        return Math.toIntExact(expirationSeconds);
     }
 
 

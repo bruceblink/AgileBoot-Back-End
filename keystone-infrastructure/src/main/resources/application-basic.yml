@@ -109,7 +109,6 @@ token:
   header: Authorization
   secret: ${TOKEN_SECRET:sdhfkjshBN6rr32df38}
   expirationSeconds: 1800
-  autoRefreshTime: 20
 
 # ---- MyBatis-Plus ----
 mybatis-plus:

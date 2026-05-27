@@ -70,6 +70,18 @@ public class RedisCacheTemplate<T> {
     }
 
     /**
+     * 直接从 Redis 读取，绕过本地 Caffeine 缓存。
+     */
+    public T getObjectOnlyInRedisById(Object id) {
+        String cachedKey = generateKey(id);
+        T cacheObject = getRedisUtil().getCacheObject(cachedKey);
+        if (cacheObject == null) {
+            caffeineCache.invalidate(cachedKey);
+        }
+        return cacheObject;
+    }
+
+    /**
      * 从缓存中获取 对象， 即使找不到的话 也不从DB中找
      * @param cachedKey 直接通过redis的key来搜索
      */
@@ -85,9 +97,20 @@ public class RedisCacheTemplate<T> {
         caffeineCache.invalidate(generateKey(id));
     }
 
+    public void set(Object id, T obj, Integer timeout, TimeUnit timeUnit) {
+        getRedisUtil().setCacheObject(generateKey(id), obj, timeout, timeUnit);
+        caffeineCache.invalidate(generateKey(id));
+    }
+
     public boolean setIfAbsent(Object id, T obj) {
         Boolean result = getRedisUtil().setCacheObjectIfAbsent(generateKey(id), obj, redisRedisEnum.expiration(),
             redisRedisEnum.timeUnit());
+        caffeineCache.invalidate(generateKey(id));
+        return Boolean.TRUE.equals(result);
+    }
+
+    public boolean setIfAbsent(Object id, T obj, Integer timeout, TimeUnit timeUnit) {
+        Boolean result = getRedisUtil().setCacheObjectIfAbsent(generateKey(id), obj, timeout, timeUnit);
         caffeineCache.invalidate(generateKey(id));
         return Boolean.TRUE.equals(result);
     }

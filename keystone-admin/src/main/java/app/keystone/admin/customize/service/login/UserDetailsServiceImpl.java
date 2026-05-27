@@ -18,7 +18,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,9 +44,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final SysRoleService roleService;
 
-    private final TokenService tokenService;
-
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         SysUserEntity userEntity = userService.getUserByUserName(username);
@@ -68,8 +64,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         SystemLoginUser loginUser = new SystemLoginUser(userEntity.getUserId(), userEntity.getIsAdmin(), userEntity.getUsername(),
             userEntity.getPassword(), roleInfo, userEntity.getDeptId());
         loginUser.fillLoginInfo();
-        loginUser.setAutoRefreshCacheTime(loginUser.getLoginInfo().getLoginTime()
-            + TimeUnit.MINUTES.toMillis(tokenService.getAutoRefreshTime()));
         return loginUser;
     }
 

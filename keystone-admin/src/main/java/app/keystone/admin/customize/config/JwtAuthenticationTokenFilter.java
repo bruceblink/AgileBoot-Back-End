@@ -47,9 +47,6 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
         SystemLoginUser loginUser = getLoginUser(request);
         if (loginUser != null && AuthenticationUtils.getAuthentication() == null) {
-            if (loginUser.getCachedKey() != null) {
-                tokenService.refreshToken(loginUser);
-            }
             // 如果没有将当前登录用户放入到上下文中的话，会认定用户未授权，返回用户未登陆的错误
             putCurrentLoginUserIntoContext(request, loginUser);
 

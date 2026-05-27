@@ -62,7 +62,6 @@ class JwtAuthenticationTokenFilterTest {
         filter.doFilter(request, response, chain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isEqualTo(loginUser);
-        verify(tokenService).refreshToken(loginUser);
         verify(keyloTokenVerifier, never()).verify(Mockito.anyString());
         verify(chain).doFilter(request, response);
     }
@@ -84,7 +83,6 @@ class JwtAuthenticationTokenFilterTest {
         assertThat(loginUser.getUsername()).isEqualTo("service:sys_test");
         assertThat(loginUser.isAdmin()).isTrue();
         assertThat(loginUser.getRoleInfo().getMenuPermissions()).contains(RoleInfo.ALL_PERMISSIONS);
-        verify(tokenService, never()).refreshToken(Mockito.any());
         verify(keyloTokenVerifier).verify("keylo-access-token");
         verify(chain).doFilter(request, response);
     }

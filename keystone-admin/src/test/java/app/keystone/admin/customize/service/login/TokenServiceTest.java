@@ -21,6 +21,7 @@ import io.jsonwebtoken.Jwts;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.Test;
@@ -35,13 +36,16 @@ class TokenServiceTest {
         RedisCacheTemplate<String> loginAccountCache = mock(RedisCacheTemplate.class);
         redisCacheService.loginUserCache = loginUserCache;
         redisCacheService.loginAccountCache = loginAccountCache;
-        when(loginAccountCache.setIfAbsent(eq("1"), anyString())).thenReturn(true);
+        when(loginAccountCache.setIfAbsent(eq("1"), anyString(), eq(1800), eq(TimeUnit.SECONDS))).thenReturn(true);
         TokenService tokenService = new TokenService(redisCacheService);
         setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
         setField(tokenService, "expirationSeconds", 1800L);
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         String token = tokenService.createTokenAndPutUserInCache(loginUser);
+
+        verify(loginUserCache).set(loginUser.getCachedKey(), loginUser, 1800, TimeUnit.SECONDS);
+        verify(loginAccountCache).setIfAbsent(eq("1"), anyString(), eq(1800), eq(TimeUnit.SECONDS));
 
         Claims claims = Jwts.parser()
             .verifyWith(signingKey("0123456789abcdef0123456789abcdef"))
@@ -59,19 +63,20 @@ class TokenServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void createTokenAndPutUserInCache_shouldRejectWhenAccountHasActiveSession() {
+    void createTokenAndPutUserInCache_shouldRejectWhenAccountHasActiveSession() throws Exception {
         RedisCacheService redisCacheService = mock(RedisCacheService.class);
         RedisCacheTemplate<SystemLoginUser> loginUserCache = mock(RedisCacheTemplate.class);
         RedisCacheTemplate<String> loginAccountCache = mock(RedisCacheTemplate.class);
         redisCacheService.loginUserCache = loginUserCache;
         redisCacheService.loginAccountCache = loginAccountCache;
         TokenService tokenService = new TokenService(redisCacheService);
+        setField(tokenService, "expirationSeconds", 1800L);
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         SystemLoginUser existingLoginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         existingLoginUser.setCachedKey("existing-token-id");
         when(loginAccountCache.getObjectOnlyInCacheById("1")).thenReturn("existing-token-id");
-        when(loginUserCache.getObjectOnlyInCacheById("existing-token-id")).thenReturn(existingLoginUser);
+        when(loginUserCache.getObjectOnlyInRedisById("existing-token-id")).thenReturn(existingLoginUser);
 
         assertThatThrownBy(() -> tokenService.createTokenAndPutUserInCache(loginUser))
             .isInstanceOf(ApiException.class)
@@ -95,14 +100,14 @@ class TokenServiceTest {
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         when(loginAccountCache.getObjectOnlyInCacheById("1")).thenReturn("expired-token-id");
-        when(loginUserCache.getObjectOnlyInCacheById("expired-token-id")).thenReturn(null);
-        when(loginAccountCache.setIfAbsent(eq("1"), anyString())).thenReturn(true);
+        when(loginUserCache.getObjectOnlyInRedisById("expired-token-id")).thenReturn(null);
+        when(loginAccountCache.setIfAbsent(eq("1"), anyString(), eq(1800), eq(TimeUnit.SECONDS))).thenReturn(true);
 
         String token = tokenService.createTokenAndPutUserInCache(loginUser);
 
         assertThat(token).isNotBlank();
         verify(loginAccountCache).delete("1");
-        verify(loginUserCache).set(loginUser.getCachedKey(), loginUser);
+        verify(loginUserCache).set(loginUser.getCachedKey(), loginUser, 1800, TimeUnit.SECONDS);
     }
 
     @Test
