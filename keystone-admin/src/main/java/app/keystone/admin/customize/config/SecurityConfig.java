@@ -85,11 +85,10 @@ public class SecurityConfig {
     @Bean
     public LogoutSuccessHandler logOutSuccessHandler() {
         return (request, response, authentication) -> {
-            SystemLoginUser loginUser = tokenService.getLoginUser(request);
+            String token = tokenService.getTokenFromRequest(request);
+            SystemLoginUser loginUser = tokenService.removeLoginUserByToken(token);
             if (loginUser != null) {
                 String userName = loginUser.getUsername();
-                // 删除用户缓存记录
-                tokenService.removeLoginUser(loginUser);
                 // 记录用户退出日志
                 ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(
                     userName, LoginStatusEnum.LOGOUT, LoginStatusEnum.LOGOUT.description()));

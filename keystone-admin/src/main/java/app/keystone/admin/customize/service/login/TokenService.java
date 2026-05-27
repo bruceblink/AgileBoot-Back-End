@@ -122,7 +122,11 @@ public class TokenService {
             throw e;
         }
 
-        return generateToken(Map.of(Token.LOGIN_USER_KEY, loginUser.getCachedKey()));
+        return generateToken(Map.of(
+            Token.LOGIN_USER_KEY, loginUser.getCachedKey(),
+            Token.LOGIN_USER_ID, loginUser.getUserId(),
+            Token.LOGIN_USERNAME, loginUser.getUsername()
+        ));
     }
 
     /**
@@ -145,6 +149,32 @@ public class TokenService {
         }
         redisCache.loginUserCache.delete(loginUser.getCachedKey());
         releaseLoginAccount(loginUser, loginUser.getCachedKey());
+    }
+
+    public SystemLoginUser removeLoginUserByToken(String token) {
+        if (token == null || token.isBlank()) {
+            return null;
+        }
+
+        Claims claims = parseToken(token);
+        String cachedKey = (String) claims.get(Token.LOGIN_USER_KEY);
+        if (cachedKey == null || cachedKey.isBlank()) {
+            return null;
+        }
+
+        SystemLoginUser loginUser = redisCache.loginUserCache.getObjectOnlyInCacheById(cachedKey);
+        redisCache.loginUserCache.delete(cachedKey);
+
+        if (loginUser != null) {
+            releaseLoginAccount(loginUser, cachedKey);
+            return loginUser;
+        }
+
+        String accountId = loginAccountCacheId(claims);
+        if (accountId != null) {
+            releaseLoginAccount(accountId, cachedKey);
+        }
+        return null;
     }
 
     public void removeLoginUser(String cachedKey) {
@@ -173,7 +203,13 @@ public class TokenService {
     }
 
     private void releaseLoginAccount(SystemLoginUser loginUser, String cachedKey) {
-        String accountId = loginAccountCacheId(loginUser);
+        releaseLoginAccount(loginAccountCacheId(loginUser), cachedKey);
+    }
+
+    private void releaseLoginAccount(String accountId, String cachedKey) {
+        if (accountId == null || accountId.isBlank()) {
+            return;
+        }
         String currentCachedKey = redisCache.loginAccountCache.getObjectOnlyInCacheById(accountId);
         if (cachedKey != null && cachedKey.equals(currentCachedKey)) {
             redisCache.loginAccountCache.delete(accountId);
@@ -185,6 +221,15 @@ public class TokenService {
             return loginUser.getUserId().toString();
         }
         return loginUser.getUsername();
+    }
+
+    private String loginAccountCacheId(Claims claims) {
+        Object userId = claims.get(Token.LOGIN_USER_ID);
+        if (userId != null) {
+            return userId.toString();
+        }
+        Object username = claims.get(Token.LOGIN_USERNAME);
+        return username == null ? null : username.toString();
     }
 
 

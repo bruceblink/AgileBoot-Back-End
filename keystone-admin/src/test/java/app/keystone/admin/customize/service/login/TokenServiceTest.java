@@ -53,6 +53,8 @@ class TokenServiceTest {
         assertNotNull(claims.getIssuedAt());
         assertNotNull(claims.getExpiration());
         assertNotNull(claims.get(Token.LOGIN_USER_KEY));
+        assertThat(claims.get(Token.LOGIN_USER_ID, Long.class)).isEqualTo(1L);
+        assertThat(claims.get(Token.LOGIN_USERNAME, String.class)).isEqualTo("admin");
     }
 
     @Test
@@ -123,9 +125,67 @@ class TokenServiceTest {
         verify(loginAccountCache).delete("1");
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void removeLoginUserByToken_shouldReleaseAccountMarkerWhenLoginUserCacheExists() throws Exception {
+        RedisCacheService redisCacheService = mock(RedisCacheService.class);
+        RedisCacheTemplate<SystemLoginUser> loginUserCache = mock(RedisCacheTemplate.class);
+        RedisCacheTemplate<String> loginAccountCache = mock(RedisCacheTemplate.class);
+        redisCacheService.loginUserCache = loginUserCache;
+        redisCacheService.loginAccountCache = loginAccountCache;
+        TokenService tokenService = new TokenService(redisCacheService);
+        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        setField(tokenService, "expirationSeconds", 1800L);
+
+        SystemLoginUser loginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
+        loginUser.setCachedKey("token-id");
+        String token = generateToken(tokenService, "token-id", 1L, "admin");
+        when(loginUserCache.getObjectOnlyInCacheById("token-id")).thenReturn(loginUser);
+        when(loginAccountCache.getObjectOnlyInCacheById("1")).thenReturn("token-id");
+
+        SystemLoginUser removedLoginUser = tokenService.removeLoginUserByToken(token);
+
+        assertThat(removedLoginUser).isEqualTo(loginUser);
+        verify(loginUserCache).delete("token-id");
+        verify(loginAccountCache).delete("1");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void removeLoginUserByToken_shouldReleaseAccountMarkerByJwtClaimsWhenLoginUserCacheIsMissing() throws Exception {
+        RedisCacheService redisCacheService = mock(RedisCacheService.class);
+        RedisCacheTemplate<SystemLoginUser> loginUserCache = mock(RedisCacheTemplate.class);
+        RedisCacheTemplate<String> loginAccountCache = mock(RedisCacheTemplate.class);
+        redisCacheService.loginUserCache = loginUserCache;
+        redisCacheService.loginAccountCache = loginAccountCache;
+        TokenService tokenService = new TokenService(redisCacheService);
+        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        setField(tokenService, "expirationSeconds", 1800L);
+
+        String token = generateToken(tokenService, "token-id", 1L, "admin");
+        when(loginUserCache.getObjectOnlyInCacheById("token-id")).thenReturn(null);
+        when(loginAccountCache.getObjectOnlyInCacheById("1")).thenReturn("token-id");
+
+        SystemLoginUser removedLoginUser = tokenService.removeLoginUserByToken(token);
+
+        assertThat(removedLoginUser).isNull();
+        verify(loginUserCache).delete("token-id");
+        verify(loginAccountCache).delete("1");
+    }
+
     private SecretKey signingKey(String secret) {
         byte[] keyBytes = Arrays.copyOf(secret.getBytes(StandardCharsets.UTF_8), 64);
         return new SecretKeySpec(keyBytes, "HmacSHA512");
+    }
+
+    private String generateToken(TokenService tokenService, String cachedKey, Long userId, String username) throws Exception {
+        java.lang.reflect.Method method = TokenService.class.getDeclaredMethod("generateToken", java.util.Map.class);
+        method.setAccessible(true);
+        return (String) method.invoke(tokenService, java.util.Map.of(
+            Token.LOGIN_USER_KEY, cachedKey,
+            Token.LOGIN_USER_ID, userId,
+            Token.LOGIN_USERNAME, username
+        ));
     }
 
     private void setField(Object target, String fieldName, Object value) throws Exception {

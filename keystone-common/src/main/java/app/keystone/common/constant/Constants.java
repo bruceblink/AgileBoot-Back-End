@@ -42,6 +42,16 @@ public class Constants {
          */
         public static final String LOGIN_USER_KEY = "login_user_key";
 
+        /**
+         * 登录用户ID
+         */
+        public static final String LOGIN_USER_ID = "login_user_id";
+
+        /**
+         * 登录用户名
+         */
+        public static final String LOGIN_USERNAME = "login_username";
+
     }
 
     public static class Captcha {
