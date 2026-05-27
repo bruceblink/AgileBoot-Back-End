@@ -85,6 +85,13 @@ public class RedisCacheTemplate<T> {
         caffeineCache.invalidate(generateKey(id));
     }
 
+    public boolean setIfAbsent(Object id, T obj) {
+        Boolean result = getRedisUtil().setCacheObjectIfAbsent(generateKey(id), obj, redisRedisEnum.expiration(),
+            redisRedisEnum.timeUnit());
+        caffeineCache.invalidate(generateKey(id));
+        return Boolean.TRUE.equals(result);
+    }
+
     public void delete(Object id) {
         getRedisUtil().deleteObject(generateKey(id));
         caffeineCache.invalidate(generateKey(id));

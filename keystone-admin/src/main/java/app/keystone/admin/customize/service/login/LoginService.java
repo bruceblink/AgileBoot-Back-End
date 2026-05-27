@@ -127,8 +127,8 @@ public class LoginService {
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
         SystemLoginUser loginUser = (SystemLoginUser) authentication.getPrincipal();
-        recordLoginInfo(loginUser);
-        return new LoginResult(tokenService.createTokenAndPutUserInCache(loginUser), null, null, null, null);
+        String token = createTokenAndRecordLoginInfo(loginUser);
+        return new LoginResult(token, null, null, null, null);
     }
 
     public LoginResult keyloLogin(KeyloLoginCommand keyloLoginCommand) {
@@ -162,13 +162,24 @@ public class LoginService {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             loginUser, null, loginUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        recordLoginInfo(loginUser);
-        return new LoginResult(tokenService.createTokenAndPutUserInCache(loginUser), keyloIdentity.getAccessToken(),
-            keyloIdentity.getRefreshToken(), keyloIdentity.getExpiresIn(), keyloIdentity.getTokenType());
+        String token = createTokenAndRecordLoginInfo(loginUser);
+        return new LoginResult(token, keyloIdentity.getAccessToken(), keyloIdentity.getRefreshToken(),
+            keyloIdentity.getExpiresIn(), keyloIdentity.getTokenType());
     }
 
     public SystemLoginUser buildLoginUserByKeyloIdentity(KeyloTokenIdentity keyloIdentity) {
         return keyloLoginUserResolver.resolve(keyloIdentity);
+    }
+
+    private String createTokenAndRecordLoginInfo(SystemLoginUser loginUser) {
+        String token = tokenService.createTokenAndPutUserInCache(loginUser);
+        try {
+            recordLoginInfo(loginUser);
+            return token;
+        } catch (RuntimeException e) {
+            tokenService.removeLoginUser(loginUser);
+            throw e;
+        }
     }
 
     @Data

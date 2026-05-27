@@ -10,7 +10,6 @@ import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode.Client;
 import app.keystone.common.utils.ServletHolderUtil;
 import app.keystone.common.utils.jackson.JacksonUtil;
-import app.keystone.domain.common.cache.RedisCacheService;
 import app.keystone.infrastructure.thread.ThreadPoolManager;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
 import lombok.RequiredArgsConstructor;
@@ -48,8 +47,6 @@ import org.springframework.web.filter.CorsFilter;
 public class SecurityConfig {
 
     private final TokenService tokenService;
-
-    private final RedisCacheService redisCache;
 
     /**
      * token认证过滤器
@@ -92,7 +89,7 @@ public class SecurityConfig {
             if (loginUser != null) {
                 String userName = loginUser.getUsername();
                 // 删除用户缓存记录
-                redisCache.loginUserCache.delete(loginUser.getCachedKey());
+                tokenService.removeLoginUser(loginUser);
                 // 记录用户退出日志
                 ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(
                     userName, LoginStatusEnum.LOGOUT, LoginStatusEnum.LOGOUT.description()));

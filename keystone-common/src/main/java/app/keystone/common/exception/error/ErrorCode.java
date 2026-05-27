@@ -106,6 +106,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 
         LOGIN_KEYLO_PROVISION_FAILED(10209, "Keylo用户注册失败：{}", "Business.LOGIN_KEYLO_PROVISION_FAILED"),
 
+        LOGIN_ACCOUNT_ALREADY_LOGGED_IN(10210, "该账号已经登录", "Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN"),
+
         UPLOAD_FILE_TYPE_NOT_ALLOWED(10401, "不允许上传的文件类型，仅允许：{}", "Business.UPLOAD_FILE_TYPE_NOT_ALLOWED"),
 
         UPLOAD_FILE_NAME_EXCEED_MAX_LENGTH(10402, "文件名长度超过：{} ", "Business.UPLOAD_FILE_NAME_EXCEED_MAX_LENGTH"),

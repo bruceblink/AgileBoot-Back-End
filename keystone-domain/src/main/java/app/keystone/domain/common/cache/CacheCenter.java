@@ -44,6 +44,10 @@ public class CacheCenter {
         return redisCacheService.loginUserCache;
     }
 
+    public static RedisCacheTemplate<String> loginAccountCache() {
+        return redisCacheService.loginAccountCache;
+    }
+
     public static RedisCacheTemplate<SysUserEntity> userCache() {
         return redisCacheService.userCache;
     }

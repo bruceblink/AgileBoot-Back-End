@@ -33,6 +33,7 @@ public class RedisCacheService {
 
     public RedisCacheTemplate<String> captchaCache;
     public RedisCacheTemplate<SystemLoginUser> loginUserCache;
+    public RedisCacheTemplate<String> loginAccountCache;
     public RedisCacheTemplate<SysUserEntity> userCache;
     public RedisCacheTemplate<SysRoleEntity> roleCache;
     public RedisCacheTemplate<SysPostEntity> postCache;
@@ -46,6 +47,8 @@ public class RedisCacheService {
         captchaCache = new RedisCacheTemplate<>(redisUtil, CacheKeyEnum.CAPTCHAT);
 
         loginUserCache = new RedisCacheTemplate<>(redisUtil, CacheKeyEnum.LOGIN_USER_KEY);
+
+        loginAccountCache = new RedisCacheTemplate<>(redisUtil, CacheKeyEnum.LOGIN_ACCOUNT_KEY);
 
         userCache = new RedisCacheTemplate<SysUserEntity>(redisUtil, CacheKeyEnum.USER_ENTITY_KEY) {
             @Override

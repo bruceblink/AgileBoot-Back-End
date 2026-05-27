@@ -3,7 +3,6 @@ package app.keystone.admin.customize.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import app.keystone.admin.customize.service.login.TokenService;
-import app.keystone.domain.common.cache.RedisCacheService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.mock.env.MockEnvironment;
@@ -46,7 +45,6 @@ class SecurityConfigSwaggerAccessTest {
         environment.setProperty("springdoc.swagger-ui.enabled", Boolean.toString(swaggerUiEnabled));
         return new SecurityConfig(
             Mockito.mock(TokenService.class),
-            Mockito.mock(RedisCacheService.class),
             Mockito.mock(JwtAuthenticationTokenFilter.class),
             Mockito.mock(UserDetailsService.class),
             Mockito.mock(CorsFilter.class),

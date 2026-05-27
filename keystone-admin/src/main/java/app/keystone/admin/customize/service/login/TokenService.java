@@ -3,6 +3,7 @@ package app.keystone.admin.customize.service.login;
 import app.keystone.common.constant.Constants.Token;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
+import app.keystone.common.exception.error.ErrorCode.Business;
 import app.keystone.domain.common.cache.RedisCacheService;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
 import io.jsonwebtoken.Claims;
@@ -114,6 +115,12 @@ public class TokenService {
         loginUser.setCachedKey(UUID.randomUUID().toString());
 
         redisCache.loginUserCache.set(loginUser.getCachedKey(), loginUser);
+        try {
+            occupyLoginAccount(loginUser);
+        } catch (RuntimeException e) {
+            redisCache.loginUserCache.delete(loginUser.getCachedKey());
+            throw e;
+        }
 
         return generateToken(Map.of(Token.LOGIN_USER_KEY, loginUser.getCachedKey()));
     }
@@ -128,7 +135,56 @@ public class TokenService {
             loginUser.setAutoRefreshCacheTime(currentTime + TimeUnit.MINUTES.toMillis(autoRefreshTime));
             // 根据uuid将loginUser存入缓存
             redisCache.loginUserCache.set(loginUser.getCachedKey(), loginUser);
+            redisCache.loginAccountCache.set(loginAccountCacheId(loginUser), loginUser.getCachedKey());
         }
+    }
+
+    public void removeLoginUser(SystemLoginUser loginUser) {
+        if (loginUser == null) {
+            return;
+        }
+        redisCache.loginUserCache.delete(loginUser.getCachedKey());
+        releaseLoginAccount(loginUser, loginUser.getCachedKey());
+    }
+
+    public void removeLoginUser(String cachedKey) {
+        SystemLoginUser loginUser = redisCache.loginUserCache.getObjectOnlyInCacheById(cachedKey);
+        redisCache.loginUserCache.delete(cachedKey);
+        if (loginUser != null) {
+            releaseLoginAccount(loginUser, cachedKey);
+        }
+    }
+
+    private void occupyLoginAccount(SystemLoginUser loginUser) {
+        String accountId = loginAccountCacheId(loginUser);
+        String existingCachedKey = redisCache.loginAccountCache.getObjectOnlyInCacheById(accountId);
+        if (existingCachedKey != null) {
+            SystemLoginUser existingLoginUser = redisCache.loginUserCache.getObjectOnlyInCacheById(existingCachedKey);
+            if (existingLoginUser != null) {
+                throw new ApiException(Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN);
+            }
+            redisCache.loginAccountCache.delete(accountId);
+        }
+
+        boolean occupied = redisCache.loginAccountCache.setIfAbsent(accountId, loginUser.getCachedKey());
+        if (!occupied) {
+            throw new ApiException(Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN);
+        }
+    }
+
+    private void releaseLoginAccount(SystemLoginUser loginUser, String cachedKey) {
+        String accountId = loginAccountCacheId(loginUser);
+        String currentCachedKey = redisCache.loginAccountCache.getObjectOnlyInCacheById(accountId);
+        if (cachedKey != null && cachedKey.equals(currentCachedKey)) {
+            redisCache.loginAccountCache.delete(accountId);
+        }
+    }
+
+    private String loginAccountCacheId(SystemLoginUser loginUser) {
+        if (loginUser.getUserId() != null) {
+            return loginUser.getUserId().toString();
+        }
+        return loginUser.getUsername();
     }
 
 
