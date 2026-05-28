@@ -129,7 +129,7 @@ public class LoginService {
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
         SystemLoginUser loginUser = (SystemLoginUser) authentication.getPrincipal();
-        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser);
+        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser, isForceLogin(loginCommand));
         return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
             issuedToken.getRefreshExpiresIn(), null, null, null, null);
     }
@@ -165,7 +165,7 @@ public class LoginService {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             loginUser, null, loginUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser);
+        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser, false);
         return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
             issuedToken.getRefreshExpiresIn(), keyloIdentity.getAccessToken(), keyloIdentity.getRefreshToken(),
             keyloIdentity.getExpiresIn(), keyloIdentity.getTokenType());
@@ -191,8 +191,8 @@ public class LoginService {
         tokenService.removeLoginUserByRefreshToken(refreshTokenCommand.getRefreshToken());
     }
 
-    private IssuedToken createTokenAndRecordLoginInfo(SystemLoginUser loginUser) {
-        IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser);
+    private IssuedToken createTokenAndRecordLoginInfo(SystemLoginUser loginUser, boolean forceLogin) {
+        IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser, forceLogin);
         try {
             recordLoginInfo(loginUser);
             return issuedToken;
@@ -200,6 +200,10 @@ public class LoginService {
             tokenService.removeLoginUser(loginUser);
             throw e;
         }
+    }
+
+    private boolean isForceLogin(LoginCommand loginCommand) {
+        return loginCommand != null && Boolean.TRUE.equals(loginCommand.getForceLogin());
     }
 
     @Data

@@ -117,6 +117,10 @@ public class TokenService {
      * @return 令牌
      */
     public IssuedToken createTokenAndPutUserInCache(SystemLoginUser loginUser) {
+        return createTokenAndPutUserInCache(loginUser, false);
+    }
+
+    public IssuedToken createTokenAndPutUserInCache(SystemLoginUser loginUser, boolean forceLogin) {
         String tokenId = UUID.randomUUID().toString();
         String refreshSessionId = UUID.randomUUID().toString();
         String refreshTokenSecret = UUID.randomUUID() + UUID.randomUUID().toString();
@@ -140,7 +144,7 @@ public class TokenService {
         refreshSession.setRevoked(false);
 
         try {
-            occupyLoginAccount(accountId, refreshSessionId);
+            occupyLoginAccount(accountId, refreshSessionId, forceLogin);
             redisCache.loginRefreshTokenCache.set(refreshSessionId, refreshSession, refreshCacheTimeoutSeconds(),
                 TimeUnit.SECONDS);
             redisCache.loginUserCache.set(tokenId, loginUser, tokenCacheTimeoutSeconds(), TimeUnit.SECONDS);
@@ -257,16 +261,18 @@ public class TokenService {
         }
     }
 
-    private void occupyLoginAccount(String accountId, String refreshSessionId) {
+    private void occupyLoginAccount(String accountId, String refreshSessionId, boolean forceLogin) {
         String existingRefreshSessionId = redisCache.loginAccountCache.getObjectOnlyInRedisById(accountId);
         if (existingRefreshSessionId != null) {
             LoginRefreshSession existingRefreshSession =
                 redisCache.loginRefreshTokenCache.getObjectOnlyInRedisById(existingRefreshSessionId);
             if (isRefreshSessionActive(existingRefreshSession)) {
-                throw new ApiException(Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN);
-            }
-            redisCache.loginAccountCache.delete(accountId);
-            if (existingRefreshSessionId != null) {
+                if (!forceLogin) {
+                    throw new ApiException(Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN);
+                }
+                revokeRefreshSession(existingRefreshSession);
+            } else {
+                redisCache.loginAccountCache.delete(accountId);
                 redisCache.loginRefreshTokenCache.delete(existingRefreshSessionId);
             }
         }

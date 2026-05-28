@@ -107,7 +107,7 @@ class LoginServiceKeyloLoginTest {
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, true, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         when(userDetailsService.buildLoginUser(mappedUser)).thenReturn(loginUser);
-        when(tokenService.createTokenAndPutUserInCache(loginUser))
+        when(tokenService.createTokenAndPutUserInCache(loginUser, false))
             .thenReturn(new IssuedToken("keystone-token", "refresh-token", 1800L, 604800L));
 
         SysUserEntity cachedUser = new SysUserEntity() {
@@ -164,7 +164,7 @@ class LoginServiceKeyloLoginTest {
         org.springframework.security.authentication.UsernamePasswordAuthenticationToken authentication =
             new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
-        when(tokenService.createTokenAndPutUserInCache(loginUser))
+        when(tokenService.createTokenAndPutUserInCache(loginUser, false))
             .thenReturn(new IssuedToken("local-token", "refresh-token", 1800L, 604800L));
 
         SysUserEntity cachedUser = new SysUserEntity() {
@@ -241,7 +241,7 @@ class LoginServiceKeyloLoginTest {
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, true, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         when(userDetailsService.buildLoginUser(mappedUser)).thenReturn(loginUser);
-        when(tokenService.createTokenAndPutUserInCache(loginUser))
+        when(tokenService.createTokenAndPutUserInCache(loginUser, false))
             .thenReturn(new IssuedToken("keystone-token", "refresh-token", 1800L, 604800L));
 
         SysUserEntity cachedUser = new SysUserEntity() {
@@ -278,8 +278,36 @@ class LoginServiceKeyloLoginTest {
             assertEquals("access", result.getKeyloTokenType());
             assertNotNull(SecurityContextHolder.getContext().getAuthentication());
             assertEquals(loginUser, SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-            verify(tokenService, times(1)).createTokenAndPutUserInCache(loginUser);
+            verify(tokenService, times(1)).createTokenAndPutUserInCache(loginUser, false);
         }
+    }
+
+    @Test
+    void login_shouldPassForceLoginToTokenService_whenLocalAuthSucceeds() throws Exception {
+        setAuthMode(loginService, "local");
+        when(keyloProperties.isEnabled()).thenReturn(false);
+        when(sysConfigService.getConfigValueByKey("sys.account.captchaOnOff")).thenReturn("false");
+        doNothing().when(loginService).recordLoginInfo(any(SystemLoginUser.class));
+
+        LoginCommand command = new LoginCommand();
+        command.setUsername("admin");
+        command.setPassword("plain-password");
+        command.setForceLogin(true);
+
+        doReturn("plain-password").when(loginService).decryptPassword("plain-password");
+
+        SystemLoginUser loginUser = new SystemLoginUser(1L, true, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken authentication =
+            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(loginUser, null,
+                loginUser.getAuthorities());
+        when(authenticationManager.authenticate(any())).thenReturn(authentication);
+        when(tokenService.createTokenAndPutUserInCache(loginUser, true))
+            .thenReturn(new IssuedToken("local-token", "refresh-token", 1800L, 604800L));
+
+        LoginResult result = loginService.login(command);
+
+        assertEquals("local-token", result.getToken());
+        verify(tokenService).createTokenAndPutUserInCache(loginUser, true);
     }
 
     @Test
