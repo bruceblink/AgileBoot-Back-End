@@ -6,6 +6,71 @@ Keystone 当前使用短期 JWT 作为访问令牌，JWT 中保存 `login_user_k
 
 这能解决 Web 端 token 过期后账号占用残留的问题，但对桌面客户端不够友好。桌面客户端通常需要长时间运行，不能因为 access token 到期就频繁要求用户重新输入账号密码。因此需要引入完整的 refresh token 机制，而不是恢复“只刷新 Redis、不刷新 JWT”的旧逻辑。
 
+## 术语表
+
+| 术语 | 说明 |
+| --- | --- |
+| access token | 客户端调用 Keystone API 时携带的短期访问令牌。当前实现中它是 JWT，放在 `Authorization: Bearer <token>` 请求头中。 |
+| refresh token | 客户端用于换取新 access token 的长期凭证。它不直接用于调用业务 API，只用于 `/refresh-token`。 |
+| JWT | JSON Web Token。Keystone 的 access token 使用 JWT 格式，服务端可以校验签名、读取过期时间和 `login_user_key` 等 claim。 |
+| claim | JWT 中保存的键值数据，例如 `login_user_key`、`login_user_id`、`exp`。 |
+| tokenId | Keystone 生成的 access token 会话 ID，保存在 JWT 的 `login_user_key` claim 中，也是 Redis `login_tokens:{tokenId}` 的后缀。 |
+| refreshTokenId | Keystone 生成的 refresh 会话 ID，用于定位 Redis 中的 `login_refresh_tokens:{refreshTokenId}`。它不是 refresh token 明文。 |
+| refresh token 明文 | 返回给客户端保存的随机字符串。客户端刷新时提交它；服务端不应在 Redis 中保存明文。 |
+| refreshTokenHash | refresh token 明文经过哈希后的值，服务端保存在 Redis 中，用于刷新时比对。 |
+| refresh 会话 | 服务端保存的一条长期登录状态记录，Redis key 为 `login_refresh_tokens:{refreshTokenId}`。它把 refresh token、当前 access token、账号占用、过期时间和撤销状态关联起来。 |
+| accountId | 单账号登录占用 ID。优先使用 `sys_user.user_id`，缺失时使用 `username` 兜底。 |
+| login session | Keystone 登录会话。本文中指一个 refresh token 会话以及它当前关联的 access token。 |
+| 单账号占用 | Redis 中 `login_accounts:{accountId}` 记录某账号当前在线会话，用于拒绝第二次登录。 |
+| token rotation | refresh token 轮换。每次刷新时服务端返回新的 refresh token，并使旧 refresh token 失效。 |
+| token replay | refresh token 重放。旧 refresh token 已被轮换或撤销后再次被使用，通常表示客户端并发异常或凭证泄露风险。 |
+| 单飞刷新 | 客户端并发请求同时遇到 token 失效时，只发起一次 `/refresh-token`，其它请求等待刷新结果。 |
+
+## 核心概念
+
+### access token 与 refresh token 的区别
+
+access token 是“访问 API 的临时通行证”，有效期短，泄露后的风险窗口也短。它会被频繁放进请求头，因此不适合设计得太长。
+
+refresh token 是“重新获取 access token 的长期凭证”，有效期更长，使用频率更低，必须更谨慎保存。它不应该出现在普通业务 API 请求中，也不应该写入日志。
+
+### tokenId 与 refreshTokenId 的区别
+
+`tokenId` 表示一次短期 access token 会话。每次刷新 access token 都会生成新的 `tokenId`，旧的 `login_tokens:{oldTokenId}` 应被删除。
+
+`refreshTokenId` 表示一次长期登录会话。只要用户没有退出、没有被强退、refresh token 没有过期，这个 ID 可以在多次 access token 刷新之间保持稳定。
+
+文档中提到的“refresh 会话”就是 `refreshTokenId` 对应的服务端状态对象。它不是客户端手里的 refresh token 明文，而是服务端用来管理长期登录状态的记录。
+
+因此：
+
+```text
+一个 refreshTokenId
+  -> 同一时间只关联一个 currentTokenId
+  -> 每次刷新都会替换 currentTokenId
+```
+
+### 单账号占用为什么绑定 refreshTokenId
+
+如果 `login_accounts:{accountId}` 绑定短期 `tokenId`，access token 刷新后账号占用也必须频繁更新，容易出现旧 token 已删、新 token 未写入之间的短暂不一致。
+
+绑定 `refreshTokenId` 更稳定，因为它代表完整登录会话，而不是某一次短期 access token。只要 refresh 会话有效，就认为该账号在线。
+
+### 为什么 refresh token 不直接用 JWT
+
+refresh token 可以使用 JWT，但 Keystone 更适合使用随机字符串加服务端 Redis 状态：
+
+1. 服务端可以立即撤销 refresh token。
+2. 服务端可以检测 token rotation 后的重放。
+3. Redis 中只保存哈希，即使 Redis 泄露也不能直接拿来刷新。
+4. 单账号登录状态天然需要服务端状态，使用随机 refresh token 更直接。
+
+### 过期和撤销的区别
+
+过期是自然失效，由 TTL 或 `expiresAt` 控制。撤销是人为失效，例如用户主动退出、管理员强退、检测到 refresh token 重放。
+
+客户端不需要区分两者的 UI 行为：都应进入重新登录流程。但服务端日志应区分，以便排查安全问题和用户行为。
+
 ## 目标
 
 1. Web 端和桌面客户端都可以在 access token 过期前或收到认证失败后刷新 token。
@@ -29,6 +94,46 @@ Keystone 当前使用短期 JWT 作为访问令牌，JWT 中保存 `login_user_k
 
 access token 仍是 JWT。refresh token 建议使用高熵随机字符串，不使用 JWT，服务端只保存其哈希值，避免 Redis 泄露时可直接使用明文 refresh token。
 
+access token 的有效期决定“单次 API 访问凭证多久失效”。refresh token 的有效期决定“用户最多可以保持登录多久”。例如 access token 30 分钟、refresh token 7 天，表示客户端最多每 30 分钟需要刷新一次，但 7 天内无需重新输入账号密码。
+
+## Refresh 会话有效期策略
+
+refresh 会话的有效期和 refresh token 有效期绑定，由 `token.refreshExpirationSeconds` 控制。默认值建议为 7 天：
+
+```yaml
+token:
+  refreshExpirationSeconds: 604800
+```
+
+默认策略是固定有效期：用户从登录成功开始最多保持登录 7 天。期间即使客户端持续刷新 access token，refresh 会话的最终过期时间也不变。到达 `expiresAt` 后，refresh token 失效，客户端必须重新登录。
+
+固定有效期下：
+
+| 对象 | 有效期来源 | 是否随刷新延长 |
+| --- | --- | --- |
+| `login_tokens:{tokenId}` | `token.expirationSeconds` | 每次刷新 access token 都生成新 key 和新 TTL |
+| `login_refresh_tokens:{refreshTokenId}` | `token.refreshExpirationSeconds` 和固定 `expiresAt` | 否 |
+| `login_accounts:{accountId}` | 与 refresh 会话一致 | 否 |
+
+也允许配置为滚动刷新 refresh token。启用后，每次 `/refresh-token` 成功都会把 refresh 会话有效期向后延长一个 `token.refreshExpirationSeconds` 周期，适合需要“只要持续使用就不掉线”的桌面客户端场景。
+
+建议配置项：
+
+```yaml
+token:
+  refreshSlidingExpirationEnabled: false
+```
+
+滚动刷新开启后：
+
+| 对象 | 有效期来源 | 是否随刷新延长 |
+| --- | --- | --- |
+| `login_tokens:{tokenId}` | `token.expirationSeconds` | 是，生成新 access token 时重建 |
+| `login_refresh_tokens:{refreshTokenId}` | `now + token.refreshExpirationSeconds` | 是 |
+| `login_accounts:{accountId}` | 与 refresh 会话一致 | 是 |
+
+无论是否启用滚动刷新，服务端都必须在 refresh 会话对象中保存明确的 `expiresAt`。Redis TTL 只是自动清理手段，业务判断应以 `expiresAt` 和 `revoked` 为准。
+
 ## Redis Key 设计
 
 新增和调整以下 key：
@@ -51,6 +156,23 @@ refresh token 会话对象建议字段：
 | `issuedAt` | 签发时间 |
 | `expiresAt` | refresh token 过期时间 |
 | `revoked` | 是否已撤销 |
+
+三类 key 的关系：
+
+```text
+login_accounts:{accountId}
+  -> refreshTokenId
+
+login_refresh_tokens:{refreshTokenId}
+  -> currentTokenId
+  -> refreshTokenHash
+  -> accountId
+
+login_tokens:{currentTokenId}
+  -> SystemLoginUser
+```
+
+服务端判断账号是否在线时，应以 `login_accounts:{accountId}` 指向的 refresh 会话是否有效为准。服务端处理 API 请求时，应以 access token 中的 `tokenId` 是否能查到 `login_tokens:{tokenId}` 为准。
 
 ## 登录流程
 
@@ -93,6 +215,8 @@ Content-Type: application/json
 
 成功响应和登录响应保持同一结构，至少返回新的 access token；推荐同时轮换 refresh token。
 
+刷新接口不需要携带有效 access token。原因是调用刷新接口时，access token 可能已经过期。刷新接口的身份依据是 refresh token 本身。
+
 刷新流程：
 
 1. 校验 refresh token 格式并计算哈希。
@@ -120,6 +244,8 @@ Content-Type: application/json
 
 第一阶段如果要降低改造范围，可以不轮换 refresh token，但必须保证退出登录、监控强退、过期清理能撤销 refresh 会话。
 
+如果启用轮换，客户端必须保证“保存新 token”是原子操作：收到刷新响应后，access token 和 refresh token 要一起替换。如果只替换了 access token，没有替换 refresh token，下一次刷新会使用旧 refresh token，服务端可能判断为重放。
+
 ## 并发控制
 
 ### 服务端
@@ -142,6 +268,8 @@ Web 端 axios 拦截器需要保持单飞刷新：
 4. 刷新成功后替换本地 token，并重放队列请求。
 5. 刷新失败后清理本地登录态并跳转登录页。
 
+Web 端不建议每个请求都主动检查过期时间。更简单的策略是：请求失败后由拦截器统一刷新。但如果页面存在长轮询、大文件上传、后台定时任务，也可以在请求前发现 access token 快过期时主动刷新。
+
 ### 桌面客户端
 
 桌面客户端建议采用主动刷新：
@@ -151,6 +279,8 @@ Web 端 axios 拦截器需要保持单飞刷新：
 3. 如果调用 API 收到认证失败，再尝试一次刷新。
 4. 刷新失败后进入未登录状态，提示用户重新登录。
 5. refresh token 应存放在系统安全存储中，例如 Windows Credential Manager，而不是明文配置文件。
+
+桌面客户端建议采用主动刷新，是因为它可能长时间没有用户交互，等 API 报错后再刷新会影响后台任务。主动刷新失败时，客户端应暂停需要认证的任务，并把状态切换为“需要重新登录”。
 
 ## 退出登录
 
@@ -179,6 +309,13 @@ POST /logout-refresh-token
 
 用于桌面客户端或 Web 端在 access token 已失效时主动释放 refresh 会话。
 
+两种退出接口的职责边界：
+
+| 接口 | 适用场景 | 身份依据 |
+| --- | --- | --- |
+| `/logout` | access token 仍有效时正常退出 | `Authorization` 中的 access token |
+| `/logout-refresh-token` | access token 已失效但客户端仍持有 refresh token | 请求体中的 refresh token |
+
 ## 监控强退
 
 在线用户列表应从 refresh 会话维度展示，而不是只展示短期 access token：
@@ -202,6 +339,7 @@ token:
   expirationSeconds: 1800
   refreshExpirationSeconds: 604800
   refreshRotationEnabled: true
+  refreshSlidingExpirationEnabled: false
   refreshLockSeconds: 10
 ```
 
@@ -210,8 +348,9 @@ token:
 | 配置 | 默认值 | 说明 |
 | --- | --- | --- |
 | `token.expirationSeconds` | `1800` | access token 有效期 |
-| `token.refreshExpirationSeconds` | `604800` | refresh token 有效期 |
+| `token.refreshExpirationSeconds` | `604800` | refresh token / refresh 会话有效期，默认 7 天 |
 | `token.refreshRotationEnabled` | `true` | 是否每次刷新都轮换 refresh token |
+| `token.refreshSlidingExpirationEnabled` | `false` | 是否在每次刷新成功后滚动延长 refresh 会话有效期 |
 | `token.refreshLockSeconds` | `10` | 单个 refresh 会话刷新锁过期时间 |
 
 ## 客户端协议
@@ -232,6 +371,8 @@ Web 登录后保存：
 
 响应拦截器刷新成功后必须原子替换本地 token 数据。刷新失败时调用统一的本地会话清理逻辑并跳转 `/login`。
 
+Web 端保存 refresh token 有 XSS 风险。当前前端已经使用 JS 管理 token，因此第一阶段可以继续沿用现有存储方式；后续如要进一步加固，可以评估 HttpOnly Cookie，但这会影响跨域、CSRF、防重放等配套设计。
+
 ### 桌面客户端
 
 桌面客户端登录后保存：
@@ -244,6 +385,8 @@ Web 登录后保存：
 | refresh token 过期时间 | 本地配置或内存 |
 
 桌面客户端启动时，如果 refresh token 仍存在，可以先调用 `/refresh-token` 获取新的 access token，而不是要求用户重新输入密码。
+
+桌面客户端不要把 refresh token 写入普通日志、崩溃报告、调试输出或明文配置文件。刷新失败时也不要把 refresh token 拼进错误消息。
 
 ## 错误码建议
 
