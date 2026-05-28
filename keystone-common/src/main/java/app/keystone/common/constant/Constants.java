@@ -52,6 +52,11 @@ public class Constants {
          */
         public static final String LOGIN_USERNAME = "login_username";
 
+        /**
+         * refresh 会话ID
+         */
+        public static final String LOGIN_REFRESH_SESSION_ID = "login_refresh_session_id";
+
     }
 
     public static class Captcha {

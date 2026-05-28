@@ -2,6 +2,7 @@ package app.keystone.domain.common.cache;
 
 import app.keystone.infrastructure.cache.caffeine.AbstractCaffeineCacheTemplate;
 import app.keystone.infrastructure.cache.redis.RedisCacheTemplate;
+import app.keystone.infrastructure.user.web.LoginRefreshSession;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
 import app.keystone.domain.system.dept.db.SysDeptEntity;
 import app.keystone.domain.system.dict.db.SysDictDataEntity;
@@ -42,6 +43,14 @@ public class CacheCenter {
 
     public static RedisCacheTemplate<SystemLoginUser> loginUserCache() {
         return redisCacheService.loginUserCache;
+    }
+
+    public static RedisCacheTemplate<LoginRefreshSession> loginRefreshTokenCache() {
+        return redisCacheService.loginRefreshTokenCache;
+    }
+
+    public static RedisCacheTemplate<String> loginRefreshLockCache() {
+        return redisCacheService.loginRefreshLockCache;
     }
 
     public static RedisCacheTemplate<String> loginAccountCache() {

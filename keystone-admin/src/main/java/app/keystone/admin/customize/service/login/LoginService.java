@@ -3,9 +3,11 @@ package app.keystone.admin.customize.service.login;
 import app.keystone.admin.customize.async.AsyncTaskFactory;
 import app.keystone.admin.customize.service.login.command.KeyloLoginCommand;
 import app.keystone.admin.customize.service.login.command.LoginCommand;
+import app.keystone.admin.customize.service.login.command.RefreshTokenCommand;
 import app.keystone.admin.customize.service.login.dto.CaptchaDTO;
 import app.keystone.admin.customize.service.login.dto.ConfigDTO;
 import app.keystone.admin.customize.service.login.dto.RsaPublicKeyDTO;
+import app.keystone.admin.customize.service.login.TokenService.IssuedToken;
 import app.keystone.admin.customize.service.login.keylo.KeyloCredentialVerifier;
 import app.keystone.admin.customize.service.login.keylo.KeyloLoginUserResolver;
 import app.keystone.admin.customize.service.login.keylo.KeyloProperties;
@@ -127,8 +129,9 @@ public class LoginService {
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
         SystemLoginUser loginUser = (SystemLoginUser) authentication.getPrincipal();
-        String token = createTokenAndRecordLoginInfo(loginUser);
-        return new LoginResult(token, null, null, null, null);
+        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser);
+        return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
+            issuedToken.getRefreshExpiresIn(), null, null, null, null);
     }
 
     public LoginResult keyloLogin(KeyloLoginCommand keyloLoginCommand) {
@@ -162,8 +165,9 @@ public class LoginService {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             loginUser, null, loginUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String token = createTokenAndRecordLoginInfo(loginUser);
-        return new LoginResult(token, keyloIdentity.getAccessToken(), keyloIdentity.getRefreshToken(),
+        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser);
+        return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
+            issuedToken.getRefreshExpiresIn(), keyloIdentity.getAccessToken(), keyloIdentity.getRefreshToken(),
             keyloIdentity.getExpiresIn(), keyloIdentity.getTokenType());
     }
 
@@ -171,11 +175,27 @@ public class LoginService {
         return keyloLoginUserResolver.resolve(keyloIdentity);
     }
 
-    private String createTokenAndRecordLoginInfo(SystemLoginUser loginUser) {
-        String token = tokenService.createTokenAndPutUserInCache(loginUser);
+    public LoginResult refreshToken(RefreshTokenCommand refreshTokenCommand) {
+        if (refreshTokenCommand == null || !StringUtils.hasText(refreshTokenCommand.getRefreshToken())) {
+            throw new ApiException(ErrorCode.Client.COMMON_REQUEST_PARAMETERS_INVALID, "refreshToken is required");
+        }
+        IssuedToken issuedToken = tokenService.refreshAccessToken(refreshTokenCommand.getRefreshToken());
+        return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
+            issuedToken.getRefreshExpiresIn(), null, null, null, null);
+    }
+
+    public void logoutRefreshToken(RefreshTokenCommand refreshTokenCommand) {
+        if (refreshTokenCommand == null || !StringUtils.hasText(refreshTokenCommand.getRefreshToken())) {
+            return;
+        }
+        tokenService.removeLoginUserByRefreshToken(refreshTokenCommand.getRefreshToken());
+    }
+
+    private IssuedToken createTokenAndRecordLoginInfo(SystemLoginUser loginUser) {
+        IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser);
         try {
             recordLoginInfo(loginUser);
-            return token;
+            return issuedToken;
         } catch (RuntimeException e) {
             tokenService.removeLoginUser(loginUser);
             throw e;
@@ -187,6 +207,12 @@ public class LoginService {
     public static class LoginResult {
 
         private String token;
+
+        private String refreshToken;
+
+        private Long expiresIn;
+
+        private Long refreshExpiresIn;
 
         private String keyloAccessToken;
 

@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import app.keystone.admin.customize.service.login.LoginService.LoginResult;
+import app.keystone.admin.customize.service.login.TokenService.IssuedToken;
 import app.keystone.admin.customize.service.login.command.KeyloLoginCommand;
 import app.keystone.admin.customize.service.login.command.LoginCommand;
 import app.keystone.admin.customize.service.login.keylo.KeyloCredentialVerifier;
@@ -106,7 +107,8 @@ class LoginServiceKeyloLoginTest {
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, true, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         when(userDetailsService.buildLoginUser(mappedUser)).thenReturn(loginUser);
-        when(tokenService.createTokenAndPutUserInCache(loginUser)).thenReturn("keystone-token");
+        when(tokenService.createTokenAndPutUserInCache(loginUser))
+            .thenReturn(new IssuedToken("keystone-token", "refresh-token", 1800L, 604800L));
 
         SysUserEntity cachedUser = new SysUserEntity() {
             @Override
@@ -133,6 +135,9 @@ class LoginServiceKeyloLoginTest {
             LoginResult result = loginService.login(command);
 
             assertEquals("keystone-token", result.getToken());
+            assertEquals("refresh-token", result.getRefreshToken());
+            assertEquals(1800L, result.getExpiresIn());
+            assertEquals(604800L, result.getRefreshExpiresIn());
             assertEquals("keylo-access-token", result.getKeyloAccessToken());
             assertNull(result.getKeyloRefreshToken());
             assertEquals(3600L, result.getKeyloExpiresIn());
@@ -159,7 +164,8 @@ class LoginServiceKeyloLoginTest {
         org.springframework.security.authentication.UsernamePasswordAuthenticationToken authentication =
             new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
-        when(tokenService.createTokenAndPutUserInCache(loginUser)).thenReturn("local-token");
+        when(tokenService.createTokenAndPutUserInCache(loginUser))
+            .thenReturn(new IssuedToken("local-token", "refresh-token", 1800L, 604800L));
 
         SysUserEntity cachedUser = new SysUserEntity() {
             @Override
@@ -186,6 +192,9 @@ class LoginServiceKeyloLoginTest {
             LoginResult result = loginService.login(command);
 
             assertEquals("local-token", result.getToken());
+            assertEquals("refresh-token", result.getRefreshToken());
+            assertEquals(1800L, result.getExpiresIn());
+            assertEquals(604800L, result.getRefreshExpiresIn());
             assertNull(result.getKeyloAccessToken());
             assertNull(result.getKeyloRefreshToken());
             assertNull(result.getKeyloExpiresIn());
@@ -232,7 +241,8 @@ class LoginServiceKeyloLoginTest {
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, true, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         when(userDetailsService.buildLoginUser(mappedUser)).thenReturn(loginUser);
-        when(tokenService.createTokenAndPutUserInCache(loginUser)).thenReturn("keystone-token");
+        when(tokenService.createTokenAndPutUserInCache(loginUser))
+            .thenReturn(new IssuedToken("keystone-token", "refresh-token", 1800L, 604800L));
 
         SysUserEntity cachedUser = new SysUserEntity() {
             @Override
@@ -259,6 +269,9 @@ class LoginServiceKeyloLoginTest {
             LoginResult result = loginService.keyloLogin(command);
 
             assertEquals("keystone-token", result.getToken());
+            assertEquals("refresh-token", result.getRefreshToken());
+            assertEquals(1800L, result.getExpiresIn());
+            assertEquals(604800L, result.getRefreshExpiresIn());
             assertEquals("mock-token", result.getKeyloAccessToken());
             assertNull(result.getKeyloRefreshToken());
             assertNull(result.getKeyloExpiresIn());

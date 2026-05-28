@@ -130,7 +130,8 @@ public class SecurityConfig {
             // 过滤请求
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(
-                        "/login", "/login/keylo", "/register", "/getConfig", "/health", "/captchaImage"
+                        "/login", "/login/keylo", "/refresh-token", "/logout-refresh-token", "/register", "/getConfig",
+                        "/health", "/captchaImage"
                     ).anonymous()
                     .requestMatchers("/login/rsa-public-key").permitAll()
                     .requestMatchers("/druid/**").authenticated();

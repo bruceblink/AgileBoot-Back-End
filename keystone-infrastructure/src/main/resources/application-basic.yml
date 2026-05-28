@@ -109,6 +109,9 @@ token:
   header: Authorization
   secret: ${TOKEN_SECRET:sdhfkjshBN6rr32df38}
   expirationSeconds: 1800
+  refreshExpirationSeconds: ${TOKEN_REFRESH_EXPIRATION_SECONDS:604800}
+  refreshSlidingExpirationEnabled: ${TOKEN_REFRESH_SLIDING_EXPIRATION_ENABLED:false}
+  refreshLockSeconds: ${TOKEN_REFRESH_LOCK_SECONDS:10}
 
 # ---- MyBatis-Plus ----
 mybatis-plus:

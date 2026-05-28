@@ -14,6 +14,12 @@ public class TokenDTO {
 
     private String token;
 
+    private String refreshToken;
+
+    private Long expiresIn;
+
+    private Long refreshExpiresIn;
+
     private CurrentLoginUserDTO currentUser;
 
     private String keyloAccessToken;

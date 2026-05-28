@@ -43,6 +43,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     private final KeyloTokenVerifier keyloTokenVerifier;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "/refresh-token".equals(request.getServletPath())
+            || "/logout-refresh-token".equals(request.getServletPath());
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
         throws ServletException, IOException {
         SystemLoginUser loginUser = getLoginUser(request);
