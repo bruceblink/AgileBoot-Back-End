@@ -147,7 +147,7 @@ public class LoginService {
 
         log.warn("Deprecated /login/keylo endpoint was used. Please migrate clients to /login.");
         KeyloTokenIdentity keyloIdentity = keyloTokenVerifier.verify(keyloLoginCommand.getAccessToken());
-        return buildTokenByKeyloIdentity(keyloIdentity);
+        return buildTokenByKeyloIdentity(keyloIdentity, isForceLogin(keyloLoginCommand));
     }
 
     private LoginResult loginByKeyloCredential(LoginCommand loginCommand) {
@@ -157,15 +157,15 @@ public class LoginService {
 
         String password = decryptPassword(loginCommand.getPassword());
         KeyloTokenIdentity keyloIdentity = keyloCredentialVerifier.verify(loginCommand.getUsername(), password);
-        return buildTokenByKeyloIdentity(keyloIdentity);
+        return buildTokenByKeyloIdentity(keyloIdentity, isForceLogin(loginCommand));
     }
 
-    private LoginResult buildTokenByKeyloIdentity(KeyloTokenIdentity keyloIdentity) {
+    private LoginResult buildTokenByKeyloIdentity(KeyloTokenIdentity keyloIdentity, boolean forceLogin) {
         SystemLoginUser loginUser = buildLoginUserByKeyloIdentity(keyloIdentity);
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             loginUser, null, loginUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser, false);
+        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser, forceLogin);
         return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
             issuedToken.getRefreshExpiresIn(), keyloIdentity.getAccessToken(), keyloIdentity.getRefreshToken(),
             keyloIdentity.getExpiresIn(), keyloIdentity.getTokenType());
@@ -204,6 +204,10 @@ public class LoginService {
 
     private boolean isForceLogin(LoginCommand loginCommand) {
         return loginCommand != null && Boolean.TRUE.equals(loginCommand.getForceLogin());
+    }
+
+    private boolean isForceLogin(KeyloLoginCommand keyloLoginCommand) {
+        return keyloLoginCommand != null && Boolean.TRUE.equals(keyloLoginCommand.getForceLogin());
     }
 
     @Data

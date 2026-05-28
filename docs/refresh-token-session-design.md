@@ -176,7 +176,7 @@ login_tokens:{currentTokenId}
 
 ## 登录流程
 
-1. 本地认证或 Keylo 凭证认证成功后，构建 `SystemLoginUser`。
+1. 本地认证、Keylo 凭证认证或 `/login/keylo` 兼容 token 认证成功后，构建 `SystemLoginUser`。
 2. 检查 `login_accounts:{accountId}`：
    - 不存在：允许创建新 refresh token 会话。
    - 存在：读取 `login_refresh_tokens:{refreshTokenId}`。
@@ -214,20 +214,21 @@ login_tokens:{currentTokenId}
 
 接管流程：
 
-1. 客户端正常提交 `/login`。
-2. 后端完成账号密码认证后发现已有有效 refresh 会话，返回“该账号已经登录”。
+1. 客户端正常提交 Keystone 登录请求。
+2. 后端完成对应登录入口的身份认证后发现已有有效 refresh 会话，返回“该账号已经登录”。
 3. 客户端弹出确认框，明确说明继续登录会踢出旧会话。
-4. 用户确认后，客户端再次提交 `/login`，请求体中带 `forceLogin=true`。
-5. 后端再次完成账号密码认证。
+4. 用户确认后，客户端再次提交登录请求，请求体中带 `forceLogin=true`。
+5. 后端再次完成身份认证。
 6. 认证通过后，后端撤销旧 refresh 会话，删除旧 `login_tokens:{tokenId}` 和 `login_accounts:{accountId}`。
 7. 后端创建新的 refresh 会话并返回新的 access token / refresh token。
 
 安全边界：
 
-1. `forceLogin=true` 只能在账号密码认证通过后生效。
+1. `forceLogin=true` 只能在对应登录入口认证通过后生效；它不是独立的强退接口。
 2. 服务端不能因为已有会话残留就自动覆盖旧会话。
-3. Keylo 兼容 token 登录不使用该接管流程，避免第三方 token 入口静默踢出已有 Keystone 会话。
-4. 如果启用了验证码，第一次登录失败后验证码已被消费；客户端应重新获取验证码并让用户再次提交强制登录请求。
+3. 直接携带 Keylo accessToken 访问受保护接口的临时主体不属于 Keystone refresh 会话，不能触发接管。
+4. `/login/keylo` 是兼容登录入口，会签发 Keystone refresh 会话；只有请求显式携带 `forceLogin=true` 且 Keylo token 校验通过后，才允许接管旧 Keystone 会话。
+5. 如果启用了验证码，第一次登录失败后验证码已被消费；客户端应重新获取验证码并让用户再次提交强制登录请求。
 
 ## 刷新接口
 

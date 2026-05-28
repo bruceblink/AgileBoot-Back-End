@@ -169,7 +169,7 @@ public class TokenService {
             String currentAccountSessionId =
                 redisCache.loginAccountCache.getObjectOnlyInRedisById(refreshSession.getAccountId());
             if (!refreshSession.getRefreshSessionId().equals(currentAccountSessionId)) {
-                revokeRefreshSession(refreshSession);
+                forceLogoutRefreshSession(refreshSession);
                 throw invalidRefreshToken();
             }
 
@@ -213,7 +213,7 @@ public class TokenService {
         }
         String tokenHash = hashRefreshToken(parsedRefreshToken.refreshTokenSecret());
         if (tokenHash.equals(refreshSession.getRefreshTokenHash())) {
-            revokeRefreshSession(refreshSession);
+            forceLogoutRefreshSession(refreshSession);
         }
     }
 
@@ -221,7 +221,7 @@ public class TokenService {
         if (loginUser == null) {
             return;
         }
-        if (!revokeRefreshSession(loginUser, loginUser.getCachedKey())) {
+        if (!forceLogoutByTokenId(loginUser.getCachedKey(), loginUser)) {
             redisCache.loginUserCache.delete(loginUser.getCachedKey());
         }
     }
@@ -241,22 +241,21 @@ public class TokenService {
         String refreshSessionId = (String) claims.get(Token.LOGIN_REFRESH_SESSION_ID);
 
         if (loginUser != null) {
-            if (!revokeRefreshSession(refreshSessionId, loginUser, cachedKey)) {
+            if (!forceLogoutByTokenId(cachedKey, refreshSessionId, loginUser)) {
                 redisCache.loginUserCache.delete(cachedKey);
             }
             return loginUser;
         }
 
         String accountId = loginAccountCacheId(claims);
-        if (!revokeRefreshSession(refreshSessionId, accountId, cachedKey)) {
+        if (!forceLogoutByTokenId(cachedKey, refreshSessionId, accountId)) {
             redisCache.loginUserCache.delete(cachedKey);
         }
         return null;
     }
 
     public void removeLoginUser(String cachedKey) {
-        SystemLoginUser loginUser = redisCache.loginUserCache.getObjectOnlyInCacheById(cachedKey);
-        if (loginUser == null || !revokeRefreshSession(loginUser, cachedKey)) {
+        if (!forceLogoutByTokenId(cachedKey)) {
             redisCache.loginUserCache.delete(cachedKey);
         }
     }
@@ -270,7 +269,7 @@ public class TokenService {
                 if (!forceLogin) {
                     throw new ApiException(Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN);
                 }
-                revokeRefreshSession(existingRefreshSession);
+                forceLogoutRefreshSession(existingRefreshSession);
             } else {
                 redisCache.loginAccountCache.delete(accountId);
                 redisCache.loginRefreshTokenCache.delete(existingRefreshSessionId);
@@ -284,16 +283,24 @@ public class TokenService {
         }
     }
 
-    private boolean revokeRefreshSession(SystemLoginUser loginUser, String tokenId) {
-        return revokeRefreshSession(null, loginUser, tokenId);
+    private boolean forceLogoutByTokenId(String tokenId) {
+        SystemLoginUser loginUser = redisCache.loginUserCache.getObjectOnlyInCacheById(tokenId);
+        if (loginUser == null) {
+            return false;
+        }
+        return forceLogoutByTokenId(tokenId, loginUser);
     }
 
-    private boolean revokeRefreshSession(String refreshSessionId, SystemLoginUser loginUser, String tokenId) {
+    private boolean forceLogoutByTokenId(String tokenId, SystemLoginUser loginUser) {
+        return forceLogoutByTokenId(tokenId, null, loginUser);
+    }
+
+    private boolean forceLogoutByTokenId(String tokenId, String refreshSessionId, SystemLoginUser loginUser) {
         String accountId = loginUser == null ? null : loginAccountCacheId(loginUser);
-        return revokeRefreshSession(refreshSessionId, accountId, tokenId);
+        return forceLogoutByTokenId(tokenId, refreshSessionId, accountId);
     }
 
-    private boolean revokeRefreshSession(String refreshSessionId, String accountId, String tokenId) {
+    private boolean forceLogoutByTokenId(String tokenId, String refreshSessionId, String accountId) {
         LoginRefreshSession refreshSession = null;
         if (refreshSessionId != null && !refreshSessionId.isBlank()) {
             refreshSession = redisCache.loginRefreshTokenCache.getObjectOnlyInRedisById(refreshSessionId);
@@ -313,11 +320,11 @@ public class TokenService {
         if (refreshSession == null) {
             return false;
         }
-        revokeRefreshSession(refreshSession);
+        forceLogoutRefreshSession(refreshSession);
         return true;
     }
 
-    private void revokeRefreshSession(LoginRefreshSession refreshSession) {
+    private void forceLogoutRefreshSession(LoginRefreshSession refreshSession) {
         if (refreshSession == null) {
             return;
         }
@@ -466,11 +473,11 @@ public class TokenService {
         }
         String tokenHash = hashRefreshToken(parsedRefreshToken.refreshTokenSecret());
         if (!tokenHash.equals(refreshSession.getRefreshTokenHash())) {
-            revokeRefreshSession(refreshSession);
+            forceLogoutRefreshSession(refreshSession);
             throw invalidRefreshToken();
         }
         if (refreshSession.getLoginUser() == null) {
-            revokeRefreshSession(refreshSession);
+            forceLogoutRefreshSession(refreshSession);
             throw invalidRefreshToken();
         }
         return refreshSession;

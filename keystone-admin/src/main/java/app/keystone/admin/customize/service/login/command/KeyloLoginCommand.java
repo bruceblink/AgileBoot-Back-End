@@ -12,4 +12,9 @@ public class KeyloLoginCommand {
      * Keylo 分发的 access token
      */
     private String accessToken;
+
+    /**
+     * 是否接管旧会话
+     */
+    private Boolean forceLogin;
 }

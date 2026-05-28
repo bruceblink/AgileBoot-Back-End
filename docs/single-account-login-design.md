@@ -6,12 +6,12 @@ Keystone 使用无状态 JWT 承载 tokenId，并把真实登录用户信息缓�
 
 当前业务要求改为：同一账号同一时间只能有一个 Keystone 在线会话。当该账号已有有效会话时，新的登录请求应被拒绝，并提示“该账号已经登录”。
 
-引入 refresh token 后，账号占用绑定的是长期 refresh 会话。浏览器或桌面客户端异常关闭时，服务端无法区分“本人重连”和“恶意抢占”，因此不会静默覆盖旧会话。账号密码登录可以在用户明确确认后带 `forceLogin=true` 接管旧会话，后端只有在重新完成认证后才会撤销旧 refresh 会话。
+引入 refresh token 后，账号占用绑定的是长期 refresh 会话。浏览器或桌面客户端异常关闭时，服务端无法区分“本人重连”和“恶意抢占”，因此不会静默覆盖旧会话。登录入口可以在用户明确确认后带 `forceLogin=true` 接管旧会话，后端只有在重新完成该入口的身份认证后才会撤销旧 refresh 会话。
 
 ## 目标
 
 1. 同一 `sys_user.user_id` 只允许一个有效 Keystone 登录会话。
-2. 第二次登录不踢掉旧会话，而是拒绝新登录。
+2. 第二次登录默认不踢掉旧会话，而是拒绝新登录。
 3. 正常退出、监控页强退、token 过期都要正确释放或失效账号占用状态。
 4. Redis 中残留的过期账号占用标记不应永久阻塞登录。
 5. 本地登录、mixed/Keylo 凭证登录、`/login/keylo` 兼容入口都走同一套限制。
@@ -19,7 +19,7 @@ Keystone 使用无状态 JWT 承载 tokenId，并把真实登录用户信息缓�
 ## 非目标
 
 1. 不限制直接携带 Keylo accessToken 访问受保护接口的临时主体。该路径不是 Keystone 登录会话，不写入 `login_tokens:`。
-2. 不实现“新登录踢掉旧登录”。当前语义是“已有在线会话时拒绝新登录”。
+2. 不实现静默的“新登录踢掉旧登录”。当前语义是“已有在线会话时先拒绝新登录，用户确认后才允许显式接管”。
 3. 不做多端类型区分，例如 PC、移动端分别允许一个会话。
 
 ## Redis Key 设计
@@ -52,6 +52,8 @@ Keystone 维护两类登录缓存：
 5. `LoginService` 再记录登录成功日志和更新用户最近登录信息。
 
 如果账号占用失败，`TokenService` 会删除本次临时写入的 `login_tokens:{tokenId}`，避免产生无主在线会话。
+
+如果客户端在用户确认后再次提交登录请求并带 `forceLogin=true`，`TokenService` 会在认证通过后撤销旧 refresh 会话，再创建新的 Keystone 会话。该流程与监控页强退复用同一类“踢出会话”语义：删除旧 `login_tokens:{tokenId}`、`login_refresh_tokens:{refreshTokenId}` 和匹配的 `login_accounts:{accountId}`。
 
 ## 并发控制
 
