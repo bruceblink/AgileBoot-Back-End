@@ -233,16 +233,18 @@ Content-Type: application/json
 8. 刷新 `login_refresh_tokens:{refreshTokenId}` 与 `login_accounts:{accountId}` 的 TTL。
 9. 返回新 access token。
 
+第一阶段实现中 `/refresh-token` 已纳入匿名访问白名单，并且 JWT filter 会跳过该路径。这样客户端即使请求头里仍带着已过期的 access token，也不会在进入刷新逻辑前被拦截。
+
 ## Refresh Token 轮换
 
-推荐启用 refresh token rotation：
+默认启用 refresh token rotation：
 
 1. 每次刷新都返回新的 refresh token 明文。
 2. 服务端用新哈希覆盖旧哈希。
 3. 客户端收到响应后同时替换 access token 和 refresh token。
 4. 如果旧 refresh token 再次被使用，视为重放风险，撤销该 refresh 会话并释放账号占用。
 
-第一阶段如果要降低改造范围，可以不轮换 refresh token，但必须保证退出登录、监控强退、过期清理能撤销 refresh 会话。
+Keystone 当前实现采用固定 rotation 策略：每次刷新都会返回新的 refresh token，不再提供关闭 rotation 的配置项。这样可以避免长期复用同一 refresh token 带来的泄露风险。
 
 如果启用轮换，客户端必须保证“保存新 token”是原子操作：收到刷新响应后，access token 和 refresh token 要一起替换。如果只替换了 access token，没有替换 refresh token，下一次刷新会使用旧 refresh token，服务端可能判断为重放。
 
@@ -338,7 +340,6 @@ POST /logout-refresh-token
 token:
   expirationSeconds: 1800
   refreshExpirationSeconds: 604800
-  refreshRotationEnabled: true
   refreshSlidingExpirationEnabled: false
   refreshLockSeconds: 10
 ```
@@ -349,9 +350,10 @@ token:
 | --- | --- | --- |
 | `token.expirationSeconds` | `1800` | access token 有效期 |
 | `token.refreshExpirationSeconds` | `604800` | refresh token / refresh 会话有效期，默认 7 天 |
-| `token.refreshRotationEnabled` | `true` | 是否每次刷新都轮换 refresh token |
 | `token.refreshSlidingExpirationEnabled` | `false` | 是否在每次刷新成功后滚动延长 refresh 会话有效期 |
 | `token.refreshLockSeconds` | `10` | 单个 refresh 会话刷新锁过期时间 |
+
+refresh token rotation 固定开启，不额外暴露配置项。
 
 ## 客户端协议
 
