@@ -94,7 +94,7 @@ public class TokenService {
                 // 解析对应的权限以及用户信息
                 String uuid = (String) claims.get(Token.LOGIN_USER_KEY);
 
-                return redisCache.loginUserCache.getObjectOnlyInCacheById(uuid);
+                return redisCache.loginUserCache.getObjectOnlyInRedisById(uuid);
             } catch (ExpiredJwtException | SignatureException | MalformedJwtException | UnsupportedJwtException
                 | IllegalArgumentException jwtException) {
                 if (logInvalidToken) {
@@ -144,10 +144,10 @@ public class TokenService {
         refreshSession.setRevoked(false);
 
         try {
-            occupyLoginAccount(accountId, refreshSessionId, forceLogin);
             redisCache.loginRefreshTokenCache.set(refreshSessionId, refreshSession, refreshCacheTimeoutSeconds(),
                 TimeUnit.SECONDS);
             redisCache.loginUserCache.set(tokenId, loginUser, tokenCacheTimeoutSeconds(), TimeUnit.SECONDS);
+            occupyLoginAccount(accountId, refreshSessionId, forceLogin);
         } catch (RuntimeException e) {
             redisCache.loginUserCache.delete(tokenId);
             redisCache.loginRefreshTokenCache.delete(refreshSessionId);
@@ -237,7 +237,7 @@ public class TokenService {
             return null;
         }
 
-        SystemLoginUser loginUser = redisCache.loginUserCache.getObjectOnlyInCacheById(cachedKey);
+        SystemLoginUser loginUser = redisCache.loginUserCache.getObjectOnlyInRedisById(cachedKey);
         String refreshSessionId = (String) claims.get(Token.LOGIN_REFRESH_SESSION_ID);
 
         if (loginUser != null) {
@@ -283,7 +283,7 @@ public class TokenService {
     }
 
     private boolean forceLogoutByTokenId(String tokenId) {
-        SystemLoginUser loginUser = redisCache.loginUserCache.getObjectOnlyInCacheById(tokenId);
+        SystemLoginUser loginUser = redisCache.loginUserCache.getObjectOnlyInRedisById(tokenId);
         if (loginUser == null) {
             return false;
         }
@@ -307,6 +307,11 @@ public class TokenService {
         if (refreshSession == null && accountId != null && !accountId.isBlank()) {
             String currentRefreshSessionId = redisCache.loginAccountCache.getObjectOnlyInRedisById(accountId);
             if (currentRefreshSessionId != null) {
+                if (refreshSessionId != null && refreshSessionId.equals(currentRefreshSessionId)) {
+                    redisCache.loginAccountCache.delete(accountId);
+                    redisCache.loginRefreshTokenCache.delete(refreshSessionId);
+                    return true;
+                }
                 LoginRefreshSession currentRefreshSession =
                     redisCache.loginRefreshTokenCache.getObjectOnlyInRedisById(currentRefreshSessionId);
                 if (currentRefreshSession != null && tokenId != null
@@ -393,12 +398,12 @@ public class TokenService {
         return Math.toIntExact(remainingSeconds);
     }
 
-    private boolean isRefreshSessionActive(LoginRefreshSession refreshSession) {
+    private boolean isRefreshSessionInvalid(LoginRefreshSession refreshSession) {
         return refreshSession == null || refreshSession.isRevoked() || refreshSession.isExpired(System.currentTimeMillis());
     }
 
     private boolean isRefreshSessionOnline(LoginRefreshSession refreshSession) {
-        if (isRefreshSessionActive(refreshSession) || refreshSession.getCurrentTokenId() == null
+        if (isRefreshSessionInvalid(refreshSession) || refreshSession.getCurrentTokenId() == null
             || refreshSession.getCurrentTokenId().isBlank()) {
             return false;
         }
@@ -486,7 +491,7 @@ public class TokenService {
     private LoginRefreshSession getValidRefreshSession(ParsedRefreshToken parsedRefreshToken) {
         LoginRefreshSession refreshSession =
             redisCache.loginRefreshTokenCache.getObjectOnlyInRedisById(parsedRefreshToken.refreshSessionId());
-        if (isRefreshSessionActive(refreshSession)) {
+        if (isRefreshSessionInvalid(refreshSession)) {
             throw invalidRefreshToken();
         }
         String tokenHash = hashRefreshToken(parsedRefreshToken.refreshTokenSecret());

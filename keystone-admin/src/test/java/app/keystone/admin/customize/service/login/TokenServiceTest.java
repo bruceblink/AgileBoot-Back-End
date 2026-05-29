@@ -52,9 +52,9 @@ class TokenServiceTest {
         TokenService.IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser);
 
         verify(loginUserCache).set(loginUser.getCachedKey(), loginUser, 1800, TimeUnit.SECONDS);
-        verify(loginAccountCache).setIfAbsent(eq("1"), anyString(), eq(604800), eq(TimeUnit.SECONDS));
         verify(loginRefreshTokenCache).set(anyString(), org.mockito.ArgumentMatchers.any(LoginRefreshSession.class),
             eq(604800), eq(TimeUnit.SECONDS));
+        verify(loginAccountCache).setIfAbsent(eq("1"), anyString(), eq(604800), eq(TimeUnit.SECONDS));
 
         Claims claims = Jwts.parser()
             .verifyWith(signingKey("0123456789abcdef0123456789abcdef"))
@@ -135,8 +135,7 @@ class TokenServiceTest {
             "existing-refresh-session-id", "1", "existing-token-id", existingLoginUser);
         when(loginAccountCache.getObjectOnlyInRedisById("1"))
             .thenReturn("existing-refresh-session-id")
-            .thenReturn("existing-refresh-session-id")
-            .thenReturn(null);
+            .thenReturn("existing-refresh-session-id");
         when(loginRefreshTokenCache.getObjectOnlyInRedisById("existing-refresh-session-id"))
             .thenReturn(existingRefreshSession);
         when(loginUserCache.getObjectOnlyInRedisById("existing-token-id")).thenReturn(existingLoginUser);
@@ -172,8 +171,7 @@ class TokenServiceTest {
             "existing-refresh-session-id", "1", "missing-token-id", loginUser);
         when(loginAccountCache.getObjectOnlyInRedisById("1"))
             .thenReturn("existing-refresh-session-id")
-            .thenReturn("existing-refresh-session-id")
-            .thenReturn(null);
+            .thenReturn("existing-refresh-session-id");
         when(loginRefreshTokenCache.getObjectOnlyInRedisById("existing-refresh-session-id"))
             .thenReturn(existingRefreshSession);
         when(loginUserCache.getObjectOnlyInRedisById("missing-token-id")).thenReturn(null);
@@ -265,7 +263,7 @@ class TokenServiceTest {
         loginUser.setCachedKey("token-id");
         String token = generateToken(tokenService, "token-id", "refresh-session-id", 1L, "admin");
         LoginRefreshSession refreshSession = refreshSession("refresh-session-id", "1", "token-id", loginUser);
-        when(loginUserCache.getObjectOnlyInCacheById("token-id")).thenReturn(loginUser);
+        when(loginUserCache.getObjectOnlyInRedisById("token-id")).thenReturn(loginUser);
         when(loginRefreshTokenCache.getObjectOnlyInRedisById("refresh-session-id")).thenReturn(refreshSession);
         when(loginAccountCache.getObjectOnlyInRedisById("1")).thenReturn("refresh-session-id");
 
@@ -295,7 +293,7 @@ class TokenServiceTest {
 
         String token = generateToken(tokenService, "token-id", "refresh-session-id", 1L, "admin");
         LoginRefreshSession refreshSession = refreshSession("refresh-session-id", "1", "token-id", null);
-        when(loginUserCache.getObjectOnlyInCacheById("token-id")).thenReturn(null);
+        when(loginUserCache.getObjectOnlyInRedisById("token-id")).thenReturn(null);
         when(loginRefreshTokenCache.getObjectOnlyInRedisById("refresh-session-id")).thenReturn(refreshSession);
         when(loginAccountCache.getObjectOnlyInRedisById("1")).thenReturn("refresh-session-id");
 
