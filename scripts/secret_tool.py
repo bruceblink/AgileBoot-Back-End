@@ -26,6 +26,7 @@ PREFIX = "secret:v1:aes-256-gcm"
 DEFAULT_SECRET_DIR = "docker/.secrets"
 PASSWORD_ALPHABET = string.ascii_letters + string.digits + "!@#$%^&*()-_=+[]{}:,.?"
 DEFAULT_PASSWORD_LENGTH = 32
+DEFAULT_REDIS_KEY_PATTERN = "*"
 
 
 def ensure_writable(path: Path) -> None:
@@ -55,8 +56,17 @@ def hide_if_dot_path(path: Path) -> None:
 def write_text(path: Path, value: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     ensure_writable(path)
-    path.write_text(value + "\n", encoding="utf-8")
+    path.write_text(value, encoding="utf-8")
     hide_if_dot_path(path)
+
+
+def redis_acl_key_pattern(value: str) -> str:
+    value = value.strip()
+    if value in ("*", "~*"):
+        return "~*"
+    if value.startswith("~"):
+        return value
+    return f"~{value}:*"
 
 
 def read_text_if_non_empty(path: Path) -> str | None:
@@ -155,7 +165,8 @@ def cmd_generate_deployment(args: argparse.Namespace) -> None:
     write_text(
         secret_dir / ".redis.acl",
         "user default off\n"
-        f"user {args.redis_user} on #{redis_hash} ~{args.redis_key_prefix}:* +@read +@write +@connection",
+        f"user {args.redis_user} on #{redis_hash} {redis_acl_key_pattern(args.redis_key_prefix)} "
+        "+@read +@write +@connection +@scripting",
     )
     if not keep_database_plain:
         ensure_writable(database_plain_file)
@@ -197,7 +208,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     generate.add_argument("--secret-dir", default=DEFAULT_SECRET_DIR)
     generate.add_argument("--redis-user", default="keystone")
-    generate.add_argument("--redis-key-prefix", default="keystone")
+    generate.add_argument("--redis-key-prefix", default=DEFAULT_REDIS_KEY_PATTERN)
     generate.add_argument("--password-length", type=int, default=DEFAULT_PASSWORD_LENGTH)
     generate.add_argument(
         "--keep-database-plain",

@@ -48,3 +48,4 @@ docker/app/
 !keystone-admin/build/
 !keystone-admin/build/libs/
 !keystone-admin/build/libs/keystone-admin.jar
+/.secrets/

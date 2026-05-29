@@ -2,12 +2,13 @@ package app.keystone.domain.system.monitor;
 
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode.Internal;
-import app.keystone.domain.common.cache.CacheCenter;
+import app.keystone.domain.common.cache.RedisCacheService;
 import app.keystone.domain.system.monitor.dto.OnlineUserDTO;
 import app.keystone.domain.system.monitor.dto.RedisCacheInfoDTO;
 import app.keystone.domain.system.monitor.dto.RedisCacheInfoDTO.CommandStatusDTO;
 import app.keystone.domain.system.monitor.dto.ServerInfo;
 import app.keystone.infrastructure.cache.redis.CacheKeyEnum;
+import app.keystone.infrastructure.user.web.SystemLoginUser;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,6 +17,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.connection.RedisServerCommands;
@@ -28,9 +30,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MonitorApplicationService {
 
     private final RedisTemplate<String, ?> redisTemplate;
+
+    private final RedisCacheService redisCacheService;
 
     public RedisCacheInfoDTO getRedisCacheInfo() {
         Properties info = (Properties) redisTemplate.execute((RedisCallback<Object>) RedisServerCommands::info);
@@ -67,9 +72,10 @@ public class MonitorApplicationService {
             return Collections.emptyList();
         }
 
-        Stream<OnlineUserDTO> onlineUserStream = keys.stream().map(o ->
-                    CacheCenter.loginUserCache().getObjectOnlyInCacheByKey(o))
-            .filter(Objects::nonNull).map(OnlineUserDTO::new);
+        Stream<OnlineUserDTO> onlineUserStream = keys.stream()
+            .map(this::getOnlineUserByRedisKey)
+            .filter(Objects::nonNull)
+            .map(OnlineUserDTO::new);
 
         List<OnlineUserDTO> filteredOnlineUsers = onlineUserStream
             .filter(o ->
@@ -80,6 +86,19 @@ public class MonitorApplicationService {
 
         Collections.reverse(filteredOnlineUsers);
         return filteredOnlineUsers;
+    }
+
+    private SystemLoginUser getOnlineUserByRedisKey(String redisKey) {
+        try {
+            return redisCacheService.loginUserCache.getObjectOnlyInRedisById(getLoginUserTokenId(redisKey));
+        } catch (RuntimeException e) {
+            log.warn("Failed to load online user from redis key: {}", redisKey, e);
+            return null;
+        }
+    }
+
+    private String getLoginUserTokenId(String redisKey) {
+        return StringUtils.removeStart(redisKey, CacheKeyEnum.LOGIN_USER_KEY.key());
     }
 
     public ServerInfo getServerInfo() {

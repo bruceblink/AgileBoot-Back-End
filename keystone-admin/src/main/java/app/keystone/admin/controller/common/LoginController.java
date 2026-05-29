@@ -4,6 +4,7 @@ import app.keystone.admin.customize.service.login.LoginService;
 import app.keystone.admin.customize.service.login.LoginService.LoginResult;
 import app.keystone.admin.customize.service.login.command.KeyloLoginCommand;
 import app.keystone.admin.customize.service.login.command.LoginCommand;
+import app.keystone.admin.customize.service.login.command.RefreshTokenCommand;
 import app.keystone.admin.customize.service.login.dto.CaptchaDTO;
 import app.keystone.admin.customize.service.login.dto.ConfigDTO;
 import app.keystone.admin.customize.service.login.dto.RsaPublicKeyDTO;
@@ -117,9 +118,26 @@ public class LoginController {
         return ResponseDTO.ok(buildTokenDTO(loginResult, currentUserDTO));
     }
 
+    @Operation(summary = "刷新 Keystone token", description = "使用 Keystone refresh token 换取新的 access token")
+    @PostMapping("/refresh-token")
+    public ResponseDTO<TokenDTO> refreshToken(@RequestBody RefreshTokenCommand refreshTokenCommand) {
+        LoginResult loginResult = loginService.refreshToken(refreshTokenCommand);
+        return ResponseDTO.ok(buildTokenDTO(loginResult, null));
+    }
+
+    @Operation(summary = "通过 refresh token 退出登录", description = "access token 已失效时用于释放 Keystone refresh 会话")
+    @PostMapping("/logout-refresh-token")
+    public ResponseDTO<Void> logoutRefreshToken(@RequestBody RefreshTokenCommand refreshTokenCommand) {
+        loginService.logoutRefreshToken(refreshTokenCommand);
+        return ResponseDTO.ok();
+    }
+
     private TokenDTO buildTokenDTO(LoginResult loginResult, CurrentLoginUserDTO currentUserDTO) {
         TokenDTO tokenDTO = new TokenDTO();
         tokenDTO.setToken(loginResult.getToken());
+        tokenDTO.setRefreshToken(loginResult.getRefreshToken());
+        tokenDTO.setExpiresIn(loginResult.getExpiresIn());
+        tokenDTO.setRefreshExpiresIn(loginResult.getRefreshExpiresIn());
         tokenDTO.setCurrentUser(currentUserDTO);
         tokenDTO.setKeyloAccessToken(loginResult.getKeyloAccessToken());
         tokenDTO.setKeyloRefreshToken(loginResult.getKeyloRefreshToken());

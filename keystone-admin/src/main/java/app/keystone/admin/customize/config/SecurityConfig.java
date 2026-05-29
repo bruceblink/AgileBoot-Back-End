@@ -10,7 +10,6 @@ import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode.Client;
 import app.keystone.common.utils.ServletHolderUtil;
 import app.keystone.common.utils.jackson.JacksonUtil;
-import app.keystone.domain.common.cache.RedisCacheService;
 import app.keystone.infrastructure.thread.ThreadPoolManager;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
 import lombok.RequiredArgsConstructor;
@@ -48,8 +47,6 @@ public class SecurityConfig {
 
     private final TokenService tokenService;
 
-    private final RedisCacheService redisCache;
-
     /**
      * token认证过滤器
      */
@@ -61,7 +58,6 @@ public class SecurityConfig {
      * 跨域过滤器
      */
     private final CorsFilter corsFilter;
-
 
     /**
      * 登录异常处理类
@@ -85,11 +81,10 @@ public class SecurityConfig {
     @Bean
     public LogoutSuccessHandler logOutSuccessHandler() {
         return (request, response, authentication) -> {
-            SystemLoginUser loginUser = tokenService.getLoginUser(request);
+            String token = tokenService.getTokenFromRequest(request);
+            SystemLoginUser loginUser = tokenService.removeLoginUserByToken(token);
             if (loginUser != null) {
                 String userName = loginUser.getUsername();
-                // 删除用户缓存记录
-                redisCache.loginUserCache.delete(loginUser.getCachedKey());
                 // 记录用户退出日志
                 ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(
                     userName, LoginStatusEnum.LOGOUT, LoginStatusEnum.LOGOUT.description()));
@@ -131,7 +126,8 @@ public class SecurityConfig {
             // 过滤请求
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(
-                        "/login", "/login/keylo", "/register", "/getConfig", "/health", "/captchaImage"
+                        "/login", "/login/keylo", "/refresh-token", "/logout-refresh-token", "/register", "/getConfig",
+                        "/health", "/captchaImage"
                     ).anonymous()
                     .requestMatchers("/login/rsa-public-key").permitAll()
                     .requestMatchers("/druid/**").authenticated()
@@ -152,6 +148,5 @@ public class SecurityConfig {
 
         return httpSecurity.build();
     }
-
 
 }

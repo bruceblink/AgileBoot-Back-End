@@ -1,9 +1,9 @@
 package app.keystone.admin.controller.system;
 
+import app.keystone.admin.customize.service.login.TokenService;
 import app.keystone.common.core.base.BaseController;
 import app.keystone.common.core.dto.ResponseDTO;
 import app.keystone.common.core.page.PageDTO;
-import app.keystone.domain.common.cache.CacheCenter;
 import app.keystone.domain.system.monitor.MonitorApplicationService;
 import app.keystone.domain.system.monitor.dto.OnlineUserDTO;
 import app.keystone.domain.system.monitor.dto.RedisCacheInfoDTO;
@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class MonitorController extends BaseController {
 
     private final MonitorApplicationService monitorApplicationService;
+
+    private final TokenService tokenService;
 
     @Operation(summary = "Redis信息")
     @PreAuthorize("@permission.has('monitor:cache:list')")
@@ -74,7 +76,7 @@ public class MonitorController extends BaseController {
     @AccessLog(title = "在线用户", businessType = BusinessTypeEnum.FORCE_LOGOUT)
     @DeleteMapping("/onlineUser/{tokenId}")
     public ResponseDTO<Void> logoutOnlineUser(@PathVariable String tokenId) {
-        CacheCenter.loginUserCache().delete(tokenId);
+        tokenService.removeLoginUser(tokenId);
         return ResponseDTO.ok();
     }
 

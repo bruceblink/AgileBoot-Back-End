@@ -11,8 +11,8 @@ spring:
     encoding: UTF-8
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 20MB
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:256MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:256MB}
   devtools:
     restart:
       enabled: false
@@ -52,8 +52,8 @@ spring:
         master:
           url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/keystone?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
           username: ${SPRING_DATASOURCE_USERNAME:root}
-          # 支持 secret:v1:aes-256-gcm 密文，开启 keystone.datasource.password-encryption.enabled 后自动解密
-          password: ${SPRING_DATASOURCE_PASSWORD:12345}
+          # 仅支持 secret:v1:aes-256-gcm 密文或密文文件。
+          # 配置后会在启动期解密并注入到数据源 password。
           password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:}
       druid:
         initialSize: 5
@@ -74,8 +74,8 @@ spring:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
-      # 支持 secret:v1:aes-256-gcm 密文，开启 keystone.redis.password-encryption.enabled 后自动解密
-      password: ${SPRING_DATA_REDIS_PASSWORD:12345}
+      # 仅支持 secret:v1:aes-256-gcm 密文或密文文件。
+      # 配置后会在启动期解密并注入到 Redis password。
       password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:}
       timeout: 10s
       lettuce:
@@ -109,7 +109,9 @@ token:
   header: Authorization
   secret: ${TOKEN_SECRET:sdhfkjshBN6rr32df38}
   expirationSeconds: 1800
-  autoRefreshTime: 20
+  refreshExpirationSeconds: ${TOKEN_REFRESH_EXPIRATION_SECONDS:604800}
+  refreshSlidingExpirationEnabled: ${TOKEN_REFRESH_SLIDING_EXPIRATION_ENABLED:false}
+  refreshLockSeconds: ${TOKEN_REFRESH_LOCK_SECONDS:10}
 
 # ---- MyBatis-Plus ----
 mybatis-plus:
@@ -145,7 +147,7 @@ keystone:
     mode: ${KEYSTONE_AUTH_MODE:local}
     keylo:
       enabled: ${KEYSTONE_AUTH_KEYLO_ENABLED:false}
-      base-url: ${KEYLO_BASE_URL:http://127.0.0.1:2345}
+      base-url: ${KEYLO_BASE_URL:http://keylo:2345}
       issuer-uri: ${KEYLO_ISSUER_URI:${keystone.auth.keylo.base-url}}
       trusted-issuers: ${KEYLO_TRUSTED_ISSUERS:${keystone.auth.keylo.issuer-uri}}
       jwk-set-uri: ${KEYLO_JWK_SET_URI:${keystone.auth.keylo.base-url}/.well-known/jwks.json}
@@ -160,10 +162,11 @@ keystone:
       credential-password-field: ${KEYLO_CREDENTIAL_PASSWORD_FIELD:client_secret}
       credential-verify-url: ${KEYLO_CREDENTIAL_VERIFY_URL:${keystone.auth.keylo.base-url}/v1/auth/token}
       provisioning:
-        enabled: ${KEYLO_PROVISIONING_ENABLED:false}
+        enabled: ${KEYLO_PROVISIONING_ENABLED:true}
         admin-client-id: ${KEYLO_ADMIN_CLIENT_ID:cli-admin-root}
         admin-client-secret: ${KEYLO_ADMIN_CLIENT_SECRET:replace-with-strong-admin-secret}
         create-user-url: ${KEYLO_CREATE_USER_URL:${keystone.auth.keylo.base-url}/v1/admin/users}
+        reset-password-url-template: ${KEYLO_RESET_PASSWORD_URL_TEMPLATE:${keystone.auth.keylo.base-url}/v1/admin/users/{userId}/reset-password}
         admin-token-url: ${KEYLO_ADMIN_TOKEN_URL:${keystone.auth.keylo.base-url}/v1/admin/token}
         auth-header-name: ${KEYLO_AUTH_HEADER_NAME:Authorization}
         auth-header-value: ${KEYLO_AUTH_HEADER_VALUE:}
@@ -187,16 +190,12 @@ keystone:
   rsaPrivateKey: ${KEYSTONE_RSA_PRIVATE_KEY}
   datasource:
     password-encryption:
-      # 是否启用数据库密码 secret:v1:aes-256-gcm 自动解密
-      enabled: ${KEYSTONE_DATASOURCE_PASSWORD_ENCRYPTION_ENABLED:false}
-      # AES-256 key；生产环境建议使用 KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE 指向 .secrets 文件
+      # AES-256 key；生产环境建议使用 KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE 指向 secret 文件
       encrypt-key: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY:}
       encrypt-key-file: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE:}
   redis:
     password-encryption:
-      # 是否启用 Redis password secret:v1:aes-256-gcm 自动解密
-      enabled: ${KEYSTONE_REDIS_PASSWORD_ENCRYPTION_ENABLED:false}
-      # AES-256 key，建议通过 KEYSTONE_REDIS_ENCRYPT_KEY_FILE 指向 .secrets 文件
+      # AES-256 key，建议通过 KEYSTONE_REDIS_ENCRYPT_KEY_FILE 指向 secret 文件
       encrypt-key: ${KEYSTONE_REDIS_ENCRYPT_KEY:}
       encrypt-key-file: ${KEYSTONE_REDIS_ENCRYPT_KEY_FILE:}
   frontend:

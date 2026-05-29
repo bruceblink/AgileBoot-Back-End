@@ -18,6 +18,15 @@ keystone:
       audiences: ${KEYLO_AUDIENCES:admin-backend,sys_test}
       provisioning:
         enabled: ${KEYLO_PROVISIONING_ENABLED:true}
+        admin-client-secret: ${KEYLO_ADMIN_CLIENT_SECRET:replace-with-strong-admin-secret}
+  datasource:
+    password-encryption:
+      encrypt-key: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY:}
+      encrypt-key-file: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY_FILE:docker/.secrets/.database_password.key}
+  redis:
+    password-encryption:
+      encrypt-key: ${KEYSTONE_REDIS_ENCRYPT_KEY:}
+      encrypt-key-file: ${KEYSTONE_REDIS_ENCRYPT_KEY_FILE:docker/.secrets/.redis_password.key}
 
 spring:
   datasource:
@@ -44,6 +53,7 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
+      username: ${SPRING_DATA_REDIS_USERNAME:}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
       password-file: ${SPRING_DATA_REDIS_PASSWORD_FILE:}
       password: ${SPRING_DATA_REDIS_PASSWORD:12345}

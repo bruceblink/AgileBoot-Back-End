@@ -8,11 +8,14 @@ import static org.mockito.Mockito.when;
 
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
+import app.keystone.common.utils.jackson.JacksonUtil;
 import app.keystone.domain.system.user.command.AddUserCommand;
 import java.net.http.HttpResponse;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class KeyloUserProvisioningServiceTest {
@@ -130,6 +133,44 @@ class KeyloUserProvisioningServiceTest {
     }
 
     @Test
+    void resetPassword_shouldPostPasswordToConfiguredKeyloEndpoint() {
+        KeyloUserProvisioningProperties properties = buildDefaultProperties();
+        TestableKeyloUserProvisioningService service = new TestableKeyloUserProvisioningService(properties);
+        service.enqueue(response(200, "{\"access_token\":\"admin-token\"}"));
+        service.enqueue(response(200, "{\"success\":true}"));
+
+        service.resetPassword("uid-2002", "NewPassword123!");
+
+        assertEquals(properties.getAdminTokenUrl(), service.requests.get(0).url());
+        RecordedRequest resetRequest = service.requests.get(1);
+        assertEquals("http://keylo.local/v1/admin/users/uid-2002/reset-password", resetRequest.url());
+        assertEquals("NewPassword123!", JacksonUtil.getAsString(resetRequest.jsonBody(), "password"));
+        assertEquals("Bearer admin-token", resetRequest.headers().get("Authorization"));
+    }
+
+    @Test
+    void resetPassword_shouldSkip_whenProvisioningDisabled() {
+        KeyloUserProvisioningProperties properties = buildDefaultProperties();
+        properties.setEnabled(false);
+        TestableKeyloUserProvisioningService service = new TestableKeyloUserProvisioningService(properties);
+
+        service.resetPassword("uid-2002", "NewPassword123!");
+
+        assertEquals(0, service.requests.size());
+    }
+
+    @Test
+    void resetPassword_shouldSkip_whenResetPasswordUrlMissing() {
+        KeyloUserProvisioningProperties properties = buildDefaultProperties();
+        properties.setResetPasswordUrlTemplate("");
+        TestableKeyloUserProvisioningService service = new TestableKeyloUserProvisioningService(properties);
+
+        service.resetPassword("uid-2002", "NewPassword123!");
+
+        assertEquals(0, service.requests.size());
+    }
+
+    @Test
     void provisionUser_shouldDeriveSubject_whenCreateUserResponseOnlyContainsUserId() {
         KeyloUserProvisioningProperties properties = buildDefaultProperties();
         TestableKeyloUserProvisioningService service = new TestableKeyloUserProvisioningService(properties);
@@ -153,6 +194,7 @@ class KeyloUserProvisioningServiceTest {
         KeyloUserProvisioningProperties properties = new KeyloUserProvisioningProperties();
         properties.setEnabled(true);
         properties.setCreateUserUrl("http://keylo.local/v1/admin/users");
+        properties.setResetPasswordUrlTemplate("http://keylo.local/v1/admin/users/{userId}/reset-password");
         properties.setAdminTokenUrl("http://keylo.local/v1/admin/token");
         properties.setAdminClientId("cli-admin-root");
         properties.setAdminClientSecret("strong-secret");
@@ -180,6 +222,7 @@ class KeyloUserProvisioningServiceTest {
 
     private static class TestableKeyloUserProvisioningService extends KeyloUserProvisioningService {
         private final Deque<HttpResponse<String>> responses = new ArrayDeque<>();
+        private final List<RecordedRequest> requests = new ArrayList<>();
 
         private TestableKeyloUserProvisioningService(KeyloUserProvisioningProperties properties) {
             super(properties);
@@ -191,11 +234,15 @@ class KeyloUserProvisioningServiceTest {
 
         @Override
         protected HttpResponse<String> sendPostJson(String url, String jsonBody, Map<String, String> headers, int timeoutMillis) {
+            requests.add(new RecordedRequest(url, jsonBody, headers));
             HttpResponse<String> response = responses.pollFirst();
             if (response == null) {
                 throw new IllegalStateException("No mocked response for " + url);
             }
             return response;
         }
+    }
+
+    private record RecordedRequest(String url, String jsonBody, Map<String, String> headers) {
     }
 }

@@ -62,7 +62,6 @@ class JwtAuthenticationTokenFilterTest {
         filter.doFilter(request, response, chain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isEqualTo(loginUser);
-        verify(tokenService).refreshToken(loginUser);
         verify(keyloTokenVerifier, never()).verify(Mockito.anyString());
         verify(chain).doFilter(request, response);
     }
@@ -84,7 +83,6 @@ class JwtAuthenticationTokenFilterTest {
         assertThat(loginUser.getUsername()).isEqualTo("service:sys_test");
         assertThat(loginUser.isAdmin()).isTrue();
         assertThat(loginUser.getRoleInfo().getMenuPermissions()).contains(RoleInfo.ALL_PERMISSIONS);
-        verify(tokenService, never()).refreshToken(Mockito.any());
         verify(keyloTokenVerifier).verify("keylo-access-token");
         verify(chain).doFilter(request, response);
     }
@@ -115,6 +113,29 @@ class JwtAuthenticationTokenFilterTest {
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(tokenService, never()).getLoginUserByTokenSilently(Mockito.anyString());
         verify(chain).doFilter(request, response);
+    }
+
+    @Test
+    void shouldSkipAuthenticationForRefreshTokenEndpoints() throws Exception {
+        MockHttpServletRequest request = requestWithBearer("expired-access-token");
+        request.setServletPath("/refresh-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(tokenService, never()).getLoginUserByTokenSilently(Mockito.anyString());
+        verify(chain).doFilter(request, response);
+
+        SecurityContextHolder.clearContext();
+        MockHttpServletRequest logoutRequest = requestWithBearer("expired-access-token");
+        logoutRequest.setServletPath("/logout-refresh-token");
+        MockHttpServletResponse logoutResponse = new MockHttpServletResponse();
+
+        filter.doFilter(logoutRequest, logoutResponse, chain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(chain).doFilter(logoutRequest, logoutResponse);
     }
 
     private MockHttpServletRequest requestWithBearer(String token) {

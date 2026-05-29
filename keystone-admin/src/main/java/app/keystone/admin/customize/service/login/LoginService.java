@@ -3,9 +3,11 @@ package app.keystone.admin.customize.service.login;
 import app.keystone.admin.customize.async.AsyncTaskFactory;
 import app.keystone.admin.customize.service.login.command.KeyloLoginCommand;
 import app.keystone.admin.customize.service.login.command.LoginCommand;
+import app.keystone.admin.customize.service.login.command.RefreshTokenCommand;
 import app.keystone.admin.customize.service.login.dto.CaptchaDTO;
 import app.keystone.admin.customize.service.login.dto.ConfigDTO;
 import app.keystone.admin.customize.service.login.dto.RsaPublicKeyDTO;
+import app.keystone.admin.customize.service.login.TokenService.IssuedToken;
 import app.keystone.admin.customize.service.login.keylo.KeyloCredentialVerifier;
 import app.keystone.admin.customize.service.login.keylo.KeyloLoginUserResolver;
 import app.keystone.admin.customize.service.login.keylo.KeyloProperties;
@@ -127,8 +129,9 @@ public class LoginService {
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
         SystemLoginUser loginUser = (SystemLoginUser) authentication.getPrincipal();
-        recordLoginInfo(loginUser);
-        return new LoginResult(tokenService.createTokenAndPutUserInCache(loginUser), null, null, null, null);
+        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser, isForceLogin(loginCommand));
+        return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
+            issuedToken.getRefreshExpiresIn(), null, null, null, null);
     }
 
     public LoginResult keyloLogin(KeyloLoginCommand keyloLoginCommand) {
@@ -144,7 +147,7 @@ public class LoginService {
 
         log.warn("Deprecated /login/keylo endpoint was used. Please migrate clients to /login.");
         KeyloTokenIdentity keyloIdentity = keyloTokenVerifier.verify(keyloLoginCommand.getAccessToken());
-        return buildTokenByKeyloIdentity(keyloIdentity);
+        return buildTokenByKeyloIdentity(keyloIdentity, isForceLogin(keyloLoginCommand));
     }
 
     private LoginResult loginByKeyloCredential(LoginCommand loginCommand) {
@@ -154,21 +157,57 @@ public class LoginService {
 
         String password = decryptPassword(loginCommand.getPassword());
         KeyloTokenIdentity keyloIdentity = keyloCredentialVerifier.verify(loginCommand.getUsername(), password);
-        return buildTokenByKeyloIdentity(keyloIdentity);
+        return buildTokenByKeyloIdentity(keyloIdentity, isForceLogin(loginCommand));
     }
 
-    private LoginResult buildTokenByKeyloIdentity(KeyloTokenIdentity keyloIdentity) {
+    private LoginResult buildTokenByKeyloIdentity(KeyloTokenIdentity keyloIdentity, boolean forceLogin) {
         SystemLoginUser loginUser = buildLoginUserByKeyloIdentity(keyloIdentity);
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             loginUser, null, loginUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        recordLoginInfo(loginUser);
-        return new LoginResult(tokenService.createTokenAndPutUserInCache(loginUser), keyloIdentity.getAccessToken(),
-            keyloIdentity.getRefreshToken(), keyloIdentity.getExpiresIn(), keyloIdentity.getTokenType());
+        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser, forceLogin);
+        return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
+            issuedToken.getRefreshExpiresIn(), keyloIdentity.getAccessToken(), keyloIdentity.getRefreshToken(),
+            keyloIdentity.getExpiresIn(), keyloIdentity.getTokenType());
     }
 
     public SystemLoginUser buildLoginUserByKeyloIdentity(KeyloTokenIdentity keyloIdentity) {
         return keyloLoginUserResolver.resolve(keyloIdentity);
+    }
+
+    public LoginResult refreshToken(RefreshTokenCommand refreshTokenCommand) {
+        if (refreshTokenCommand == null || !StringUtils.hasText(refreshTokenCommand.getRefreshToken())) {
+            throw new ApiException(ErrorCode.Client.COMMON_REQUEST_PARAMETERS_INVALID, "refreshToken is required");
+        }
+        IssuedToken issuedToken = tokenService.refreshAccessToken(refreshTokenCommand.getRefreshToken());
+        return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
+            issuedToken.getRefreshExpiresIn(), null, null, null, null);
+    }
+
+    public void logoutRefreshToken(RefreshTokenCommand refreshTokenCommand) {
+        if (refreshTokenCommand == null || !StringUtils.hasText(refreshTokenCommand.getRefreshToken())) {
+            return;
+        }
+        tokenService.removeLoginUserByRefreshToken(refreshTokenCommand.getRefreshToken());
+    }
+
+    private IssuedToken createTokenAndRecordLoginInfo(SystemLoginUser loginUser, boolean forceLogin) {
+        IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser, forceLogin);
+        try {
+            recordLoginInfo(loginUser);
+            return issuedToken;
+        } catch (RuntimeException e) {
+            tokenService.removeLoginUser(loginUser);
+            throw e;
+        }
+    }
+
+    private boolean isForceLogin(LoginCommand loginCommand) {
+        return loginCommand != null && Boolean.TRUE.equals(loginCommand.getForceLogin());
+    }
+
+    private boolean isForceLogin(KeyloLoginCommand keyloLoginCommand) {
+        return keyloLoginCommand != null && Boolean.TRUE.equals(keyloLoginCommand.getForceLogin());
     }
 
     @Data
@@ -176,6 +215,12 @@ public class LoginService {
     public static class LoginResult {
 
         private String token;
+
+        private String refreshToken;
+
+        private Long expiresIn;
+
+        private Long refreshExpiresIn;
 
         private String keyloAccessToken;
 

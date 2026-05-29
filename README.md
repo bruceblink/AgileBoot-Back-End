@@ -117,14 +117,14 @@ docker compose logs -f mysql
 ```bash
 cd docker
 cp .env.example .env
-# 编辑 .env，按需修改密码、端口、Keylo 配置等
+# 编辑 .env，按需修改密码、端口、登录模式等
 ```
 
 当前约定：
 
 - Docker 运行时统一使用 `SPRING_DATA_REDIS_*`，不再使用旧的 `SPRING_REDIS_*`
 - `KEYSTONE_AUTH_MODE` / `KEYSTONE_AUTH_KEYLO_ENABLED` 控制后端登录模式
-- 当 Keylo token 的 `iss` 与服务访问地址不一致时，使用 `KEYLO_TRUSTED_ISSUERS` 显式指定可信 issuer，例如 `keylo`
+- Keylo 服务地址、issuer、JWKS、audience 和凭证登录地址由 `application-basic.yml` 统一提供默认值；如需覆盖，使用 `docker/app/config/application-prod.yml` 等 Spring 配置文件，避免 Docker Compose 与 Spring 配置双入口产生歧义
 - `KEYLO_LEGACY_TOKEN_LOGIN_ENABLED=false` 可关闭兼容保留的 `/login/keylo`
 - `SPRING_PROFILES_ACTIVE` 默认为 `prod`，容器运行时走部署配置
 

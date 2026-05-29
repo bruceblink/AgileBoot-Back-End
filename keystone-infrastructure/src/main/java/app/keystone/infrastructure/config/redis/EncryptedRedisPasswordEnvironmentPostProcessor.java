@@ -23,15 +23,6 @@ public class EncryptedRedisPasswordEnvironmentPostProcessor implements Environme
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        boolean enabled = environment.getProperty(
-            "keystone.redis.password-encryption.enabled",
-            Boolean.class,
-            false
-        );
-        if (!enabled) {
-            return;
-        }
-
         String encryptedPassword = resolveEncryptedPassword(environment);
         if (!StringUtils.hasText(encryptedPassword)) {
             return;
@@ -68,7 +59,6 @@ public class EncryptedRedisPasswordEnvironmentPostProcessor implements Environme
         }
         return firstText(
             environment.getProperty(REDIS_PASSWORD_PROPERTY),
-            environment.getProperty("SPRING_DATA_REDIS_PASSWORD"),
             environment.getProperty("KEYSTONE_REDIS_PASSWORD_ENC")
         );
     }

@@ -13,6 +13,8 @@ public class KeyloUserProvisioningProperties {
 
     private String createUserUrl;
 
+    private String resetPasswordUrlTemplate;
+
     private String authHeaderName = "Authorization";
 
     private String authHeaderValue;

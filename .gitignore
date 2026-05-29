@@ -63,3 +63,4 @@ keystone-common/build/
 *.tar
 *.zip
 __pycache__
+/.secrets/

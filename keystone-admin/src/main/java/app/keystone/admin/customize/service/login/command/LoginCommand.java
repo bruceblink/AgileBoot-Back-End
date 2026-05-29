@@ -30,4 +30,9 @@ public class LoginCommand {
      */
     private String captchaCodeKey;
 
+    /**
+     * 是否接管旧会话
+     */
+    private Boolean forceLogin;
+
 }

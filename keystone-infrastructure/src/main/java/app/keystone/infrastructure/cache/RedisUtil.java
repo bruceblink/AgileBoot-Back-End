@@ -50,6 +50,14 @@ public class RedisUtil {
     }
 
     /**
+     * 仅当key不存在时写入缓存对象。
+     */
+    public <T> Boolean setCacheObjectIfAbsent(final String key, final T value, final Integer timeout,
+        final TimeUnit timeUnit) {
+        return redisTemplate.opsForValue().setIfAbsent(key, value, timeout, timeUnit);
+    }
+
+    /**
      * 设置有效时间
      *
      * @param key Redis键
