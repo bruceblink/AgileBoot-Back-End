@@ -91,6 +91,7 @@ class TokenServiceTest {
         setField(tokenService, "refreshExpirationSeconds", 604800L);
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
+        SystemLoginUser existingLoginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         LoginRefreshSession existingRefreshSession = new LoginRefreshSession();
         existingRefreshSession.setRefreshSessionId("existing-refresh-session-id");
         existingRefreshSession.setAccountId("1");
@@ -99,6 +100,7 @@ class TokenServiceTest {
         when(loginAccountCache.getObjectOnlyInRedisById("1")).thenReturn("existing-refresh-session-id");
         when(loginRefreshTokenCache.getObjectOnlyInRedisById("existing-refresh-session-id"))
             .thenReturn(existingRefreshSession);
+        when(loginUserCache.getObjectOnlyInRedisById("existing-token-id")).thenReturn(existingLoginUser);
 
         assertThatThrownBy(() -> tokenService.createTokenAndPutUserInCache(loginUser))
             .isInstanceOf(ApiException.class)
@@ -137,11 +139,50 @@ class TokenServiceTest {
             .thenReturn(null);
         when(loginRefreshTokenCache.getObjectOnlyInRedisById("existing-refresh-session-id"))
             .thenReturn(existingRefreshSession);
+        when(loginUserCache.getObjectOnlyInRedisById("existing-token-id")).thenReturn(existingLoginUser);
 
         TokenService.IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser, true);
 
         assertThat(issuedToken.getToken()).isNotBlank();
         verify(loginUserCache).delete("existing-token-id");
+        verify(loginAccountCache).delete("1");
+        verify(loginRefreshTokenCache).delete("existing-refresh-session-id");
+        verify(loginUserCache).set(loginUser.getCachedKey(), loginUser, 1800, TimeUnit.SECONDS);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void createTokenAndPutUserInCache_shouldClearRefreshSessionWhenAccessSessionIsMissing() throws Exception {
+        RedisCacheService redisCacheService = mock(RedisCacheService.class);
+        RedisCacheTemplate<SystemLoginUser> loginUserCache = mock(RedisCacheTemplate.class);
+        RedisCacheTemplate<LoginRefreshSession> loginRefreshTokenCache = mock(RedisCacheTemplate.class);
+        RedisCacheTemplate<String> loginRefreshLockCache = mock(RedisCacheTemplate.class);
+        RedisCacheTemplate<String> loginAccountCache = mock(RedisCacheTemplate.class);
+        redisCacheService.loginUserCache = loginUserCache;
+        redisCacheService.loginRefreshTokenCache = loginRefreshTokenCache;
+        redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
+        redisCacheService.loginAccountCache = loginAccountCache;
+        TokenService tokenService = new TokenService(redisCacheService);
+        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        setField(tokenService, "expirationSeconds", 1800L);
+        setField(tokenService, "refreshExpirationSeconds", 604800L);
+
+        SystemLoginUser loginUser = new SystemLoginUser(1L, false, "testk", "pwd", RoleInfo.EMPTY_ROLE, 1L);
+        LoginRefreshSession existingRefreshSession = refreshSession(
+            "existing-refresh-session-id", "1", "missing-token-id", loginUser);
+        when(loginAccountCache.getObjectOnlyInRedisById("1"))
+            .thenReturn("existing-refresh-session-id")
+            .thenReturn("existing-refresh-session-id")
+            .thenReturn(null);
+        when(loginRefreshTokenCache.getObjectOnlyInRedisById("existing-refresh-session-id"))
+            .thenReturn(existingRefreshSession);
+        when(loginUserCache.getObjectOnlyInRedisById("missing-token-id")).thenReturn(null);
+        when(loginAccountCache.setIfAbsent(eq("1"), anyString(), eq(604800), eq(TimeUnit.SECONDS))).thenReturn(true);
+
+        TokenService.IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser);
+
+        assertThat(issuedToken.getToken()).isNotBlank();
+        verify(loginUserCache).delete("missing-token-id");
         verify(loginAccountCache).delete("1");
         verify(loginRefreshTokenCache).delete("existing-refresh-session-id");
         verify(loginUserCache).set(loginUser.getCachedKey(), loginUser, 1800, TimeUnit.SECONDS);

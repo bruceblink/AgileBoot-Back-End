@@ -265,14 +265,13 @@ public class TokenService {
         if (existingRefreshSessionId != null) {
             LoginRefreshSession existingRefreshSession =
                 redisCache.loginRefreshTokenCache.getObjectOnlyInRedisById(existingRefreshSessionId);
-            if (isRefreshSessionActive(existingRefreshSession)) {
+            if (isRefreshSessionOnline(existingRefreshSession)) {
                 if (!forceLogin) {
                     throw new ApiException(Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN);
                 }
                 forceLogoutRefreshSession(existingRefreshSession);
             } else {
-                redisCache.loginAccountCache.delete(accountId);
-                redisCache.loginRefreshTokenCache.delete(existingRefreshSessionId);
+                clearInactiveRefreshSession(accountId, existingRefreshSessionId, existingRefreshSession);
             }
         }
 
@@ -398,6 +397,24 @@ public class TokenService {
         return refreshSession != null && !refreshSession.isRevoked() && !refreshSession.isExpired(System.currentTimeMillis());
     }
 
+    private boolean isRefreshSessionOnline(LoginRefreshSession refreshSession) {
+        if (!isRefreshSessionActive(refreshSession) || refreshSession.getCurrentTokenId() == null
+            || refreshSession.getCurrentTokenId().isBlank()) {
+            return false;
+        }
+        return redisCache.loginUserCache.getObjectOnlyInRedisById(refreshSession.getCurrentTokenId()) != null;
+    }
+
+    private void clearInactiveRefreshSession(String accountId, String refreshSessionId,
+        LoginRefreshSession refreshSession) {
+        if (refreshSession != null) {
+            forceLogoutRefreshSession(refreshSession);
+            return;
+        }
+        redisCache.loginAccountCache.delete(accountId);
+        redisCache.loginRefreshTokenCache.delete(refreshSessionId);
+    }
+
     private void acquireRefreshLock(String refreshSessionId, String lockValue) {
         boolean locked = redisCache.loginRefreshLockCache.setIfAbsent(refreshSessionId, lockValue,
             refreshLockTimeoutSeconds(), TimeUnit.SECONDS);
@@ -429,7 +446,8 @@ public class TokenService {
     /**
      * 从数据声明生成令牌
      *
-     * @param claims 数据声明
+     * @param loginUser 登录用户
+     * @param refreshSessionId 刷新会话id
      * @return 令牌
      */
     private String generateAccessToken(SystemLoginUser loginUser, String refreshSessionId) {
