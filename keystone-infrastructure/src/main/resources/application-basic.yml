@@ -50,7 +50,7 @@ spring:
       strict: false
       datasource:
         master:
-          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/keystone?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/keystone?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
           username: ${SPRING_DATASOURCE_USERNAME:root}
           # 仅支持 secret:v1:aes-256-gcm 密文或密文文件。
           # 配置后会在启动期解密并注入到数据源 password。

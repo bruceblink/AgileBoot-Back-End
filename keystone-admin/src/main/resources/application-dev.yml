@@ -34,7 +34,7 @@ spring:
     dynamic:
       datasource:
         master:
-          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:33066/keystone?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:33066/keystone?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
           username: ${SPRING_DATASOURCE_USERNAME:root}
           password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:}
           password: ${SPRING_DATASOURCE_PASSWORD:12345}
