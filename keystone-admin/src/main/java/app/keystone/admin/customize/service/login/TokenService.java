@@ -394,11 +394,11 @@ public class TokenService {
     }
 
     private boolean isRefreshSessionActive(LoginRefreshSession refreshSession) {
-        return refreshSession != null && !refreshSession.isRevoked() && !refreshSession.isExpired(System.currentTimeMillis());
+        return refreshSession == null || refreshSession.isRevoked() || refreshSession.isExpired(System.currentTimeMillis());
     }
 
     private boolean isRefreshSessionOnline(LoginRefreshSession refreshSession) {
-        if (!isRefreshSessionActive(refreshSession) || refreshSession.getCurrentTokenId() == null
+        if (isRefreshSessionActive(refreshSession) || refreshSession.getCurrentTokenId() == null
             || refreshSession.getCurrentTokenId().isBlank()) {
             return false;
         }
@@ -486,7 +486,7 @@ public class TokenService {
     private LoginRefreshSession getValidRefreshSession(ParsedRefreshToken parsedRefreshToken) {
         LoginRefreshSession refreshSession =
             redisCache.loginRefreshTokenCache.getObjectOnlyInRedisById(parsedRefreshToken.refreshSessionId());
-        if (!isRefreshSessionActive(refreshSession)) {
+        if (isRefreshSessionActive(refreshSession)) {
             throw invalidRefreshToken();
         }
         String tokenHash = hashRefreshToken(parsedRefreshToken.refreshTokenSecret());
