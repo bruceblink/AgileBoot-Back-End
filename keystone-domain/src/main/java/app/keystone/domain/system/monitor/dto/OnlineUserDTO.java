@@ -3,6 +3,7 @@ package app.keystone.domain.system.monitor.dto;
 import app.keystone.domain.common.cache.CacheCenter;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
 import app.keystone.domain.system.dept.db.SysDeptEntity;
+import app.keystone.infrastructure.user.base.LoginInfo;
 import lombok.Data;
 
 /**
@@ -61,13 +62,20 @@ public class OnlineUserDTO {
         this.setTokenId(user.getCachedKey());
         this.tokenId = user.getCachedKey();
         this.username = user.getUsername();
-        this.ipAddress = user.getLoginInfo().getIpAddress();
-        this.loginLocation = user.getLoginInfo().getLocation();
-        this.browser = user.getLoginInfo().getBrowser();
-        this.operationSystem = user.getLoginInfo().getOperationSystem();
-        this.loginTime = user.getLoginInfo().getLoginTime();
+        LoginInfo loginInfo = user.getLoginInfo();
+        if (loginInfo != null) {
+            this.ipAddress = loginInfo.getIpAddress();
+            this.loginLocation = loginInfo.getLocation();
+            this.browser = loginInfo.getBrowser();
+            this.operationSystem = loginInfo.getOperationSystem();
+            this.loginTime = loginInfo.getLoginTime();
+        }
 
-        SysDeptEntity deptEntity = CacheCenter.deptCache().get(user.getDeptId() + "");
+        if (user.getDeptId() == null) {
+            return;
+        }
+
+        SysDeptEntity deptEntity = CacheCenter.deptCache().get(user.getDeptId());
 
         if (deptEntity != null) {
             this.deptName = deptEntity.getDeptName();
