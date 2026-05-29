@@ -4,14 +4,14 @@
 
 Keystone 使用无状态 JWT 承载 tokenId，并把真实登录用户信息缓存在 Redis `login_tokens:` 中。历史实现只按 tokenId 保存会话，因此同一账号可以多次登录，每次登录都会生成新的 tokenId 和 Redis 会话。
 
-当前业务要求改为：同一账号同一时间只能有一个 Keystone 在线会话。当该账号已有有效会话时，新的登录请求应被拒绝，并提示“该账号已经登录”。
+当前业务要求改为：同一账号同一时间只能有一个 Keystone 在线 access 会话。当该账号已有有效在线 access 会话时，新的登录请求应被拒绝，并提示“该账号已经登录”。
 
-引入 refresh token 后，账号占用绑定的是长期 refresh 会话。浏览器或桌面客户端异常关闭时，服务端无法区分“本人重连”和“恶意抢占”，因此不会静默覆盖旧会话。登录入口可以在用户明确确认后带 `forceLogin=true` 接管旧会话，后端只有在重新完成该入口的身份认证后才会撤销旧 refresh 会话。
+引入 refresh token 后，`login_accounts:{accountId}` 保存 refreshTokenId，便于刷新 access token 时保持账号占用索引稳定。但当前业务口径下，是否在线仍以 refresh 会话中的 currentTokenId 对应的 `login_tokens:{tokenId}` 是否存在为准。access 会话已不存在时，允许用户重新输入账号密码登录，并清理旧 refresh 会话。
 
 ## 目标
 
-1. 同一 `sys_user.user_id` 只允许一个有效 Keystone 登录会话。
-2. 第二次登录默认不踢掉旧会话，而是拒绝新登录。
+1. 同一 `sys_user.user_id` 只允许一个有效 Keystone 在线 access 会话。
+2. 第二次登录默认不踢掉仍在线的旧 access 会话，而是拒绝新登录。
 3. 正常退出、监控页强退、token 过期都要正确释放或失效账号占用状态。
 4. Redis 中残留的过期账号占用标记不应永久阻塞登录。
 5. 本地登录、mixed/Keylo 凭证登录、`/login/keylo` 兼容入口都走同一套限制。
@@ -19,7 +19,7 @@ Keystone 使用无状态 JWT 承载 tokenId，并把真实登录用户信息缓�
 ## 非目标
 
 1. 不限制直接携带 Keylo accessToken 访问受保护接口的临时主体。该路径不是 Keystone 登录会话，不写入 `login_tokens:`。
-2. 不实现静默的“新登录踢掉旧登录”。当前语义是“已有在线会话时先拒绝新登录，用户确认后才允许显式接管”。
+2. 不实现静默的“新登录踢掉仍在线的旧登录”。当前语义是“已有在线 access 会话时先拒绝新登录，用户确认后才允许显式接管”。
 3. 不做多端类型区分，例如 PC、移动端分别允许一个会话。
 
 ## Redis Key 设计
@@ -29,11 +29,11 @@ Keystone 维护两类登录缓存：
 | Key 前缀 | 值 | 用途 |
 | --- | --- | --- |
 | `login_tokens:{tokenId}` | `SystemLoginUser` | 保存当前 tokenId 对应的登录用户、权限、登录 IP、浏览器、登录时间等会话信息 |
-| `login_accounts:{accountId}` | `tokenId` | 保存账号当前占用的 tokenId，用于判断同一账号是否已经在线 |
+| `login_accounts:{accountId}` | `refreshTokenId` | 保存账号当前 refresh 会话 ID；用于定位 currentTokenId 并判断同一账号是否已经在线 |
 
 `accountId` 优先使用 `SystemLoginUser.userId`。如果未来出现无 `userId` 的 Keystone 登录主体，则兜底使用 `username`。
 
-两个 key 使用相同过期时间，按 `token.expirationSeconds` 写入 Redis TTL。这样 Redis 登录态不会比 JWT 活得更久，避免 JWT 已过期但 `login_accounts:{accountId}` 仍阻塞重新登录。
+`login_tokens:{tokenId}` 使用 `token.expirationSeconds`；`login_refresh_tokens:{refreshTokenId}` 和 `login_accounts:{accountId}` 使用 `token.refreshExpirationSeconds`。账号是否在线不只看 `login_accounts` 是否存在，还要确认其指向的 refresh 会话里 `currentTokenId` 对应的 `login_tokens:{tokenId}` 仍存在。
 
 ## 登录流程
 
@@ -45,9 +45,9 @@ Keystone 维护两类登录缓存：
 2. 写入 `login_tokens:{tokenId}`。
 3. 检查 `login_accounts:{accountId}`：
    - 如果不存在，使用 Redis `SET NX EX` 语义原子写入账号占用标记。
-   - 如果存在，读取其中的旧 `tokenId`，再绕过本地 Caffeine 缓存直接检查 Redis 中 `login_tokens:{oldTokenId}` 是否存在。
-   - 如果旧 token 仍有效，抛出 `Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN`。
-   - 如果旧 token 已过期或不存在，删除残留账号标记，然后重新尝试原子占用。
+   - 如果存在，读取其中的旧 `refreshTokenId`，再读取 `login_refresh_tokens:{refreshTokenId}`，并绕过本地 Caffeine 缓存直接检查 Redis 中 `login_tokens:{currentTokenId}` 是否存在。
+   - 如果旧 access token 仍在线，抛出 `Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN`。
+   - 如果旧 refresh 会话不存在、已过期、已撤销，或旧 access token 已过期/不存在，删除残留 refresh 会话和账号标记，然后重新尝试原子占用。
 4. 账号占用成功后签发 JWT，JWT claim 中保存 `login_user_key={tokenId}`，并附带 `login_user_id` / `login_username` 作为退出登录时的兜底释放依据。
 5. `LoginService` 再记录登录成功日志和更新用户最近登录信息。
 
@@ -71,7 +71,7 @@ Keystone 维护两类登录缓存：
 
 ### token 有效期
 
-Keystone JWT 是有明确过期时间的令牌。Redis 中 `login_tokens:{tokenId}` 和 `login_accounts:{accountId}` 使用同一个 `token.expirationSeconds` 作为 TTL，因此 token 过期后，登录会话和账号占用标记也会自然过期。
+Keystone JWT 是有明确过期时间的令牌。Redis 中 `login_tokens:{tokenId}` 使用 `token.expirationSeconds`；refresh 会话和账号占用使用 refresh token TTL。即使 refresh 会话仍未过期，只要 `login_tokens:{tokenId}` 已过期，用户就不再被视为在线。
 
 `JwtAuthenticationTokenFilter` 只负责认证请求，不再滑动刷新 Redis 登录态。否则会出现 JWT 已失效、前端尚未主动退出，但 Redis 账号占用标记仍存在，导致重新登录被误判为“该账号已经登录”。
 
@@ -81,9 +81,9 @@ Keystone JWT 是有明确过期时间的令牌。Redis 中 `login_tokens:{tokenI
 
 1. 删除 `login_tokens:{tokenId}`。
 2. 读取 `login_accounts:{accountId}`。
-3. 仅当账号占用值等于当前 `tokenId` 时删除账号占用标记。
+3. 仅当账号占用值等于当前 refresh 会话 ID 时删除账号占用标记。
 
-如果 `login_tokens:{tokenId}` 已经缺失，`TokenService` 会从 JWT claim 中读取 `login_user_id` / `login_username`，仍然尝试释放匹配的账号占用标记。最后一步避免误删其它会话的账号占用标记。
+如果 `login_tokens:{tokenId}` 已经缺失，`TokenService` 会从 JWT claim 中读取 `login_refresh_session_id` / `login_user_id` / `login_username`，仍然尝试释放匹配的 refresh 会话和账号占用标记。最后一步避免误删其它会话的账号占用标记。
 
 ### 监控页强退
 
@@ -91,7 +91,7 @@ Keystone JWT 是有明确过期时间的令牌。Redis 中 `login_tokens:{tokenI
 
 1. 先通过 tokenId 读取 `SystemLoginUser`。
 2. 删除 `login_tokens:{tokenId}`。
-3. 如果能读到登录用户，则按正常退出规则释放账号占用标记。
+3. 如果能读到登录用户或 JWT/refresh 会话关联信息，则按正常退出规则释放 refresh 会话和账号占用标记。
 
 ## 错误码
 
@@ -118,9 +118,9 @@ Keystone JWT 是有明确过期时间的令牌。Redis 中 `login_tokens:{tokenI
 
 `TokenServiceTest` 覆盖以下场景：
 
-1. 创建 token 时包含标准 JWT claims，并使用 `token.expirationSeconds` 写入 Redis 登录态 TTL。
-2. 已有有效账号会话时拒绝第二次登录。
-3. 账号占用标记残留但 Redis 中旧会话已过期时，绕过本地缓存确认后清理残留并允许登录。
+1. 创建 token 时包含标准 JWT claims，access 会话使用 `token.expirationSeconds`，refresh 会话和账号占用使用 `token.refreshExpirationSeconds`。
+2. 已有在线 access 会话时拒绝第二次登录。
+3. 账号占用标记残留但 Redis 中旧 access 会话已过期或缺失时，绕过本地缓存确认后清理残留并允许登录。
 4. 删除登录用户时同步删除匹配的账号占用标记。
 5. 登录用户缓存缺失时，退出登录仍可通过 JWT claim 释放账号占用标记。
 

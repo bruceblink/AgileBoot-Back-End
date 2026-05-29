@@ -54,7 +54,7 @@ refresh token 是“重新获取 access token 的长期凭证”，有效期更�
 
 如果 `login_accounts:{accountId}` 绑定短期 `tokenId`，access token 刷新后账号占用也必须频繁更新，容易出现旧 token 已删、新 token 未写入之间的短暂不一致。
 
-绑定 `refreshTokenId` 更稳定，因为它代表完整登录会话，而不是某一次短期 access token。只要 refresh 会话有效，就认为该账号在线。
+绑定 `refreshTokenId` 更稳定，因为刷新 access token 时不需要改写账号占用。Keystone 当前业务口径下，账号是否在线仍以 refresh 会话中的 `currentTokenId` 能否在 `login_tokens:` 中查到为准；refresh 会话本身只表示客户端仍可免密续签。
 
 ### 为什么 refresh token 不直接用 JWT
 
@@ -142,7 +142,7 @@ token:
 | --- | --- | --- | --- |
 | `login_tokens:{tokenId}` | `SystemLoginUser` | access token TTL | 当前 access token 对应的用户会话 |
 | `login_refresh_tokens:{refreshTokenId}` | refresh token 会话对象 | refresh token TTL | 保存 refresh token 哈希、账号、当前 tokenId、状态 |
-| `login_accounts:{accountId}` | `refreshTokenId` | refresh token TTL | 单账号在线占用，绑定长期会话而不是短期 access token |
+| `login_accounts:{accountId}` | `refreshTokenId` | refresh token TTL | 单账号在线占用索引，指向 refresh 会话；是否在线还要检查其 currentTokenId 对应的 access 会话 |
 
 refresh token 会话对象建议字段：
 
@@ -172,7 +172,7 @@ login_tokens:{currentTokenId}
   -> SystemLoginUser
 ```
 
-服务端判断账号是否在线时，应以 `login_accounts:{accountId}` 指向的 refresh 会话是否有效为准。服务端处理 API 请求时，应以 access token 中的 `tokenId` 是否能查到 `login_tokens:{tokenId}` 为准。
+服务端判断账号是否在线时，应先读取 `login_accounts:{accountId}` 指向的 refresh 会话，再检查该 refresh 会话的 `currentTokenId` 是否能在 `login_tokens:{tokenId}` 中查到。服务端处理 API 请求时，也应以 access token 中的 `tokenId` 是否能查到 `login_tokens:{tokenId}` 为准。这样 access token 过期后，用户不会因为仅剩 refresh 会话而在重新输入账号密码登录时被误判为在线。
 
 ## 登录流程
 
@@ -180,8 +180,8 @@ login_tokens:{currentTokenId}
 2. 检查 `login_accounts:{accountId}`：
    - 不存在：允许创建新 refresh token 会话。
    - 存在：读取 `login_refresh_tokens:{refreshTokenId}`。
-   - refresh 会话仍有效：拒绝登录，返回“该账号已经登录”。
-   - refresh 会话不存在、过期或已撤销：删除残留账号占用后允许登录。
+   - refresh 会话有效且其 `currentTokenId` 对应的 `login_tokens:{tokenId}` 仍存在：拒绝登录，返回“该账号已经登录”。
+   - refresh 会话不存在、过期、已撤销，或其 `currentTokenId` 对应的 access 会话已经不存在：删除残留 refresh 会话和账号占用后允许登录。
 3. 生成 `refreshTokenId` 和 refresh token 明文。
 4. 生成 access token 的 `tokenId` 和 JWT。
 5. 写入：
@@ -202,7 +202,7 @@ login_tokens:{currentTokenId}
 
 ## 异常退出后的显式接管
 
-浏览器、桌面客户端或网络异常退出时，服务端无法收到 `/logout`，因此 refresh 会话和 `login_accounts:{accountId}` 会继续保留到 refresh 会话过期。此时用户重新输入账号密码登录，会被判断为已有在线会话。
+浏览器、桌面客户端或网络异常退出时，服务端无法收到 `/logout`，refresh 会话和 `login_accounts:{accountId}` 可能继续保留到 refresh 会话过期。当前业务口径下，只要对应 access 会话已过期或被删除，用户重新输入账号密码登录时不再被判断为在线；旧 refresh 会话会被清理。
 
 服务端无法可靠区分以下场景：
 
@@ -210,22 +210,22 @@ login_tokens:{currentTokenId}
 2. 同一用户从另一台设备登录。
 3. 其他人获取账号密码后尝试抢占登录。
 
-因此 Keystone 不做静默接管。默认行为仍是拒绝新登录并返回“该账号已经登录”。只有客户端明确提示用户、用户确认后，才允许再次提交登录请求并带上 `forceLogin=true`。
+因此 Keystone 只在旧 access 会话仍在线时拒绝新登录并返回“该账号已经登录”。只有客户端明确提示用户、用户确认后，才允许再次提交登录请求并带上 `forceLogin=true` 接管旧在线会话。
 
 接管流程：
 
 1. 客户端正常提交 Keystone 登录请求。
-2. 后端完成对应登录入口的身份认证后发现已有有效 refresh 会话，返回“该账号已经登录”。
+2. 后端完成对应登录入口的身份认证后发现已有有效在线 access 会话，返回“该账号已经登录”。
 3. 客户端弹出确认框，明确说明继续登录会踢出旧会话。
 4. 用户确认后，客户端再次提交登录请求，请求体中带 `forceLogin=true`。
 5. 后端再次完成身份认证。
-6. 认证通过后，后端撤销旧 refresh 会话，删除旧 `login_tokens:{tokenId}` 和 `login_accounts:{accountId}`。
+6. 认证通过后，后端撤销旧 refresh 会话，删除旧 `login_tokens:{tokenId}`、`login_refresh_tokens:{refreshTokenId}` 和 `login_accounts:{accountId}`。
 7. 后端创建新的 refresh 会话并返回新的 access token / refresh token。
 
 安全边界：
 
 1. `forceLogin=true` 只能在对应登录入口认证通过后生效；它不是独立的强退接口。
-2. 服务端不能因为已有会话残留就自动覆盖旧会话。
+2. 服务端不能因为旧 access 会话仍在线就自动覆盖旧会话；但旧 access 会话已不存在时，可清理残留 refresh 会话并创建新登录。
 3. 直接携带 Keylo accessToken 访问受保护接口的临时主体不属于 Keystone refresh 会话，不能触发接管。
 4. `/login/keylo` 是兼容登录入口，会签发 Keystone refresh 会话；只有请求显式携带 `forceLogin=true` 且 Keylo token 校验通过后，才允许接管旧 Keystone 会话。
 5. 如果启用了验证码，第一次登录失败后验证码已被消费；客户端应重新获取验证码并让用户再次提交强制登录请求。
@@ -350,17 +350,17 @@ POST /logout-refresh-token
 
 ## 监控强退
 
-在线用户列表应从 refresh 会话维度展示，而不是只展示短期 access token：
+在线用户列表按当前 access 会话维度展示。只要 `login_tokens:{tokenId}` 不存在，即使 refresh 会话还未自然过期，也不应显示为在线用户：
 
 | 字段 | 来源 |
 | --- | --- |
-| tokenId | refresh 会话中的 `currentTokenId` |
-| refreshTokenId | refresh 会话 ID |
-| username | refresh 会话 |
-| loginTime | `SystemLoginUser.loginInfo.loginTime` 或 refresh 会话 `issuedAt` |
-| expiresAt | refresh 会话过期时间 |
+| tokenId | `login_tokens:{tokenId}` 的 tokenId |
+| refreshTokenId | 当前实现不在在线列表返回；可由 tokenId 关联的 refresh 会话内部使用 |
+| username | `SystemLoginUser` |
+| loginTime | `SystemLoginUser.loginInfo.loginTime` |
+| expiresAt | 当前实现不返回；access token TTL 由 Redis 控制 |
 
-强退时按 `refreshTokenId` 撤销 refresh 会话，并删除当前 `login_tokens:{currentTokenId}` 和账号占用。
+强退时按 `tokenId` 入口处理：通过 tokenId 找到当前 refresh 会话，删除 `login_tokens:{tokenId}`、`login_refresh_tokens:{refreshTokenId}` 和匹配的账号占用。
 
 ## 配置项
 
@@ -454,10 +454,10 @@ Web 端保存 refresh token 有 XSS 风险。当前前端已经使用 JS 管理 
 2. refresh token 有效时可刷新 access token。
 3. refresh 后旧 access token 对应 `login_tokens` 被删除。
 4. refresh 会话过期、撤销、哈希不匹配时刷新失败。
-5. 同一账号已有 refresh 会话时拒绝第二次登录。
-6. refresh 会话残留但已过期时允许重新登录。
+5. 同一账号已有在线 access 会话时拒绝第二次登录。
+6. refresh 会话残留、已过期，或其 access 会话已不存在时允许重新登录。
 7. `/logout` 同时删除 access token、refresh 会话和账号占用。
-8. 监控强退按 refresh 会话释放账号占用。
+8. 监控强退按 access tokenId 释放 refresh 会话和账号占用。
 9. 并发刷新同一个 refresh token 时不会产生多个有效 access token。
 
 Web 前端应覆盖：
