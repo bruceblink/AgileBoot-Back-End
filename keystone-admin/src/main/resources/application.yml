@@ -25,3 +25,8 @@ spring:
   profiles:
     # 本地开发默认 dev；部署时通过环境变量覆盖为 prod
     active: ${SPRING_PROFILES_ACTIVE:dev}
+
+keystone:
+  name: Keystone
+  version: ${KEYSTONE_VERSION:@keystoneVersion@}
+  copyright-year: 2026
