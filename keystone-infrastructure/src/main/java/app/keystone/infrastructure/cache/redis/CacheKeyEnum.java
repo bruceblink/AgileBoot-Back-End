@@ -16,11 +16,6 @@ public enum CacheKeyEnum {
     LOGIN_REFRESH_LOCK_KEY("login_refresh_locks:", 10, TimeUnit.SECONDS),
     LOGIN_ACCOUNT_KEY("login_accounts:", 30, TimeUnit.MINUTES),
     RATE_LIMIT_KEY("rate_limit:", 60, TimeUnit.SECONDS),
-    USER_ENTITY_KEY("user_entity:", 60, TimeUnit.MINUTES),
-    ROLE_ENTITY_KEY("role_entity:", 60, TimeUnit.MINUTES),
-    POST_ENTITY_KEY("post_entity:", 60, TimeUnit.MINUTES),
-    ROLE_MODEL_INFO_KEY("role_model_info:", 60, TimeUnit.MINUTES),
-    DICT_DATA_KEY("dict_data:", 60, TimeUnit.MINUTES),
 
     ;
 

@@ -4,6 +4,7 @@ import app.keystone.infrastructure.cache.caffeine.AbstractCaffeineCacheTemplate;
 import app.keystone.infrastructure.cache.redis.RedisCacheTemplate;
 import app.keystone.infrastructure.user.web.LoginRefreshSession;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
+import app.keystone.domain.dictionary.dto.LegacyApiResponse;
 import app.keystone.domain.system.dept.db.SysDeptEntity;
 import app.keystone.domain.system.dict.db.SysDictDataEntity;
 import app.keystone.domain.system.post.db.SysPostEntity;
@@ -23,10 +24,13 @@ public class CacheCenter {
 
     private static LocalCacheService localCacheService;
     private static RedisCacheService redisCacheService;
+    private static SpringCacheService springCacheService;
 
-    public CacheCenter(LocalCacheService localCacheService, RedisCacheService redisCacheService) {
+    public CacheCenter(LocalCacheService localCacheService, RedisCacheService redisCacheService,
+        SpringCacheService springCacheService) {
         CacheCenter.localCacheService = localCacheService;
         CacheCenter.redisCacheService = redisCacheService;
+        CacheCenter.springCacheService = springCacheService;
     }
 
     public static AbstractCaffeineCacheTemplate<String> configCache() {
@@ -57,20 +61,24 @@ public class CacheCenter {
         return redisCacheService.loginAccountCache;
     }
 
-    public static RedisCacheTemplate<SysUserEntity> userCache() {
-        return redisCacheService.userCache;
+    public static SpringCacheTemplate<SysUserEntity> userCache() {
+        return springCacheService == null ? null : springCacheService.userCache;
     }
 
-    public static RedisCacheTemplate<SysRoleEntity> roleCache() {
-        return redisCacheService.roleCache;
+    public static SpringCacheTemplate<SysRoleEntity> roleCache() {
+        return springCacheService == null ? null : springCacheService.roleCache;
     }
 
-    public static RedisCacheTemplate<SysPostEntity> postCache() {
-        return redisCacheService.postCache;
+    public static SpringCacheTemplate<SysPostEntity> postCache() {
+        return springCacheService == null ? null : springCacheService.postCache;
     }
 
-    public static RedisCacheTemplate<List<SysDictDataEntity>> dictDataCache() {
-        return redisCacheService.dictDataCache;
+    public static SpringCacheTemplate<List<SysDictDataEntity>> dictDataCache() {
+        return springCacheService == null ? null : springCacheService.dictDataCache;
+    }
+
+    public static SpringCacheTemplate<LegacyApiResponse> deviceListQueryCache() {
+        return springCacheService == null ? null : springCacheService.deviceListQueryCache;
     }
 
 }

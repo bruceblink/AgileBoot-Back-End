@@ -32,7 +32,6 @@ import app.keystone.domain.system.config.db.SysConfigService;
 import app.keystone.domain.system.dept.db.SysDeptService;
 import app.keystone.domain.system.user.db.SysUserEntity;
 import app.keystone.domain.system.user.db.SysUserService;
-import app.keystone.infrastructure.cache.redis.RedisCacheTemplate;
 import app.keystone.infrastructure.thread.ThreadPoolManager;
 import app.keystone.infrastructure.user.web.RoleInfo;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
@@ -110,19 +109,6 @@ class LoginServiceKeyloLoginTest {
         when(tokenService.createTokenAndPutUserInCache(loginUser, false))
             .thenReturn(new IssuedToken("keystone-token", "refresh-token", 1800L, 604800L));
 
-        SysUserEntity cachedUser = new SysUserEntity() {
-            @Override
-            public boolean updateById() {
-                return true;
-            }
-        };
-        cachedUser.setUserId(1L);
-
-        @SuppressWarnings("unchecked")
-        RedisCacheTemplate<SysUserEntity> userCache = mock(RedisCacheTemplate.class);
-        redisCache.userCache = userCache;
-        when(userCache.getObjectById(1L)).thenReturn(cachedUser);
-
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
         when(request.getHeader("User-Agent")).thenReturn("JUnit");
@@ -166,19 +152,6 @@ class LoginServiceKeyloLoginTest {
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(tokenService.createTokenAndPutUserInCache(loginUser, false))
             .thenReturn(new IssuedToken("local-token", "refresh-token", 1800L, 604800L));
-
-        SysUserEntity cachedUser = new SysUserEntity() {
-            @Override
-            public boolean updateById() {
-                return true;
-            }
-        };
-        cachedUser.setUserId(1L);
-
-        @SuppressWarnings("unchecked")
-        RedisCacheTemplate<SysUserEntity> userCache = mock(RedisCacheTemplate.class);
-        redisCache.userCache = userCache;
-        when(userCache.getObjectById(1L)).thenReturn(cachedUser);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
@@ -243,19 +216,6 @@ class LoginServiceKeyloLoginTest {
         when(userDetailsService.buildLoginUser(mappedUser)).thenReturn(loginUser);
         when(tokenService.createTokenAndPutUserInCache(loginUser, false))
             .thenReturn(new IssuedToken("keystone-token", "refresh-token", 1800L, 604800L));
-
-        SysUserEntity cachedUser = new SysUserEntity() {
-            @Override
-            public boolean updateById() {
-                return true;
-            }
-        };
-        cachedUser.setUserId(1L);
-
-        @SuppressWarnings("unchecked")
-        RedisCacheTemplate<SysUserEntity> userCache = mock(RedisCacheTemplate.class);
-        redisCache.userCache = userCache;
-        when(userCache.getObjectById(1L)).thenReturn(cachedUser);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");

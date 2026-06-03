@@ -22,6 +22,7 @@ import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.common.exception.error.ErrorCode.Business;
 import app.keystone.common.utils.ServletHolderUtil;
 import app.keystone.common.utils.i18n.MessageUtils;
+import app.keystone.domain.common.cache.CacheCenter;
 import app.keystone.domain.common.cache.LocalCacheService;
 import app.keystone.domain.common.cache.MapCache;
 import app.keystone.domain.common.cache.RedisCacheService;
@@ -351,7 +352,9 @@ public class LoginService {
             .set(SysUserEntity::getLoginIp, ServletHolderUtil.getRequest().getRemoteAddr())
             .set(SysUserEntity::getLoginDate, new Date());
         userService.update(updateWrapper);
-        redisCache.userCache.delete(loginUser.getUserId());
+        if (CacheCenter.userCache() != null) {
+            CacheCenter.userCache().delete(loginUser.getUserId());
+        }
     }
 
     public String decryptPassword(String originalPassword) {
