@@ -44,7 +44,8 @@ public class DeptModel extends SysDeptEntity {
 
     public void loadUpdateCommand(UpdateDeptCommand updateCommand) {
         loadAddCommand(updateCommand);
-        setStatus(updateCommand.getStatus() == null ? 0 : updateCommand.getStatus());
+        Integer status = updateCommand.getStatus();
+        setStatus(status == null ? StatusEnum.DISABLE.getValue() : status);
     }
 
     public void checkDeptNameUnique() {

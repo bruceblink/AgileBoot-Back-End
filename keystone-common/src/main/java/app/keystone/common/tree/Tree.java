@@ -37,10 +37,16 @@ public class Tree<T> {
     }
 
     public List<Tree<T>> getChildren() {
-        return children;
+        return List.copyOf(children);
     }
 
     public void setChildren(List<Tree<T>> children) {
-        this.children = children;
+        this.children = children == null ? new ArrayList<>() : new ArrayList<>(children);
+    }
+
+    public void addChild(Tree<T> child) {
+        if (child != null) {
+            children.add(child);
+        }
     }
 }

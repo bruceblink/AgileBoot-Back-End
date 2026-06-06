@@ -35,7 +35,7 @@ public class TreeUtil {
             }
             Tree<T> parent = idToTree.get(parentId);
             if (parent != null) {
-                parent.getChildren().add(node);
+                parent.addChild(node);
             } else {
                 roots.add(node);
             }
