@@ -218,6 +218,18 @@ public enum ErrorCode implements ErrorCodeInterface {
 
         DICT_TYPE_HAS_DATA_NOT_ALLOW_DELETE(11101, "字典类型下存在字典数据，请先删除字典数据", "Business.DICT_TYPE_HAS_DATA_NOT_ALLOW_DELETE"),
 
+        // ---------------------------------- JOB -----------------------------------------------
+
+        JOB_CRON_EXPRESSION_INVALID(11200, "Cron表达式无效：{}", "Business.JOB_CRON_EXPRESSION_INVALID"),
+
+        JOB_INVOKE_TARGET_INVALID(11201, "调用目标无效，仅支持 springBean.method() 格式", "Business.JOB_INVOKE_TARGET_INVALID"),
+
+        JOB_INVOKE_BEAN_NOT_FOUND(11202, "调用目标Bean不存在：{}", "Business.JOB_INVOKE_BEAN_NOT_FOUND"),
+
+        JOB_INVOKE_METHOD_NOT_FOUND(11203, "调用目标方法不存在或不是无参方法：{}", "Business.JOB_INVOKE_METHOD_NOT_FOUND"),
+
+        JOB_EXECUTE_FAILED(11204, "任务执行失败：{}", "Business.JOB_EXECUTE_FAILED"),
+
         ;
 
 

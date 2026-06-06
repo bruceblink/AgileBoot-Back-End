@@ -2,6 +2,7 @@ package app.keystone.domain.common.cache;
 
 import app.keystone.common.enums.common.BusinessTypeEnum;
 import app.keystone.common.enums.common.GenderEnum;
+import app.keystone.common.enums.common.JobStatusEnum;
 import app.keystone.common.enums.common.LoginStatusEnum;
 import app.keystone.common.enums.common.NoticeStatusEnum;
 import app.keystone.common.enums.common.NoticeTypeEnum;
@@ -50,6 +51,7 @@ public class MapCache {
         loadInCache(LoginStatusEnum.values());
         loadInCache(VisibleStatusEnum.values());
         loadInCache(UserStatusEnum.values());
+        loadInCache(JobStatusEnum.values());
     }
 
 

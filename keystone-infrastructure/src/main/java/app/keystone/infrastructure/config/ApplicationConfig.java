@@ -1,9 +1,12 @@
 package app.keystone.infrastructure.config;
 
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
  * 程序注解配置
@@ -18,4 +21,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @MapperScan(value = "app.keystone.**.db", markerInterface = com.baomidou.mybatisplus.core.mapper.BaseMapper.class)
 public class ApplicationConfig {
 
+    @Bean
+    public TaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(5);
+        scheduler.setThreadNamePrefix("keystone-job-");
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+        scheduler.setAwaitTerminationSeconds(30);
+        return scheduler;
+    }
 }
