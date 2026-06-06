@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 plugins {
     id 'org.springframework.boot'
 }
@@ -9,6 +11,16 @@ jar {
 
 bootJar {
     archiveFileName = 'keystone-admin.jar'
+}
+
+def keystoneVersion = project.version.toString()
+
+tasks.named('processResources') {
+    filesMatching('application.yml') {
+        filter(ReplaceTokens, tokens: [
+            keystoneVersion: keystoneVersion
+        ])
+    }
 }
 
 dependencies {
