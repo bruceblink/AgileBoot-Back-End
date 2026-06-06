@@ -1,7 +1,6 @@
 package app.keystone.admin.customize.service.login;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 import app.keystone.admin.customize.service.login.keylo.KeyloCredentialVerifier;

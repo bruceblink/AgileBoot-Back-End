@@ -2,6 +2,7 @@ package app.keystone.admin.customize.service.login.keylo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -103,6 +104,7 @@ class KeyloTokenVerifierTest {
 
         OAuth2TokenValidator<Jwt> validator = (OAuth2TokenValidator<Jwt>) ReflectionTestUtils
             .invokeMethod(keyloTokenVerifier, "buildValidator");
+        assertNotNull(validator);
 
         OAuth2TokenValidatorResult validResult = validator.validate(jwtWithAudience("keystone-admin"));
         OAuth2TokenValidatorResult invalidResult = validator.validate(jwtWithAudience("unknown-service"));

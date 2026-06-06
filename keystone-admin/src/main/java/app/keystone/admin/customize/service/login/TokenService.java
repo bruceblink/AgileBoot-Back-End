@@ -317,7 +317,6 @@ public class TokenService {
                 if (currentRefreshSession != null && tokenId != null
                     && tokenId.equals(currentRefreshSession.getCurrentTokenId())) {
                     refreshSession = currentRefreshSession;
-                    refreshSessionId = currentRefreshSessionId;
                 }
             }
         }

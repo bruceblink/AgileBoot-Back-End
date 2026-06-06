@@ -6,6 +6,7 @@ import app.keystone.common.utils.jackson.JacksonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -138,9 +139,10 @@ public class KeyloTokenVerifier {
     }
 
     private Long expiresIn(Jwt jwt) {
-        return jwt.getExpiresAt() == null
+        Instant expiresAt = jwt.getExpiresAt();
+        return expiresAt == null
             ? null
-            : Math.max(0L, (jwt.getExpiresAt().toEpochMilli() - System.currentTimeMillis()) / 1000L);
+            : Math.max(0L, (expiresAt.toEpochMilli() - System.currentTimeMillis()) / 1000L);
     }
 
     private long clockSkewSeconds() {
