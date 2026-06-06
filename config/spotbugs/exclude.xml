@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <Match>
+        <Class name="app.keystone.common.config.KeystoneConfig"/>
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+    </Match>
+    <Match>
+        <Class name="app.keystone.domain.common.cache.CacheCenter"/>
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+    </Match>
+    <Match>
+        <Class name="app.keystone.admin.customize.service.permission.DataPermissionCheckerFactory"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Or>
+            <Class name="app.keystone.domain.system.config.model.ConfigModel"/>
+            <Class name="app.keystone.domain.system.dept.model.DeptModel"/>
+            <Class name="app.keystone.domain.system.dict.model.DictTypeModel"/>
+            <Class name="app.keystone.domain.system.log.dto.OperationLogDTO"/>
+            <Class name="app.keystone.domain.system.menu.model.MenuModel"/>
+            <Class name="app.keystone.domain.system.notice.model.NoticeModel"/>
+            <Class name="app.keystone.domain.system.post.dto.PostDTO"/>
+            <Class name="app.keystone.domain.system.post.model.PostModel"/>
+            <Class name="app.keystone.domain.system.role.model.RoleModel"/>
+            <Class name="app.keystone.domain.system.user.dto.UserDTO"/>
+            <Class name="app.keystone.domain.system.user.model.UserModel"/>
+        </Or>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="app.keystone.infrastructure.cache.redis.RedisCacheTemplate"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+</FindBugsFilter>

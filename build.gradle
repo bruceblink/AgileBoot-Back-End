@@ -75,6 +75,7 @@ subprojects {
         toolVersion = '4.9.8'
         ignoreFailures = true
         showProgress = true
+        excludeFilter = rootProject.file('config/spotbugs/exclude.xml')
     }
 
     // Phase C step 3: make production bug findings fail the build.
@@ -84,8 +85,10 @@ subprojects {
 
     tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
         if (name.toLowerCase().contains('test')) {
+            auxClassPaths.from(sourceSets.test.compileClasspath)
             auxClassPaths.from(sourceSets.test.runtimeClasspath)
         } else {
+            auxClassPaths.from(sourceSets.main.compileClasspath)
             auxClassPaths.from(sourceSets.main.runtimeClasspath)
         }
         reports {

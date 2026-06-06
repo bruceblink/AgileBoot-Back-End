@@ -183,6 +183,7 @@ class KeyloUserProvisioningServiceTest {
         assertEquals("uid-2003", result.getKeyloUserId());
     }
 
+    @SuppressWarnings("unchecked")
     private HttpResponse<String> response(int statusCode, String body) {
         HttpResponse<String> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(statusCode);
