@@ -3,6 +3,7 @@ package app.keystone.admin.customize.service.login;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
+import app.keystone.admin.customize.async.AsyncTaskFactory;
 import app.keystone.admin.customize.service.login.keylo.KeyloCredentialVerifier;
 import app.keystone.admin.customize.service.login.keylo.KeyloLoginUserResolver;
 import app.keystone.admin.customize.service.login.keylo.KeyloProperties;
@@ -78,7 +79,8 @@ class LoginServiceRsaPublicKeyTest {
             mock(KeyloTokenVerifier.class),
             mock(KeyloCredentialVerifier.class),
             mock(KeyloProperties.class),
-            mock(KeyloLoginUserResolver.class)
+            mock(KeyloLoginUserResolver.class),
+            mock(AsyncTaskFactory.class)
         );
     }
 

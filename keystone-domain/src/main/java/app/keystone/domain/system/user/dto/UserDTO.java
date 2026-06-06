@@ -39,7 +39,7 @@ public class UserDTO {
             }
 
             if (entity.getPostId() != null) {
-                SysPostEntity post = CacheCenter.postCache().getObjectById(entity.getRoleId());
+                SysPostEntity post = CacheCenter.postCache().getObjectById(entity.getPostId());
                 this.postName = post != null ? post.getPostName() : "";
             }
 

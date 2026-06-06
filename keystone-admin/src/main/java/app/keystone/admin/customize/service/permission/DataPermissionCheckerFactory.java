@@ -18,8 +18,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DataPermissionCheckerFactory {
-    private static DataPermissionCheckerFactory instance;
-
     private final AbstractDataPermissionChecker allChecker;
     private final AbstractDataPermissionChecker customChecker;
     private final AbstractDataPermissionChecker singleDeptChecker;
@@ -34,14 +32,9 @@ public class DataPermissionCheckerFactory {
         this.deptTreeChecker = new DeptTreeDataPermissionChecker(deptService);
         this.onlySelfChecker = new OnlySelfDataPermissionChecker(deptService);
         this.defaultSelfChecker = new DefaultDataPermissionChecker();
-        instance = this;
     }
 
-    public static AbstractDataPermissionChecker getChecker(SystemLoginUser loginUser) {
-        return instance.resolveChecker(loginUser);
-    }
-
-    private AbstractDataPermissionChecker resolveChecker(SystemLoginUser loginUser) {
+    public AbstractDataPermissionChecker getChecker(SystemLoginUser loginUser) {
         if (loginUser == null) {
             return deptTreeChecker;
         }

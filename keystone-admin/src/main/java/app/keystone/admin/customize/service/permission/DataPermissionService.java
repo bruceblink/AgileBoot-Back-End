@@ -20,6 +20,8 @@ public class DataPermissionService {
 
     private final SysUserService userService;
 
+    private final DataPermissionCheckerFactory dataPermissionCheckerFactory;
+
     /**
      * 通过userId 校验当前用户 对 目标用户是否有操作权限
      *
@@ -60,7 +62,7 @@ public class DataPermissionService {
 
     public boolean checkDataScope(SystemLoginUser loginUser, Long targetDeptId, Long targetUserId) {
         DataCondition dataCondition = DataCondition.builder().targetDeptId(targetDeptId).targetUserId(targetUserId).build();
-        AbstractDataPermissionChecker checker = DataPermissionCheckerFactory.getChecker(loginUser);
+        AbstractDataPermissionChecker checker = dataPermissionCheckerFactory.getChecker(loginUser);
         return checker.check(loginUser, dataCondition);
     }
 

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import app.keystone.admin.customize.async.AsyncTaskFactory;
 import app.keystone.admin.customize.service.login.LoginService.LoginResult;
 import app.keystone.admin.customize.service.login.TokenService.IssuedToken;
 import app.keystone.admin.customize.service.login.command.KeyloLoginCommand;
@@ -57,8 +58,9 @@ class LoginServiceKeyloLoginTest {
     private final KeyloTokenVerifier keyloTokenVerifier = mock(KeyloTokenVerifier.class);
     private final KeyloCredentialVerifier keyloCredentialVerifier = mock(KeyloCredentialVerifier.class);
     private final KeyloProperties keyloProperties = mock(KeyloProperties.class);
+    private final AsyncTaskFactory asyncTaskFactory = mock(AsyncTaskFactory.class);
     private final KeyloLoginUserResolver keyloLoginUserResolver =
-        new KeyloLoginUserResolver(userService, userDetailsService);
+        new KeyloLoginUserResolver(userService, userDetailsService, asyncTaskFactory);
 
     private LoginService loginService;
 
@@ -73,7 +75,8 @@ class LoginServiceKeyloLoginTest {
             keyloTokenVerifier,
             keyloCredentialVerifier,
             keyloProperties,
-            keyloLoginUserResolver
+            keyloLoginUserResolver,
+            asyncTaskFactory
         ));
     }
 

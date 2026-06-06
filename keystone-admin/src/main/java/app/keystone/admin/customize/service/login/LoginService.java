@@ -87,6 +87,8 @@ public class LoginService {
 
     private final KeyloLoginUserResolver keyloLoginUserResolver;
 
+    private final AsyncTaskFactory asyncTaskFactory;
+
     @Value("${keystone.auth.mode}")
     private String authMode;
 
@@ -121,11 +123,11 @@ public class LoginService {
             authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 loginCommand.getUsername(), decryptPassword));
         } catch (BadCredentialsException e) {
-            ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(loginCommand.getUsername(), LoginStatusEnum.LOGIN_FAIL,
+            ThreadPoolManager.execute(asyncTaskFactory.loginInfoTask(loginCommand.getUsername(), LoginStatusEnum.LOGIN_FAIL,
                 MessageUtils.message("Business.LOGIN_WRONG_USER_PASSWORD")));
             throw new ApiException(e, ErrorCode.Business.LOGIN_WRONG_USER_PASSWORD);
         } catch (Exception e) {
-            ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(loginCommand.getUsername(), LoginStatusEnum.LOGIN_FAIL, e.getMessage()));
+            ThreadPoolManager.execute(asyncTaskFactory.loginInfoTask(loginCommand.getUsername(), LoginStatusEnum.LOGIN_FAIL, e.getMessage()));
             throw new ApiException(e, Business.LOGIN_ERROR, e.getMessage());
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -328,12 +330,12 @@ public class LoginService {
         String captcha = redisCache.captchaCache.getObjectById(captchaCodeKey);
         redisCache.captchaCache.delete(captchaCodeKey);
         if (captcha == null) {
-            ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(username, LoginStatusEnum.LOGIN_FAIL,
+            ThreadPoolManager.execute(asyncTaskFactory.loginInfoTask(username, LoginStatusEnum.LOGIN_FAIL,
                 ErrorCode.Business.LOGIN_CAPTCHA_CODE_EXPIRE.message()));
             throw new ApiException(ErrorCode.Business.LOGIN_CAPTCHA_CODE_EXPIRE);
         }
         if (!captchaCode.equalsIgnoreCase(captcha)) {
-            ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(username, LoginStatusEnum.LOGIN_FAIL,
+            ThreadPoolManager.execute(asyncTaskFactory.loginInfoTask(username, LoginStatusEnum.LOGIN_FAIL,
                 ErrorCode.Business.LOGIN_CAPTCHA_CODE_WRONG.message()));
             throw new ApiException(ErrorCode.Business.LOGIN_CAPTCHA_CODE_WRONG);
         }
@@ -344,7 +346,7 @@ public class LoginService {
      * @param loginUser 登录用户
      */
     public void recordLoginInfo(SystemLoginUser loginUser) {
-        ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(loginUser.getUsername(), LoginStatusEnum.LOGIN_SUCCESS,
+        ThreadPoolManager.execute(asyncTaskFactory.loginInfoTask(loginUser.getUsername(), LoginStatusEnum.LOGIN_SUCCESS,
             LoginStatusEnum.LOGIN_SUCCESS.description()));
 
         LambdaUpdateWrapper<SysUserEntity> updateWrapper = new LambdaUpdateWrapper<>();

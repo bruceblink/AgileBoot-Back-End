@@ -47,6 +47,8 @@ public class SecurityConfig {
 
     private final TokenService tokenService;
 
+    private final AsyncTaskFactory asyncTaskFactory;
+
     /**
      * token认证过滤器
      */
@@ -86,7 +88,7 @@ public class SecurityConfig {
             if (loginUser != null) {
                 String userName = loginUser.getUsername();
                 // 记录用户退出日志
-                ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(
+                ThreadPoolManager.execute(asyncTaskFactory.loginInfoTask(
                     userName, LoginStatusEnum.LOGOUT, LoginStatusEnum.LOGOUT.description()));
             }
             ServletHolderUtil.renderString(response, JacksonUtil.to(ResponseDTO.ok()));

@@ -21,12 +21,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class AsyncTaskFactory {
 
-    private static SysLoginInfoService loginInfoService;
-    private static SysOperationLogService operationLogService;
+    private final SysLoginInfoService loginInfoService;
+    private final SysOperationLogService operationLogService;
 
     public AsyncTaskFactory(SysLoginInfoService loginInfoService, SysOperationLogService operationLogService) {
-        AsyncTaskFactory.loginInfoService = loginInfoService;
-        AsyncTaskFactory.operationLogService = operationLogService;
+        this.loginInfoService = loginInfoService;
+        this.operationLogService = operationLogService;
     }
 
     /**
@@ -37,7 +37,7 @@ public class AsyncTaskFactory {
      * @param message         消息
      * @return 任务task
      */
-    public static Runnable loginInfoTask(final String username, final LoginStatusEnum loginStatusEnum, final String message) {
+    public Runnable loginInfoTask(final String username, final LoginStatusEnum loginStatusEnum, final String message) {
         final UserAgent userAgent = UserAgent.parseUserAgentString(
             ServletHolderUtil.getRequest().getHeader("User-Agent"));
         final String browser = userAgent.getBrowser() != null ? userAgent.getBrowser().getName() : "";
@@ -67,7 +67,7 @@ public class AsyncTaskFactory {
      * @param operationLog 操作日志信息
      * @return 任务task
      */
-    public static Runnable recordOperationLog(final SysOperationLogEntity operationLog) {
+    public Runnable recordOperationLog(final SysOperationLogEntity operationLog) {
         return () -> {
             operationLog.setOperatorLocation(IpRegionUtil.getBriefLocationByIp(operationLog.getOperatorIp()));
             operationLogService.save(operationLog);

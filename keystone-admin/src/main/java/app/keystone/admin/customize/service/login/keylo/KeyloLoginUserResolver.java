@@ -24,6 +24,8 @@ public class KeyloLoginUserResolver {
 
     private final UserDetailsServiceImpl userDetailsService;
 
+    private final AsyncTaskFactory asyncTaskFactory;
+
     public SystemLoginUser resolve(KeyloTokenIdentity keyloIdentity) {
         if (keyloIdentity == null) {
             throw new ApiException(ErrorCode.Business.LOGIN_KEYLO_SUBJECT_MISSING);
@@ -41,12 +43,12 @@ public class KeyloLoginUserResolver {
         }
         if (userEntity == null) {
             String identifier = StringUtils.hasText(keyloUserId) ? keyloUserId : keyloSubject;
-            ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(identifier, LoginStatusEnum.LOGIN_FAIL,
+            ThreadPoolManager.execute(asyncTaskFactory.loginInfoTask(identifier, LoginStatusEnum.LOGIN_FAIL,
                 MessageUtils.message("Business.USER_NON_EXIST", identifier)));
             throw new ApiException(ErrorCode.Business.USER_NON_EXIST, identifier);
         }
         if (!Objects.equals(UserStatusEnum.NORMAL.getValue(), userEntity.getStatus())) {
-            ThreadPoolManager.execute(AsyncTaskFactory.loginInfoTask(userEntity.getUsername(), LoginStatusEnum.LOGIN_FAIL,
+            ThreadPoolManager.execute(asyncTaskFactory.loginInfoTask(userEntity.getUsername(), LoginStatusEnum.LOGIN_FAIL,
                 MessageUtils.message("Business.USER_IS_DISABLE", userEntity.getUsername())));
             throw new ApiException(ErrorCode.Business.USER_IS_DISABLE, userEntity.getUsername());
         }

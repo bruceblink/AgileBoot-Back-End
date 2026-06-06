@@ -2,6 +2,7 @@ package app.keystone.admin.customize.aop.accessLog;
 
 import app.keystone.admin.customize.async.AsyncTaskFactory;
 import app.keystone.infrastructure.thread.ThreadPoolManager;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -17,7 +18,10 @@ import org.springframework.stereotype.Component;
 @Aspect
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class AccessLogAspect {
+
+    private final AsyncTaskFactory asyncTaskFactory;
 
     /**
      * 处理完请求后执行
@@ -49,7 +53,7 @@ public class AccessLogAspect {
             operationLog.fillAccessLogInfo(accessLog);
 
             // 保存数据库
-            ThreadPoolManager.execute(AsyncTaskFactory.recordOperationLog(operationLog));
+            ThreadPoolManager.execute(asyncTaskFactory.recordOperationLog(operationLog));
         } catch (Exception exp) {
             log.error("写入操作日式失败", exp);
         }
