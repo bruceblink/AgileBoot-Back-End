@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * 字典类型模型工厂
- * @author valarchie
+ * @author likanug
  */
 @Component
 @RequiredArgsConstructor

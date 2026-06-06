@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * 字典类型查询参数
- * @author valarchie
+ * @author likanug
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

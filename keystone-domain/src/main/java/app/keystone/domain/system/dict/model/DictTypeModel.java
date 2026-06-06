@@ -12,7 +12,7 @@ import org.springframework.beans.BeanUtils;
 
 /**
  * 字典类型领域模型
- * @author valarchie
+ * @author likanug
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

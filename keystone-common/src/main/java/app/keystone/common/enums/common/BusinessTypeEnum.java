@@ -7,7 +7,7 @@ import app.keystone.common.enums.DictionaryEnum;
 /**
  * 对应sys_operation_log的business_type
  *
- * @author valarchie
+ * @author likanug
  */
 @Dictionary(name = "sysOperationLog.businessType")
 public enum BusinessTypeEnum implements DictionaryEnum<Integer> {

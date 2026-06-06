@@ -5,7 +5,7 @@ import app.keystone.common.enums.BasicEnum;
 
 /**
  * 操作者类型
- * @author valarchie
+ * @author likanug
  */
 @Dictionary(name = "sysOperationLog.operatorType")
 public enum OperatorTypeEnum implements BasicEnum<Integer> {

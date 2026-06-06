@@ -9,7 +9,7 @@ import java.util.List;
  * 菜单权限表 服务类
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-06-16
  */
 public interface SysMenuService extends IService<SysMenuEntity> {

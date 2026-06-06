@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 角色信息
  *
- * @author valarchie
+ * @author likanug
  */
 @Tag(name = "角色API", description = "角色相关的增删查改")
 @RestController

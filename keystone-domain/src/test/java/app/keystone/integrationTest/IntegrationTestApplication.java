@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Import;
 
 /**
  * 集成测试配置类
- * @author valarchie
+ * @author likanug
  */
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class}, scanBasePackages = "app.keystone")
 @ComponentScan(

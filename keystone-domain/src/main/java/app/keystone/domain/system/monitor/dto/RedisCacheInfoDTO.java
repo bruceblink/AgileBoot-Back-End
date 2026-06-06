@@ -6,7 +6,7 @@ import lombok.Data;
 
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Data
 public class RedisCacheInfoDTO {

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Slf4j
 public class OfflineIpRegionUtil {

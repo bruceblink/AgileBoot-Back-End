@@ -17,7 +17,7 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 /**
  * 全局事务管理器
- * @author valarchie
+ * @author likanug
  */
 @Configuration
 @RequiredArgsConstructor

@@ -1,7 +1,7 @@
 package app.keystone.infrastructure.cache.aop;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 public class CacheNameConstants {
 

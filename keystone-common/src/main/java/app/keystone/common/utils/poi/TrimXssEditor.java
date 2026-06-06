@@ -1,7 +1,7 @@
 package app.keystone.common.utils.poi;
 
 /**
- * @author valarchie
+ * @author likanug
  * 读取excel的时候，去除掉html相关的标签  避免xss注入
  */
 public class TrimXssEditor {

@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * 数据权限测试接口
- * @author valarchie
+ * @author likanug
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

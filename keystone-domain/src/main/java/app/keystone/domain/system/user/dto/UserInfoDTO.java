@@ -4,7 +4,7 @@ import app.keystone.domain.system.role.dto.RoleDTO;
 import lombok.Data;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Data
 public class UserInfoDTO {

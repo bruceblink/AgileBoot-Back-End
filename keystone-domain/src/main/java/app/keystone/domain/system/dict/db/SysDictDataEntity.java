@@ -14,7 +14,7 @@ import lombok.Setter;
 
 /**
  * 字典数据表
- * @author valarchie
+ * @author likanug
  */
 @Getter
 @Setter

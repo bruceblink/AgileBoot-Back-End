@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Service
 @RequiredArgsConstructor

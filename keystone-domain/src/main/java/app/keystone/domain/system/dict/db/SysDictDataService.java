@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * 字典数据 服务接口
- * @author valarchie
+ * @author likanug
  */
 public interface SysDictDataService extends IService<SysDictDataEntity> {
 

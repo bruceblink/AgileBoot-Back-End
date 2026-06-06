@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 import org.springframework.beans.BeanUtils;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @EqualsAndHashCode(callSuper = true)
 public class DeptModel extends SysDeptEntity {

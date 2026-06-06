@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * ip校验器
  *
- * @author valarchie
+ * @author likanug
  */
 @Slf4j
 public class IpUtil {

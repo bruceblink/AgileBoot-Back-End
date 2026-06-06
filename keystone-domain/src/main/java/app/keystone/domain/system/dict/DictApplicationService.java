@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 字典应用服务
- * @author valarchie
+ * @author likanug
  */
 @Service
 @RequiredArgsConstructor

@@ -22,7 +22,7 @@ import oshi.util.Util;
  * 服务器相关信息
  *
  * @author ruoyi
- * @author valarchie
+ * @author likanug
  */
 @Data
 public class ServerInfo {

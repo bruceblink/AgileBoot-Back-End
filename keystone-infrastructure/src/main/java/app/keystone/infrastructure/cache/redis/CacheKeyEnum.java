@@ -3,7 +3,7 @@ package app.keystone.infrastructure.cache.redis;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 public enum CacheKeyEnum {
 

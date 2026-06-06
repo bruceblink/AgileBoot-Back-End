@@ -3,7 +3,7 @@ package app.keystone.admin.customize.service.login.dto;
 import lombok.Data;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Data
 public class CaptchaDTO {

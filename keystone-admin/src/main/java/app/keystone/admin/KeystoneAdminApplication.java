@@ -11,7 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
  * <a href="http://www.network-science.de/ascii/">...</a>
  * <a href="http://www.degraeve.com/img2txt.php">...</a>
  * <a href="http://life.chacuo.net/convertfont2char">...</a>
- * @author valarchie
+ * @author likanug
  */
 @SpringBootApplication
 @ComponentScan(basePackages = "app.keystone.*")

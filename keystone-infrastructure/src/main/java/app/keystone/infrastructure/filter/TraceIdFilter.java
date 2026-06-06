@@ -17,7 +17,7 @@ import org.slf4j.MDC;
 /**
  * 给每一个线程分配一个uuid 以便日志可以可以精准查询一条请求的所有日志
  * 过滤器
- * @author valarchie
+ * @author likanug
  */
 @AllArgsConstructor
 @Slf4j

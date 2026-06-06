@@ -12,7 +12,7 @@ import java.util.List;
  * 菜单权限表 Mapper 接口
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-06-16
  */
 @Mapper

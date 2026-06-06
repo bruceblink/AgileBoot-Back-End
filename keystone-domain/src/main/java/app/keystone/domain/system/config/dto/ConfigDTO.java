@@ -12,7 +12,7 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Data
 @Schema(name = "ConfigDTO", description = "配置信息")

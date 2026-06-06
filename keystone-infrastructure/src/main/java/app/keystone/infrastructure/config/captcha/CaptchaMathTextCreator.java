@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * verification code of math Generator
  *
- * @author valarchie
+ * @author likanug
  */
 public class CaptchaMathTextCreator extends DefaultTextCreator {
 

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 /**
  * 本地一级缓存  使用Map
  *
- * @author valarchie
+ * @author likanug
  */
 public class MapCache {
 

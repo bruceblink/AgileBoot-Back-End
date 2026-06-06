@@ -6,7 +6,7 @@ import app.keystone.common.exception.error.ErrorCode;
 import java.util.Objects;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 public class BasicEnumUtil {
 

@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 参数配置 信息操作处理
- * @author valarchie
+ * @author likanug
  */
 @RestController
 @RequestMapping("/system")

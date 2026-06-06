@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Component
 @RequiredArgsConstructor

@@ -4,7 +4,7 @@ import app.keystone.common.enums.BasicEnum;
 
 /**
  * 对应sys_role表的data_scope字段
- * @author valarchie
+ * @author likanug
  */
 public enum DataScopeEnum implements BasicEnum<Integer> {
 

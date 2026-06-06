@@ -37,7 +37,7 @@ import org.springframework.web.filter.CorsFilter;
  * @see this#logOutSuccessHandler 用于退出登录成功后的逻辑
  * @see JwtAuthenticationTokenFilter#doFilter token的校验和刷新
  * @see LoginService#login 登录逻辑
- * @author valarchie
+ * @author likanug
  */
 @Configuration
 @EnableWebSecurity

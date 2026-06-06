@@ -6,7 +6,7 @@ import lombok.Data;
 
 /**
  * 分页模型类
- * @author valarchie
+ * @author likanug
  */
 @Data
 public class PageDTO<T> {

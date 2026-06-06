@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 部门信息
  *
- * @author valarchie
+ * @author likanug
  */
 @RestController
 @RequestMapping("/system")

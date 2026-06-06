@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 /**
  * 动态路由信息
  * 必须加上@JsonInclude(Include.NON_NULL)的注解  否则传null值给Vue动态路由渲染时会出错
- * @author valarchie
+ * @author likanug
  */
 @JsonInclude(Include.NON_NULL)
 @Data

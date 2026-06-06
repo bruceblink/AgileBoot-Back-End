@@ -17,7 +17,7 @@ import lombok.Setter;
  * 参数配置表
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-11-03
  */
 @Getter

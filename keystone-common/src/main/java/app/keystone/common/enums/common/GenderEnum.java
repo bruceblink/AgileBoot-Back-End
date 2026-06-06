@@ -7,7 +7,7 @@ import app.keystone.common.enums.DictionaryEnum;
 /**
  * 对应sys_user的sex字段
  *
- * @author valarchie
+ * @author likanug
  */
 @Dictionary(name = "sysUser.sex")
 public enum GenderEnum implements DictionaryEnum<Integer> {

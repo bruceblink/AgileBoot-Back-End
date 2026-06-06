@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
 /**
  * token验证处理
  *
- * @author valarchie
+ * @author likanug
  */
 @Component
 @Slf4j

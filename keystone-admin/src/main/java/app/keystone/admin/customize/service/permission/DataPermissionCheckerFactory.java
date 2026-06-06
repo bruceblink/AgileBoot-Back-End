@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * 数据权限检测器工厂
- * @author valarchie
+ * @author likanug
  */
 @Component
 public class DataPermissionCheckerFactory {

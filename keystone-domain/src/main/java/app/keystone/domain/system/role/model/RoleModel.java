@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 /**
  * 限流切面处理
  *
- * @author valarchie
+ * @author likanug
  */
 @Aspect
 @Component

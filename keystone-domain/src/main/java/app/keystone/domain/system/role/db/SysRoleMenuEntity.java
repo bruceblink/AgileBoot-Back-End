@@ -16,7 +16,7 @@ import lombok.Setter;
  * 角色和菜单关联表
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-10-02
  */
 @Getter

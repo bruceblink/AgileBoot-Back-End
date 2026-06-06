@@ -3,7 +3,7 @@ package app.keystone.common.utils.ip;
 /**
  * IP地理位置工具类
  *
- * @author valarchie
+ * @author likanug
  */
 public class IpRegionUtil {
 

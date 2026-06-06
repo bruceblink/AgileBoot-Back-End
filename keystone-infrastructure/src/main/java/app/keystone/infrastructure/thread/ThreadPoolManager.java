@@ -9,7 +9,7 @@ import java.util.concurrent.*;
 /**
  * 异步任务管理器
  *
- * @author valarchie
+ * @author likanug
  */
 @Slf4j
 public class ThreadPoolManager {

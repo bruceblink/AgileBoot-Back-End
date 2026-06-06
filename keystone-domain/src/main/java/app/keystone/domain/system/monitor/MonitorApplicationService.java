@@ -26,7 +26,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Service
 @RequiredArgsConstructor

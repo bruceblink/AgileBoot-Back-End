@@ -19,7 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdviceAd
 /**
  * 重复提交拦截器 如果涉及前后端加解密的话  也可以通过继承RequestBodyAdvice来实现
  *
- * @author valarchie
+ * @author likanug
  */
 @ControllerAdvice(basePackages = "app.keystone")
 @Slf4j

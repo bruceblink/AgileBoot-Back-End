@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 通用请求处理
- * @author valarchie
+ * @author likanug
  */
 @Tag(name = "上传API", description = "上传相关接口")
 @RestController

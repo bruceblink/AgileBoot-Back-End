@@ -6,7 +6,7 @@ import app.keystone.common.enums.DictionaryEnum;
 
 /**
  * 对应sys_user的status字段
- * @author valarchie
+ * @author likanug
  */
 @Dictionary(name = "sysUser.status")
 public enum UserStatusEnum implements DictionaryEnum<Integer> {

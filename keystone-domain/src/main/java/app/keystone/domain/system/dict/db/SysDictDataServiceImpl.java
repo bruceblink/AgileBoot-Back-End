@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * 字典数据 服务实现类
- * @author valarchie
+ * @author likanug
  */
 @Service
 public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDictDataEntity>

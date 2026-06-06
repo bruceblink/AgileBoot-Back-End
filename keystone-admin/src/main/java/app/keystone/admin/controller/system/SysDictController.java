@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 数据字典 增删查改
- * @author valarchie
+ * @author likanug
  */
 @RestController
 @RequestMapping("/system")

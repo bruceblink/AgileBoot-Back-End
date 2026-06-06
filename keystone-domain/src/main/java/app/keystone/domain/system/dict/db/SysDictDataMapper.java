@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 字典数据 Mapper 接口
- * @author valarchie
+ * @author likanug
  */
 @Mapper
 public interface SysDictDataMapper extends BaseMapper<SysDictDataEntity> {

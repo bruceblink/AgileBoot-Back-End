@@ -18,7 +18,7 @@ import lombok.Setter;
  * 操作日志记录
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-10-02
  */
 @Getter

@@ -4,7 +4,7 @@ import app.keystone.common.enums.BasicEnum;
 
 /**
  *
- * @author valarchie
+ * @author likanug
  */
 @Deprecated
 public enum MenuComponentEnum implements BasicEnum<Integer> {

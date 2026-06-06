@@ -1,7 +1,7 @@
 package app.keystone.infrastructure.thread;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 public class ThreadConfig {
 

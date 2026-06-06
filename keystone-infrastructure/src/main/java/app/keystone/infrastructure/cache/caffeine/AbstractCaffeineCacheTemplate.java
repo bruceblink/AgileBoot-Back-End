@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * </p>
  *
  * @param <T> 缓存值类型
- * @author valarchie
+ * @author likanug
  */
 @Slf4j
 public abstract class AbstractCaffeineCacheTemplate<T> {

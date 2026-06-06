@@ -2,7 +2,7 @@ package app.keystone.infrastructure.annotations.ratelimit;
 
 /**
  * 限流key
- * @author valarchie
+ * @author likanug
  */
 public class RateLimitKey {
 

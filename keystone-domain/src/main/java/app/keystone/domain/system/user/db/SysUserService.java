@@ -13,7 +13,7 @@ import java.util.Set;
  * 用户信息表 服务类
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-06-16
  */
 public interface SysUserService extends IService<SysUserEntity> {

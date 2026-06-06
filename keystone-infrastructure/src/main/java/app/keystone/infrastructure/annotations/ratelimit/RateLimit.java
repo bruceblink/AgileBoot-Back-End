@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 /**
  * 限流注解
  *
- * @author valarchie
+ * @author likanug
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

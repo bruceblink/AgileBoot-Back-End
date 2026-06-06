@@ -4,7 +4,7 @@ import app.keystone.common.enums.BasicEnum;
 
 /**
  * Http Method
- * @author valarchie
+ * @author likanug
  */
 public enum RequestMethodEnum implements BasicEnum<Integer> {
 

@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 岗位信息表 Mapper 接口
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-06-16
  */
 @Mapper

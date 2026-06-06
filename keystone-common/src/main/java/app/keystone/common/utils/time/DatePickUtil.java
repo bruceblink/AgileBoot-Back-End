@@ -8,7 +8,7 @@ import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Slf4j
 public class DatePickUtil {

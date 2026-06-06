@@ -13,7 +13,7 @@ import org.springframework.web.filter.CorsFilter;
 
 /**
  * Filter配置
- * @author valarchie
+ * @author likanug
  */
 @Configuration
 public class FilterConfig {

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.collections4.SetUtils;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Data
 @AllArgsConstructor

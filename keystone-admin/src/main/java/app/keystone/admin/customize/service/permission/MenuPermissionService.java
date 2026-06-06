@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 /**
  *
- * @author valarchie
+ * @author likanug
  */
 @Service("permission")
 public class MenuPermissionService {

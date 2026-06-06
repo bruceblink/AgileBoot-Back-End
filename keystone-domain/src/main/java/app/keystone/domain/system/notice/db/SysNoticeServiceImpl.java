@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
  * 通知公告表 服务实现类
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-06-16
  */
 @Service

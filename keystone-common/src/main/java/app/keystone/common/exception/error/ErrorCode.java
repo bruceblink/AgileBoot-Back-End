@@ -5,7 +5,7 @@ import org.springframework.util.Assert;
 /**
  * 错误码集合
  *
- * @author valarchie
+ * @author likanug
  */
 public enum ErrorCode implements ErrorCodeInterface {
 

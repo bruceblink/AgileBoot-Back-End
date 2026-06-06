@@ -3,7 +3,7 @@ package app.keystone.domain.system.menu.dto;
 import lombok.Data;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Data
 public class TransitionDTO {

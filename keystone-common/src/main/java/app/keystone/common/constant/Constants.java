@@ -4,7 +4,7 @@ package app.keystone.common.constant;
 /**
  * 通用常量信息
  *
- * @author valarchie
+ * @author likanug
  */
 public class Constants {
     private Constants() {

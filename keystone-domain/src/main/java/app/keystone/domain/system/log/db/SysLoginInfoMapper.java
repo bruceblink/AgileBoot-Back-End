@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 系统访问记录 Mapper 接口
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-06-06
  */
 @Mapper

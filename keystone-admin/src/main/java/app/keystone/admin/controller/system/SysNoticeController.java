@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 公告 信息操作处理
  *
- * @author valarchie
+ * @author likanug
  */
 @Tag(name = "公告API", description = "公告相关的增删查改")
 @RestController

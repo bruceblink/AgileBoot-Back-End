@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Component
 @RequiredArgsConstructor

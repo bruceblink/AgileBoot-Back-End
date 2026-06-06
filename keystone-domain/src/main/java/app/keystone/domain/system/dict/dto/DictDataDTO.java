@@ -7,7 +7,7 @@ import lombok.Data;
 
 /**
  * 字典数据 DTO
- * @author valarchie
+ * @author likanug
  */
 @Data
 @Schema(name = "DictDataDTO", description = "字典数据信息")

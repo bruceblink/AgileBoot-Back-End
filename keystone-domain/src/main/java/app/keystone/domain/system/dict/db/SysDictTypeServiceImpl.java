@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * 字典类型 服务实现类
- * @author valarchie
+ * @author likanug
  */
 @Service
 public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTypeEntity>

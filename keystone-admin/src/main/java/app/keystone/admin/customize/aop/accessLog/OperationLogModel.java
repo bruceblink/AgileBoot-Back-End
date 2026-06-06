@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Slf4j
 public class OperationLogModel extends SysOperationLogEntity {

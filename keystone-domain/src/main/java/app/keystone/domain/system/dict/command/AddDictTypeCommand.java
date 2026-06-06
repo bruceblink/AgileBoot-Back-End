@@ -7,7 +7,7 @@ import lombok.Data;
 
 /**
  * 新增字典类型命令
- * @author valarchie
+ * @author likanug
  */
 @Data
 @Schema(description = "新增字典类型")

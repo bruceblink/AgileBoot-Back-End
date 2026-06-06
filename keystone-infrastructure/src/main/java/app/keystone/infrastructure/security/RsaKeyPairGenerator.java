@@ -6,7 +6,7 @@ import java.util.Base64;
 
 /**
  * Rsa key生成
- * @author valarchie
+ * @author likanug
  */
 public class RsaKeyPairGenerator {
 

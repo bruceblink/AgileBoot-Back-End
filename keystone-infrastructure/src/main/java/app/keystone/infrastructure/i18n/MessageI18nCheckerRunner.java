@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * 检测 未添加到i18n文件(messages.properties)中的message
- * @author valarchie
+ * @author likanug
  */
 @Component
 @Slf4j

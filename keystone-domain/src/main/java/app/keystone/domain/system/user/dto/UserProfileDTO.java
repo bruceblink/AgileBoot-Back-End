@@ -6,7 +6,7 @@ import app.keystone.domain.system.user.db.SysUserEntity;
 import lombok.Data;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Data
 public class UserProfileDTO {

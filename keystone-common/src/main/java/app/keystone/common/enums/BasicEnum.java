@@ -1,7 +1,7 @@
 package app.keystone.common.enums;
 
 /**
- * @author valarchie
+ * @author likanug
  * 普通的枚举 接口
  * @param <T>
  */

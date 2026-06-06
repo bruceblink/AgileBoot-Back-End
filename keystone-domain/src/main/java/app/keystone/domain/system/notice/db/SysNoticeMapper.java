@@ -13,7 +13,7 @@ import org.apache.ibatis.annotations.Select;
  * 通知公告表 Mapper 接口
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-06-16
  */
 @Mapper

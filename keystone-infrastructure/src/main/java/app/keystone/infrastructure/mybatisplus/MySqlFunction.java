@@ -7,7 +7,7 @@ import java.util.Arrays;
  * 在H2的初始化 h2sql/keystone_schema.sql加上这句
  * CREATE ALIAS FIND_IN_SET FOR "app.keystone.infrastructure.mybatisplus.MySqlFunction.find_in_set";
  *
- * @author valarchie
+ * @author likanug
  */
 public class MySqlFunction {
 

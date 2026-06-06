@@ -38,7 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 用户信息
- * @author valarchie
+ * @author likanug
  */
 @Tag(name = "用户API", description = "用户相关的增删查改")
 @RestController

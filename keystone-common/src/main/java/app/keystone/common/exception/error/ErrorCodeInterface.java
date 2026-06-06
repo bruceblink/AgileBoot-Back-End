@@ -1,7 +1,7 @@
 package app.keystone.common.exception.error;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 public interface ErrorCodeInterface {
 

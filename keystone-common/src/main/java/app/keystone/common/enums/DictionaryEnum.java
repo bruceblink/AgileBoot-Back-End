@@ -2,7 +2,7 @@ package app.keystone.common.enums;
 
 /**
  * 字典类型 接口
- * @author valarchie
+ * @author likanug
  */
 public interface DictionaryEnum<T> extends BasicEnum<T> {
 

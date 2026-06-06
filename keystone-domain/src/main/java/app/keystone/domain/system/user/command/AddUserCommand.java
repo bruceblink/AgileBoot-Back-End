@@ -4,7 +4,7 @@ import app.keystone.common.annotation.ExcelColumn;
 import lombok.Data;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Data
 public class AddUserCommand {

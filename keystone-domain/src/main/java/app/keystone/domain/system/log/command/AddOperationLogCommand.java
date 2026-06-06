@@ -8,7 +8,7 @@ import lombok.Data;
 /**
  * 客户端主动写入操作日志命令。
  *
- * @author valarchie
+ * @author likanug
  */
 @Data
 @Schema(description = "客户端操作日志录入参数")

@@ -21,7 +21,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 /**
  * 全局异常处理器
  *
- * @author valarchie
+ * @author likanug
  */
 @RestControllerAdvice
 @Slf4j

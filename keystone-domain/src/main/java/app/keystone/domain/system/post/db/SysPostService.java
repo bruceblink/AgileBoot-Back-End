@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * 岗位信息表 服务类
  * </p>
  *
- * @author valarchie
+ * @author likanug
  * @since 2022-06-16
  */
 public interface SysPostService extends IService<SysPostEntity> {

@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 /**
  * Mybatis支持*匹配扫描包
  *
- * @author valarchie
+ * @author likanug
  */
 @Configuration
 @EnableTransactionManagement

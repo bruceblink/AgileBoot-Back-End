@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 菜单信息
  *
- * @author valarchie
+ * @author likanug
  */
 @Tag(name = "菜单API", description = "菜单相关的增删查改")
 @RestController

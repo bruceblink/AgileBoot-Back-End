@@ -9,7 +9,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 @Data
 @ExcelSheet(name = "登录日志")

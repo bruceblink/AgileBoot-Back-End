@@ -1,7 +1,7 @@
 package app.keystone.common.utils.jackson;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 public class JacksonException extends RuntimeException {
 

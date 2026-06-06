@@ -3,7 +3,7 @@ package app.keystone.domain.system.menu.model;
 import app.keystone.domain.system.menu.db.SysMenuEntity;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 public class RouterModel extends SysMenuEntity {
 

@@ -2,7 +2,7 @@ package app.keystone.common.enums.dictionary;
 
 /**
  * Css 样式
- * @author valarchie
+ * @author likanug
  */
 public class CssTag {
 

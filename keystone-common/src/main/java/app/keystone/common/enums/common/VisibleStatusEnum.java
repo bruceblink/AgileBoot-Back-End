@@ -6,7 +6,7 @@ import app.keystone.common.enums.DictionaryEnum;
 
 /**
  * 对应sys_menu表的is_visible字段
- * @author valarchie
+ * @author likanug
  */
 @Deprecated
 @Dictionary(name = "sysMenu.isVisible")

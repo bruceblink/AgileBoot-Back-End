@@ -3,7 +3,7 @@ package app.keystone.infrastructure.annotations.ratelimit.implementation;
 import app.keystone.infrastructure.annotations.ratelimit.RateLimit;
 
 /**
- * @author valarchie
+ * @author likanug
  */
 public abstract class AbstractRateLimitChecker {
 
