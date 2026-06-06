@@ -1,5 +1,6 @@
 package app.keystone.domain.common.cache;
 
+import app.keystone.common.enums.dictionary.DictionaryData;
 import app.keystone.infrastructure.cache.caffeine.AbstractCaffeineCacheTemplate;
 import app.keystone.infrastructure.cache.redis.RedisCacheTemplate;
 import app.keystone.infrastructure.user.web.LoginRefreshSession;
@@ -10,6 +11,7 @@ import app.keystone.domain.system.post.db.SysPostEntity;
 import app.keystone.domain.system.role.db.SysRoleEntity;
 import app.keystone.domain.system.user.db.SysUserEntity;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 
 /**
@@ -74,6 +76,10 @@ public class CacheCenter {
 
     public static SpringCacheTemplate<List<SysDictDataEntity>> dictDataCache() {
         return springCacheService == null ? null : springCacheService.dictDataCache;
+    }
+
+    public static SpringCacheTemplate<Map<String, List<DictionaryData>>> dictionaryDataMapCache() {
+        return springCacheService == null ? null : springCacheService.dictionaryDataMapCache;
     }
 
 }

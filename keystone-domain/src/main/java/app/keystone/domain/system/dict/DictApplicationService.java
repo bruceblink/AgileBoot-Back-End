@@ -5,6 +5,7 @@ import app.keystone.common.enums.dictionary.DictionaryData;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.domain.common.cache.CacheCenter;
+import app.keystone.domain.common.cache.SpringCacheTemplate;
 import app.keystone.domain.system.dict.command.AddDictDataCommand;
 import app.keystone.domain.system.dict.command.AddDictTypeCommand;
 import app.keystone.domain.system.dict.command.UpdateDictDataCommand;
@@ -39,6 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DictApplicationService {
 
+    private static final String ALL_DICTIONARY_DATA_CACHE_KEY = "all";
+
     private final DictTypeModelFactory dictTypeModelFactory;
     private final SysDictTypeService dictTypeService;
     private final SysDictDataService dictDataService;
@@ -64,6 +67,7 @@ public class DictApplicationService {
         model.loadAddCommand(command);
         model.checkDictTypeUnique(null);
         model.insert();
+        invalidateDictionaryCaches(command.getDictType());
     }
 
     public void updateDictType(UpdateDictTypeCommand command) {
@@ -77,9 +81,8 @@ public class DictApplicationService {
                 .eq(SysDictDataEntity::getDictType, oldDictType)
                 .set(SysDictDataEntity::getDictType, command.getDictType())
                 .update();
-            CacheCenter.dictDataCache().delete(oldDictType);
         }
-        CacheCenter.dictDataCache().delete(command.getDictType());
+        invalidateDictionaryCaches(oldDictType, command.getDictType());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -91,7 +94,7 @@ public class DictApplicationService {
         if (dataCount > 0) {
             throw new ApiException(ErrorCode.Business.DICT_TYPE_HAS_DATA_NOT_ALLOW_DELETE);
         }
-        CacheCenter.dictDataCache().delete(model.getDictType());
+        invalidateDictionaryCaches(model.getDictType());
         model.deleteById();
     }
 
@@ -112,11 +115,32 @@ public class DictApplicationService {
     }
 
     public List<DictDataDTO> getDictDataByType(String dictType) {
-        List<SysDictDataEntity> list = CacheCenter.dictDataCache().getObjectById(dictType);
+        SpringCacheTemplate<List<SysDictDataEntity>> cache = CacheCenter.dictDataCache();
+        List<SysDictDataEntity> list = cache == null
+            ? dictDataService.listByDictType(dictType)
+            : cache.getObjectById(dictType);
+        if (list == null) {
+            return Collections.emptyList();
+        }
         return list.stream().map(DictDataDTO::new).collect(Collectors.toList());
     }
 
     public Map<String, List<DictionaryData>> getDictionaryDataMap() {
+        SpringCacheTemplate<Map<String, List<DictionaryData>>> cache = CacheCenter.dictionaryDataMapCache();
+        if (cache == null) {
+            return loadDictionaryDataMap();
+        }
+
+        Map<String, List<DictionaryData>> dictionary = cache.getObjectOnlyInCacheById(ALL_DICTIONARY_DATA_CACHE_KEY);
+        if (dictionary != null) {
+            return dictionary;
+        }
+        dictionary = loadDictionaryDataMap();
+        cache.set(ALL_DICTIONARY_DATA_CACHE_KEY, dictionary);
+        return dictionary;
+    }
+
+    private Map<String, List<DictionaryData>> loadDictionaryDataMap() {
         List<SysDictTypeEntity> dictTypeList = dictTypeService.list(new LambdaQueryWrapper<SysDictTypeEntity>()
             .eq(SysDictTypeEntity::getStatus, 1)
             .orderByAsc(SysDictTypeEntity::getDictId));
@@ -148,7 +172,7 @@ public class DictApplicationService {
         SysDictDataEntity entity = new SysDictDataEntity();
         BeanUtils.copyProperties(command, entity);
         dictDataService.save(entity);
-        CacheCenter.dictDataCache().delete(command.getDictType());
+        invalidateDictionaryCaches(command.getDictType());
     }
 
     public void updateDictData(UpdateDictDataCommand command) {
@@ -156,9 +180,10 @@ public class DictApplicationService {
         if (entity == null) {
             throw new ApiException(ErrorCode.Business.COMMON_OBJECT_NOT_FOUND, command.getDictCode(), "字典数据");
         }
+        String oldDictType = entity.getDictType();
         BeanUtils.copyProperties(command, entity);
         dictDataService.updateById(entity);
-        CacheCenter.dictDataCache().delete(command.getDictType());
+        invalidateDictionaryCaches(oldDictType, command.getDictType());
     }
 
     public void deleteDictData(Long dictCode) {
@@ -167,7 +192,24 @@ public class DictApplicationService {
             throw new ApiException(ErrorCode.Business.COMMON_OBJECT_NOT_FOUND, dictCode, "字典数据");
         }
         dictDataService.removeById(dictCode);
-        CacheCenter.dictDataCache().delete(entity.getDictType());
+        invalidateDictionaryCaches(entity.getDictType());
+    }
+
+    private void invalidateDictionaryCaches(String... dictTypes) {
+        SpringCacheTemplate<List<SysDictDataEntity>> dictDataCache = CacheCenter.dictDataCache();
+        if (dictDataCache != null) {
+            for (String dictType : dictTypes) {
+                if (dictType != null) {
+                    dictDataCache.delete(dictType);
+                }
+            }
+        }
+
+        SpringCacheTemplate<Map<String, List<DictionaryData>>> dictionaryDataMapCache =
+            CacheCenter.dictionaryDataMapCache();
+        if (dictionaryDataMapCache != null) {
+            dictionaryDataMapCache.delete(ALL_DICTIONARY_DATA_CACHE_KEY);
+        }
     }
 
     private DictionaryData toDictionaryData(SysDictDataEntity entity) {

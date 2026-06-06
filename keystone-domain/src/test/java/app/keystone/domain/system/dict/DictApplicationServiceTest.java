@@ -2,29 +2,59 @@ package app.keystone.domain.system.dict;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import app.keystone.common.enums.dictionary.DictionaryData;
+import app.keystone.domain.common.cache.CacheCenter;
+import app.keystone.domain.common.cache.LocalCacheService;
+import app.keystone.domain.common.cache.RedisCacheService;
+import app.keystone.domain.common.cache.SpringCacheService;
+import app.keystone.domain.system.dict.command.AddDictDataCommand;
 import app.keystone.domain.system.dict.db.SysDictDataEntity;
 import app.keystone.domain.system.dict.db.SysDictDataService;
 import app.keystone.domain.system.dict.db.SysDictTypeEntity;
 import app.keystone.domain.system.dict.db.SysDictTypeService;
 import app.keystone.domain.system.dict.model.DictTypeModelFactory;
+import app.keystone.domain.system.post.db.SysPostService;
+import app.keystone.domain.system.role.db.SysRoleService;
+import app.keystone.domain.system.user.db.SysUserService;
+import app.keystone.infrastructure.cache.aop.CacheNameConstants;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
+import org.springframework.cache.support.SimpleCacheManager;
 
 class DictApplicationServiceTest {
 
+    private SysDictTypeService dictTypeService;
+    private SysDictDataService dictDataService;
+    private DictApplicationService service;
+
+    @BeforeEach
+    void setUp() {
+        dictTypeService = mock(SysDictTypeService.class);
+        dictDataService = mock(SysDictDataService.class);
+        service = new DictApplicationService(mock(DictTypeModelFactory.class), dictTypeService, dictDataService);
+
+        SimpleCacheManager cacheManager = new SimpleCacheManager();
+        cacheManager.setCaches(List.of(
+            new ConcurrentMapCache(CacheNameConstants.DICT_DATA),
+            new ConcurrentMapCache(CacheNameConstants.DICTIONARY_DATA_MAP)
+        ));
+        cacheManager.afterPropertiesSet();
+        SpringCacheService springCacheService = new SpringCacheService(cacheManager,
+            mock(SysUserService.class), mock(SysRoleService.class), mock(SysPostService.class), dictDataService);
+        new CacheCenter(mock(LocalCacheService.class), mock(RedisCacheService.class), springCacheService);
+    }
+
     @Test
     void getDictionaryDataMap_shouldBuildFrontendDictionaryFromEnabledDatabaseRows() {
-        SysDictTypeService dictTypeService = mock(SysDictTypeService.class);
-        SysDictDataService dictDataService = mock(SysDictDataService.class);
-        DictApplicationService service = new DictApplicationService(
-            mock(DictTypeModelFactory.class), dictTypeService, dictDataService);
-
         when(dictTypeService.list(ArgumentMatchers.<Wrapper<SysDictTypeEntity>>any())).thenReturn(List.of(
             dictType(1L, "common.status"),
             dictType(2L, "sysUser.status")
@@ -42,6 +72,44 @@ class DictApplicationServiceTest {
         assertEquals(1, dictionary.get("common.status").get(0).getValue());
         assertEquals("danger", dictionary.get("common.status").get(1).getCssTag());
         assertEquals("冻结", dictionary.get("sysUser.status").get(0).getLabel());
+    }
+
+    @Test
+    void getDictionaryDataMap_shouldUseCacheAfterFirstLoad() {
+        when(dictTypeService.list(ArgumentMatchers.<Wrapper<SysDictTypeEntity>>any())).thenReturn(List.of(
+            dictType(1L, "common.status")
+        ));
+        when(dictDataService.list(ArgumentMatchers.<Wrapper<SysDictDataEntity>>any())).thenReturn(List.of(
+            dictData("common.status", "正常", "1", 1, "")
+        ));
+
+        service.getDictionaryDataMap();
+        service.getDictionaryDataMap();
+
+        verify(dictTypeService, times(1)).list(ArgumentMatchers.<Wrapper<SysDictTypeEntity>>any());
+        verify(dictDataService, times(1)).list(ArgumentMatchers.<Wrapper<SysDictDataEntity>>any());
+    }
+
+    @Test
+    void addDictData_shouldInvalidateCachedDictionaryDataMap() {
+        when(dictTypeService.list(ArgumentMatchers.<Wrapper<SysDictTypeEntity>>any())).thenReturn(List.of(
+            dictType(1L, "common.status")
+        ));
+        when(dictDataService.list(ArgumentMatchers.<Wrapper<SysDictDataEntity>>any()))
+            .thenReturn(List.of(dictData("common.status", "正常", "1", 1, "")))
+            .thenReturn(List.of(dictData("common.status", "停用", "0", 2, "danger")));
+        AddDictDataCommand command = new AddDictDataCommand();
+        command.setDictType("common.status");
+        command.setDictLabel("停用");
+        command.setDictValue("0");
+        command.setStatus(1);
+
+        service.getDictionaryDataMap();
+        service.addDictData(command);
+        Map<String, List<DictionaryData>> dictionary = service.getDictionaryDataMap();
+
+        assertEquals("停用", dictionary.get("common.status").get(0).getLabel());
+        verify(dictDataService, times(2)).list(ArgumentMatchers.<Wrapper<SysDictDataEntity>>any());
     }
 
     private SysDictTypeEntity dictType(Long id, String type) {

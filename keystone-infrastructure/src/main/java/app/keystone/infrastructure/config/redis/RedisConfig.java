@@ -61,7 +61,8 @@ public class RedisConfig {
                 CacheNameConstants.USER_ENTITY, defaultConfiguration,
                 CacheNameConstants.ROLE_ENTITY, defaultConfiguration,
                 CacheNameConstants.POST_ENTITY, defaultConfiguration,
-                CacheNameConstants.DICT_DATA, defaultConfiguration
+                CacheNameConstants.DICT_DATA, defaultConfiguration,
+                CacheNameConstants.DICTIONARY_DATA_MAP, defaultConfiguration
             ))
             .build();
     }

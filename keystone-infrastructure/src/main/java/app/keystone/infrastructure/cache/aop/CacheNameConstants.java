@@ -21,6 +21,8 @@ public class CacheNameConstants {
 
     public static final String DICT_DATA = "dictData";
 
+    public static final String DICTIONARY_DATA_MAP = "dictionaryDataMap";
+
     private CacheNameConstants() {
     }
 }

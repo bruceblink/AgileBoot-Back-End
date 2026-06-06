@@ -1,5 +1,6 @@
 package app.keystone.domain.common.cache;
 
+import app.keystone.common.enums.dictionary.DictionaryData;
 import app.keystone.domain.system.dict.db.SysDictDataEntity;
 import app.keystone.domain.system.dict.db.SysDictDataService;
 import app.keystone.domain.system.post.db.SysPostEntity;
@@ -11,6 +12,7 @@ import app.keystone.domain.system.user.db.SysUserService;
 import app.keystone.infrastructure.cache.aop.CacheNameConstants;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +23,7 @@ public class SpringCacheService {
     public final SpringCacheTemplate<SysRoleEntity> roleCache;
     public final SpringCacheTemplate<SysPostEntity> postCache;
     public final SpringCacheTemplate<List<SysDictDataEntity>> dictDataCache;
+    public final SpringCacheTemplate<Map<String, List<DictionaryData>>> dictionaryDataMapCache;
 
     public SpringCacheService(CacheManager cacheManager, SysUserService userService, SysRoleService roleService,
         SysPostService postService, SysDictDataService dictDataService) {
@@ -32,5 +35,6 @@ public class SpringCacheService {
             id -> postService.getById((Serializable) id));
         dictDataCache = new SpringCacheTemplate<>(cacheManager, CacheNameConstants.DICT_DATA,
             id -> dictDataService.listByDictType(id.toString()));
+        dictionaryDataMapCache = new SpringCacheTemplate<>(cacheManager, CacheNameConstants.DICTIONARY_DATA_MAP);
     }
 }
