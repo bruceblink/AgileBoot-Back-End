@@ -61,8 +61,7 @@ public class RedisConfig {
                 CacheNameConstants.USER_ENTITY, defaultConfiguration,
                 CacheNameConstants.ROLE_ENTITY, defaultConfiguration,
                 CacheNameConstants.POST_ENTITY, defaultConfiguration,
-                CacheNameConstants.DICT_DATA, defaultConfiguration,
-                CacheNameConstants.DEVICE_LIST_QUERY, redisCacheConfiguration(Duration.ofMinutes(5))
+                CacheNameConstants.DICT_DATA, defaultConfiguration
             ))
             .build();
     }

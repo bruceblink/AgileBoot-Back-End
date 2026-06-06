@@ -4,7 +4,6 @@ import app.keystone.infrastructure.cache.caffeine.AbstractCaffeineCacheTemplate;
 import app.keystone.infrastructure.cache.redis.RedisCacheTemplate;
 import app.keystone.infrastructure.user.web.LoginRefreshSession;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
-import app.keystone.domain.dictionary.dto.LegacyApiResponse;
 import app.keystone.domain.system.dept.db.SysDeptEntity;
 import app.keystone.domain.system.dict.db.SysDictDataEntity;
 import app.keystone.domain.system.post.db.SysPostEntity;
@@ -75,10 +74,6 @@ public class CacheCenter {
 
     public static SpringCacheTemplate<List<SysDictDataEntity>> dictDataCache() {
         return springCacheService == null ? null : springCacheService.dictDataCache;
-    }
-
-    public static SpringCacheTemplate<LegacyApiResponse> deviceListQueryCache() {
-        return springCacheService == null ? null : springCacheService.deviceListQueryCache;
     }
 
 }

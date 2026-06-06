@@ -21,8 +21,6 @@ public class CacheNameConstants {
 
     public static final String DICT_DATA = "dictData";
 
-    public static final String DEVICE_LIST_QUERY = "deviceListQuery";
-
     private CacheNameConstants() {
     }
 }
