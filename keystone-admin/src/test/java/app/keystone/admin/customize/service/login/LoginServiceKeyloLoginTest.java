@@ -31,6 +31,7 @@ import app.keystone.domain.common.cache.LocalCacheService;
 import app.keystone.domain.common.cache.RedisCacheService;
 import app.keystone.domain.system.config.db.SysConfigService;
 import app.keystone.domain.system.dept.db.SysDeptService;
+import app.keystone.domain.system.dict.DictApplicationService;
 import app.keystone.domain.system.user.db.SysUserEntity;
 import app.keystone.domain.system.user.db.SysUserService;
 import app.keystone.infrastructure.thread.ThreadPoolManager;
@@ -55,6 +56,7 @@ class LoginServiceKeyloLoginTest {
     private final AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
     private final SysUserService userService = mock(SysUserService.class);
     private final UserDetailsServiceImpl userDetailsService = mock(UserDetailsServiceImpl.class);
+    private final DictApplicationService dictApplicationService = mock(DictApplicationService.class);
     private final KeyloTokenVerifier keyloTokenVerifier = mock(KeyloTokenVerifier.class);
     private final KeyloCredentialVerifier keyloCredentialVerifier = mock(KeyloCredentialVerifier.class);
     private final KeyloProperties keyloProperties = mock(KeyloProperties.class);
@@ -72,6 +74,7 @@ class LoginServiceKeyloLoginTest {
             localCache,
             authenticationManager,
             userService,
+            dictApplicationService,
             keyloTokenVerifier,
             keyloCredentialVerifier,
             keyloProperties,

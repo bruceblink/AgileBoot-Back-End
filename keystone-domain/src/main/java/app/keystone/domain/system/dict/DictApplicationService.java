@@ -1,6 +1,7 @@
 package app.keystone.domain.system.dict;
 
 import app.keystone.common.core.page.PageDTO;
+import app.keystone.common.enums.dictionary.DictionaryData;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.domain.common.cache.CacheCenter;
@@ -18,8 +19,12 @@ import app.keystone.domain.system.dict.model.DictTypeModel;
 import app.keystone.domain.system.dict.model.DictTypeModelFactory;
 import app.keystone.domain.system.dict.query.DictDataQuery;
 import app.keystone.domain.system.dict.query.DictTypeQuery;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -111,6 +116,34 @@ public class DictApplicationService {
         return list.stream().map(DictDataDTO::new).collect(Collectors.toList());
     }
 
+    public Map<String, List<DictionaryData>> getDictionaryDataMap() {
+        List<SysDictTypeEntity> dictTypeList = dictTypeService.list(new LambdaQueryWrapper<SysDictTypeEntity>()
+            .eq(SysDictTypeEntity::getStatus, 1)
+            .orderByAsc(SysDictTypeEntity::getDictId));
+        if (dictTypeList.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<String> dictTypes = dictTypeList.stream()
+            .map(SysDictTypeEntity::getDictType)
+            .collect(Collectors.toList());
+        List<SysDictDataEntity> dictDataList = dictDataService.list(new LambdaQueryWrapper<SysDictDataEntity>()
+            .in(SysDictDataEntity::getDictType, dictTypes)
+            .eq(SysDictDataEntity::getStatus, 1)
+            .orderByAsc(SysDictDataEntity::getDictType)
+            .orderByAsc(SysDictDataEntity::getDictSort));
+
+        Map<String, List<DictionaryData>> dataByType = dictDataList.stream()
+            .collect(Collectors.groupingBy(SysDictDataEntity::getDictType, LinkedHashMap::new,
+                Collectors.mapping(this::toDictionaryData, Collectors.toList())));
+        Map<String, List<DictionaryData>> dictionary = new LinkedHashMap<>();
+        for (SysDictTypeEntity dictType : dictTypeList) {
+            dictionary.put(dictType.getDictType(),
+                dataByType.getOrDefault(dictType.getDictType(), Collections.emptyList()));
+        }
+        return dictionary;
+    }
+
     public void addDictData(AddDictDataCommand command) {
         SysDictDataEntity entity = new SysDictDataEntity();
         BeanUtils.copyProperties(command, entity);
@@ -135,5 +168,14 @@ public class DictApplicationService {
         }
         dictDataService.removeById(dictCode);
         CacheCenter.dictDataCache().delete(entity.getDictType());
+    }
+
+    private DictionaryData toDictionaryData(SysDictDataEntity entity) {
+        try {
+            return new DictionaryData(entity.getDictLabel(), Integer.valueOf(entity.getDictValue()), entity.getListClass());
+        } catch (NumberFormatException e) {
+            throw new ApiException(e, ErrorCode.Internal.INTERNAL_ERROR,
+                "字典值必须是整数：" + entity.getDictType() + "=" + entity.getDictValue());
+        }
     }
 }

@@ -17,6 +17,41 @@ create table sys_config
     deleted         int    default 0  not null comment '逻辑删除'
 );
 
+create sequence if not exists sys_dict_type_seq start with 13 increment by 1;
+create table sys_dict_type
+(
+    dict_id     bigint default next value for sys_dict_type_seq,
+    dict_name   varchar(100) default '' not null comment '字典名称',
+    dict_type   varchar(100) default '' not null comment '字典类型',
+    status      tinyint      default 1  not null comment '状态（1正常 0停用）',
+    remark      varchar(500)            null comment '备注',
+    creator_id  bigint                  null comment '创建者ID',
+    updater_id  bigint                  null comment '更新者ID',
+    create_time datetime                null comment '创建时间',
+    update_time datetime                null comment '更新时间',
+    deleted     tinyint      default 0  not null comment '逻辑删除'
+);
+
+create sequence if not exists sys_dict_data_seq start with 37 increment by 1;
+create table sys_dict_data
+(
+    dict_code   bigint default next value for sys_dict_data_seq,
+    dict_type   varchar(100) default '' not null comment '字典类型',
+    dict_label  varchar(100) default '' not null comment '字典标签',
+    dict_value  varchar(100) default '' not null comment '字典键值',
+    dict_sort   int          default 0  not null comment '字典排序',
+    is_default  tinyint      default 0  not null comment '是否默认（1是 0否）',
+    css_class   varchar(100)            null comment '样式属性（其他样式扩展）',
+    list_class  varchar(100)            null comment '表格回显样式',
+    status      tinyint      default 1  not null comment '状态（1正常 0停用）',
+    remark      varchar(500)            null comment '备注',
+    creator_id  bigint                  null comment '创建者ID',
+    updater_id  bigint                  null comment '更新者ID',
+    create_time datetime                null comment '创建时间',
+    update_time datetime                null comment '更新时间',
+    deleted     tinyint      default 0  not null comment '逻辑删除'
+);
+
 create sequence if not exists sys_dept_seq start with 11 increment by 1;
 create table sys_dept
 (

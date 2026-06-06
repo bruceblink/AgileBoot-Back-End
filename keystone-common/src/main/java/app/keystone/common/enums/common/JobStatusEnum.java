@@ -2,13 +2,11 @@ package app.keystone.common.enums.common;
 
 import app.keystone.common.enums.DictionaryEnum;
 import app.keystone.common.enums.dictionary.CssTag;
-import app.keystone.common.enums.dictionary.Dictionary;
 
 /**
  * Scheduled job status.
  * @author likanug
  */
-@Dictionary(name = "sysJob.status")
 public enum JobStatusEnum implements DictionaryEnum<Integer> {
 
     /**

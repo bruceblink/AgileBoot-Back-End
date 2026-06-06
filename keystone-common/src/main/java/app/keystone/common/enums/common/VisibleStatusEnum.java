@@ -1,7 +1,6 @@
 package app.keystone.common.enums.common;
 
 import app.keystone.common.enums.dictionary.CssTag;
-import app.keystone.common.enums.dictionary.Dictionary;
 import app.keystone.common.enums.DictionaryEnum;
 
 /**
@@ -9,7 +8,6 @@ import app.keystone.common.enums.DictionaryEnum;
  * @author likanug
  */
 @Deprecated
-@Dictionary(name = "sysMenu.isVisible")
 public enum VisibleStatusEnum implements DictionaryEnum<Integer> {
 
     /**

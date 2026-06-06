@@ -1,14 +1,12 @@
 package app.keystone.common.enums.common;
 
 import app.keystone.common.enums.dictionary.CssTag;
-import app.keystone.common.enums.dictionary.Dictionary;
 import app.keystone.common.enums.DictionaryEnum;
 
 /**
  * 用户状态
  * @author likanug
  */
-@Dictionary(name = "sysLoginLog.status")
 public enum LoginStatusEnum implements DictionaryEnum<Integer> {
     /**
      * status of user

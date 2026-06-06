@@ -24,8 +24,8 @@ import app.keystone.common.utils.ServletHolderUtil;
 import app.keystone.common.utils.i18n.MessageUtils;
 import app.keystone.domain.common.cache.CacheCenter;
 import app.keystone.domain.common.cache.LocalCacheService;
-import app.keystone.domain.common.cache.MapCache;
 import app.keystone.domain.common.cache.RedisCacheService;
+import app.keystone.domain.system.dict.DictApplicationService;
 import app.keystone.domain.system.user.db.SysUserEntity;
 import app.keystone.domain.system.user.db.SysUserService;
 import app.keystone.infrastructure.thread.ThreadPoolManager;
@@ -78,6 +78,8 @@ public class LoginService {
     private final AuthenticationManager authenticationManager;
 
     private final SysUserService userService;
+
+    private final DictApplicationService dictApplicationService;
 
     private final KeyloTokenVerifier keyloTokenVerifier;
 
@@ -244,7 +246,7 @@ public class LoginService {
 
         boolean isCaptchaOn = isCaptchaOn();
         configDTO.setIsCaptchaOn(isCaptchaOn);
-        configDTO.setDictionary(MapCache.dictionaryCache());
+        configDTO.setDictionary(dictApplicationService.getDictionaryDataMap());
         return configDTO;
     }
 

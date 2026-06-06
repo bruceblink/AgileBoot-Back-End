@@ -1,7 +1,6 @@
 package app.keystone.common.enums.common;
 
 import app.keystone.common.enums.dictionary.CssTag;
-import app.keystone.common.enums.dictionary.Dictionary;
 import app.keystone.common.enums.DictionaryEnum;
 
 /**
@@ -10,7 +9,6 @@ import app.keystone.common.enums.DictionaryEnum;
  * 全局的话使用common作为表名
  * @author likanug
  */
-@Dictionary(name = "sysNotice.noticeType")
 public enum NoticeTypeEnum implements DictionaryEnum<Integer> {
 
     /**

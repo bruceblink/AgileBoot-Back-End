@@ -1,13 +1,11 @@
 package app.keystone.common.enums.common;
 
-import app.keystone.common.enums.dictionary.Dictionary;
 import app.keystone.common.enums.BasicEnum;
 
 /**
  * 操作者类型
  * @author likanug
  */
-@Dictionary(name = "sysOperationLog.operatorType")
 public enum OperatorTypeEnum implements BasicEnum<Integer> {
 
     /**

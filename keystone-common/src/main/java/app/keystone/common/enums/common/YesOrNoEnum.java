@@ -2,13 +2,11 @@ package app.keystone.common.enums.common;
 
 import app.keystone.common.enums.DictionaryEnum;
 import app.keystone.common.enums.dictionary.CssTag;
-import app.keystone.common.enums.dictionary.Dictionary;
 
 /**
  * 系统内代表是与否的枚举
  * @author likanug
  */
-@Dictionary(name = "common.yesOrNo")
 public enum YesOrNoEnum implements DictionaryEnum<Integer> {
     /**
      * 是与否

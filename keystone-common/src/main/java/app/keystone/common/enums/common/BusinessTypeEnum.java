@@ -1,7 +1,6 @@
 package app.keystone.common.enums.common;
 
 import app.keystone.common.enums.dictionary.CssTag;
-import app.keystone.common.enums.dictionary.Dictionary;
 import app.keystone.common.enums.DictionaryEnum;
 
 /**
@@ -9,7 +8,6 @@ import app.keystone.common.enums.DictionaryEnum;
  *
  * @author likanug
  */
-@Dictionary(name = "sysOperationLog.businessType")
 public enum BusinessTypeEnum implements DictionaryEnum<Integer> {
 
     /**

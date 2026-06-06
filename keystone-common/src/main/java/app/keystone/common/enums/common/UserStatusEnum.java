@@ -1,14 +1,12 @@
 package app.keystone.common.enums.common;
 
 import app.keystone.common.enums.dictionary.CssTag;
-import app.keystone.common.enums.dictionary.Dictionary;
 import app.keystone.common.enums.DictionaryEnum;
 
 /**
  * 对应sys_user的status字段
  * @author likanug
  */
-@Dictionary(name = "sysUser.status")
 public enum UserStatusEnum implements DictionaryEnum<Integer> {
 
     /**
