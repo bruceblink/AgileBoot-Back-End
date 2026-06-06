@@ -13,6 +13,7 @@ import app.keystone.common.exception.error.ErrorCode.Business;
 import app.keystone.common.utils.ServletHolderUtil;
 import app.keystone.domain.common.dto.DownloadFileDTO;
 import app.keystone.domain.common.dto.UploadDTO;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -46,7 +47,8 @@ class FileApplicationServiceTest {
 
     @Test
     void uploadShouldSaveFileAndReturnUploadDTO() {
-        MockMultipartFile file = new MockMultipartFile("file", "avatar.jpg", "image/jpeg", "content".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "avatar.jpg", "image/jpeg",
+            "content".getBytes(StandardCharsets.UTF_8));
 
         try (MockedStatic<ServletHolderUtil> servletHolderUtilMocked = mockStatic(ServletHolderUtil.class)) {
             servletHolderUtilMocked.when(ServletHolderUtil::getContextUrl).thenReturn("http://localhost:18080");
@@ -62,7 +64,8 @@ class FileApplicationServiceTest {
 
     @Test
     void uploadBatchShouldSkipNullEntries() {
-        MockMultipartFile file = new MockMultipartFile("file", "report.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile file = new MockMultipartFile("file", "report.txt", "text/plain",
+            "hello".getBytes(StandardCharsets.UTF_8));
 
         try (MockedStatic<ServletHolderUtil> servletHolderUtilMocked = mockStatic(ServletHolderUtil.class)) {
             servletHolderUtilMocked.when(ServletHolderUtil::getContextUrl).thenReturn("http://localhost:18080");
@@ -92,11 +95,11 @@ class FileApplicationServiceTest {
     void downloadShouldReturnFileContentAndHeaders() throws Exception {
         Path downloadDir = tempDir.resolve("profile").resolve(UploadSubDir.DOWNLOAD_PATH);
         Files.createDirectories(downloadDir);
-        Files.writeString(downloadDir.resolve("readme.txt"), "download-body");
+        Files.writeString(downloadDir.resolve("readme.txt"), "download-body", StandardCharsets.UTF_8);
 
         DownloadFileDTO downloadFile = fileApplicationService.download("readme.txt");
 
-        assertEquals("download-body", new String(downloadFile.getContent()));
+        assertEquals("download-body", new String(downloadFile.getContent(), StandardCharsets.UTF_8));
         assertFalse(downloadFile.getHeaders().isEmpty());
         assertTrue(downloadFile.getHeaders().containsKey("Content-Disposition"));
     }
