@@ -66,7 +66,7 @@ public class SysUserEntity extends BaseEntity<SysUserEntity> {
     @TableField("phone_number")
     private String phoneNumber;
 
-    @ApiModelProperty("用户性别（0男 1女 2未知）")
+    @ApiModelProperty("用户性别（0女 1男 2未知）")
     @TableField("sex")
     private Integer sex;
 

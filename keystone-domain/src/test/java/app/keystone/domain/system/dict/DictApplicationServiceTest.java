@@ -57,21 +57,31 @@ class DictApplicationServiceTest {
     void getDictionaryDataMap_shouldBuildFrontendDictionaryFromEnabledDatabaseRows() {
         when(dictTypeService.list(ArgumentMatchers.<Wrapper<SysDictTypeEntity>>any())).thenReturn(List.of(
             dictType(1L, "common.status"),
-            dictType(2L, "sysUser.status")
+            dictType(2L, "sysUser.status"),
+            dictType(3L, "sysUser.sex")
         ));
         when(dictDataService.list(ArgumentMatchers.<Wrapper<SysDictDataEntity>>any())).thenReturn(List.of(
             dictData("common.status", "正常", "1", 1, ""),
             dictData("common.status", "停用", "0", 2, "danger"),
-            dictData("sysUser.status", "冻结", "3", 3, "warning")
+            dictData("sysUser.status", "冻结", "3", 3, "warning"),
+            dictData("sysUser.sex", "女", "0", 1, ""),
+            dictData("sysUser.sex", "男", "1", 2, ""),
+            dictData("sysUser.sex", "未知", "2", 3, "")
         ));
 
         Map<String, List<DictionaryData>> dictionary = service.getDictionaryDataMap();
 
-        assertEquals(List.of("common.status", "sysUser.status"), List.copyOf(dictionary.keySet()));
+        assertEquals(List.of("common.status", "sysUser.status", "sysUser.sex"), List.copyOf(dictionary.keySet()));
         assertEquals("正常", dictionary.get("common.status").get(0).getLabel());
         assertEquals(1, dictionary.get("common.status").get(0).getValue());
         assertEquals("danger", dictionary.get("common.status").get(1).getCssTag());
         assertEquals("冻结", dictionary.get("sysUser.status").get(0).getLabel());
+        assertEquals("女", dictionary.get("sysUser.sex").get(0).getLabel());
+        assertEquals(0, dictionary.get("sysUser.sex").get(0).getValue());
+        assertEquals("男", dictionary.get("sysUser.sex").get(1).getLabel());
+        assertEquals(1, dictionary.get("sysUser.sex").get(1).getValue());
+        assertEquals("未知", dictionary.get("sysUser.sex").get(2).getLabel());
+        assertEquals(2, dictionary.get("sysUser.sex").get(2).getValue());
     }
 
     @Test

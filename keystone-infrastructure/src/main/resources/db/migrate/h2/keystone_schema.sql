@@ -201,7 +201,7 @@ create table sys_user
     user_type    smallint     default 0  null comment '用户类型（00系统用户）',
     email        varchar(128) default '' null comment '用户邮箱',
     phone_number varchar(18)  default '' null comment '手机号码',
-    sex          smallint     default 0  null comment '用户性别（0男 1女 2未知）',
+    sex          smallint     default 2  null comment '用户性别（0女 1男 2未知）',
     avatar       varchar(512) default '' null comment '头像地址',
     password     varchar(128) default '' not null comment '密码',
     status       smallint     default 0  not null comment '帐号状态（1正常 2停用 3冻结）',

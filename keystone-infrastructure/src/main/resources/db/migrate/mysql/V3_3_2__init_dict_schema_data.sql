@@ -70,9 +70,9 @@ VALUES
 ('common.status', '正常', '1', 1, 0, '', 1, '正常状态', NULL, NULL, NOW(), NOW(), 0),
 ('common.status', '停用', '0', 2, 0, 'danger', 1, '停用状态', NULL, NULL, NOW(), NOW(), 0),
 -- 用户性别
-('sysUser.sex', '男', '1', 1, 0, '', 1, '性别男', NULL, NULL, NOW(), NOW(), 0),
-('sysUser.sex', '女', '2', 2, 0, '', 1, '性别女', NULL, NULL, NOW(), NOW(), 0),
-('sysUser.sex', '未知', '0', 3, 0, '', 1, '性别未知', NULL, NULL, NOW(), NOW(), 0),
+('sysUser.sex', '女', '0', 1, 0, '', 1, '性别女', NULL, NULL, NOW(), NOW(), 0),
+('sysUser.sex', '男', '1', 2, 0, '', 1, '性别男', NULL, NULL, NOW(), NOW(), 0),
+('sysUser.sex', '未知', '2', 3, 0, '', 1, '性别未知', NULL, NULL, NOW(), NOW(), 0),
 -- 用户状态
 ('sysUser.status', '正常', '1', 1, 0, '', 1, '用户正常', NULL, NULL, NOW(), NOW(), 0),
 ('sysUser.status', '禁用', '2', 2, 0, 'danger', 1, '用户禁用', NULL, NULL, NOW(), NOW(), 0),
