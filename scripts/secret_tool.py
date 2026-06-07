@@ -166,7 +166,7 @@ def cmd_generate_deployment(args: argparse.Namespace) -> None:
         secret_dir / ".redis.acl",
         "user default off\n"
         f"user {args.redis_user} on #{redis_hash} {redis_acl_key_pattern(args.redis_key_prefix)} "
-        "+@read +@write +@connection +@scripting",
+        "+@read +@write +@connection +@scripting +info",
     )
     if not keep_database_plain:
         ensure_writable(database_plain_file)
