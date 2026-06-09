@@ -82,7 +82,7 @@ public class SysRoleController extends BaseController {
     @PreAuthorize("@permission.has('system:role:add')")
     @AccessLog(title = "角色管理", businessType = BusinessTypeEnum.ADD)
     @PostMapping
-    public ResponseDTO<Void> add(@RequestBody AddRoleCommand addCommand) {
+    public ResponseDTO<Void> add(@Validated @RequestBody AddRoleCommand addCommand) {
         roleApplicationService.addRole(addCommand);
         return ResponseDTO.ok();
     }

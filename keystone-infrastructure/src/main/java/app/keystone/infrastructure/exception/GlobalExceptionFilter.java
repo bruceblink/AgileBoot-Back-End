@@ -34,7 +34,7 @@ public class GlobalExceptionFilter implements Filter {
             writeToResponse(response, resultJson);
         } catch (Exception e) {
             log.error("global filter exceptions, unknown error:", e);
-            ResponseDTO<Object> responseDTO = ResponseDTO.fail(new ApiException(Internal.INTERNAL_ERROR, e.getMessage()));
+            ResponseDTO<Object> responseDTO = ResponseDTO.fail(new ApiException(Internal.INTERNAL_ERROR));
             String resultJson = JacksonUtil.to(responseDTO);
             writeToResponse(response, resultJson);
         }

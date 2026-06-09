@@ -5,8 +5,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Collections;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode.Business;
+import app.keystone.domain.system.role.command.AddRoleCommand;
 import app.keystone.domain.system.role.db.SysRoleMenuService;
 import app.keystone.domain.system.role.db.SysRoleService;
 import org.junit.jupiter.api.Assertions;
@@ -22,6 +24,21 @@ class RoleModelTest {
 
     private static final long ROLE_ID = 1L;
 
+
+    @Test
+    void testLoadAddCommandCopiesStatus() {
+        AddRoleCommand command = new AddRoleCommand();
+        command.setRoleName("role 1");
+        command.setRoleKey("role_key");
+        command.setRoleSort(1);
+        command.setStatus(1);
+        command.setMenuIds(Collections.emptyList());
+
+        RoleModel roleModel = roleModelFactory.create();
+        roleModel.loadAddCommand(command);
+
+        Assertions.assertEquals(1, roleModel.getStatus());
+    }
 
     @Test
     void testCheckRoleNameUnique() {
