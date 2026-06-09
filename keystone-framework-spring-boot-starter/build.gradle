@@ -1,0 +1,5 @@
+dependencies {
+    api project(':keystone-framework-admin')
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}

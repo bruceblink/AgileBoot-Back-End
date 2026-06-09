@@ -189,7 +189,7 @@ docker compose down -v
 
 ## 📚 文档入口
 
-- 完整工程文档：[文档说明.md](文档说明.md)
+- 完整工程文档：[docs/项目说明.md](docs/项目说明.md)
 - Docker 启动指南：见本文档上方“Docker 开发环境”章节
 - 数据库脚本：
   - [keystone-infrastructure/src/main/resources/db/migrate/common/V3_3_0__flyway_baseline_marker.sql](keystone-infrastructure/src/main/resources/db/migrate/common/V3_3_0__flyway_baseline_marker.sql) — Flyway 基线标记
@@ -206,7 +206,7 @@ docker compose down -v
   - 已执行过的 Flyway 脚本不要重命名、不要改版本号；如需继续演进，新增更高版本脚本
   - 脚本内容不得写死数据库名（例如 `use keystone;`），应始终作用于当前 datasource 指向的库
 - 数据库密码加密：[DATABASE_PASSWORD_ENCRYPTION_GUIDE.md](DATABASE_PASSWORD_ENCRYPTION_GUIDE.md)
-- Keylo 对接说明（含可选启用、统一 `/login` 后端 Keylo 凭证鉴权、用户新增同步注册）：见 [文档说明.md](文档说明.md) 的“Keylo 集成与用户注册流程”章节
+- Keylo 对接说明（含可选启用、统一 `/login` 后端 Keylo 凭证鉴权、用户新增同步注册）：见 [docs/项目说明.md](docs/项目说明.md) 的“Keylo 集成与用户注册流程”章节
 
 ## 🤝 贡献
 

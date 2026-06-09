@@ -183,14 +183,6 @@ keystone:
   captchaType: math
   checkI18nKey: false
   traceRequestIdKey: AG-RequestId
-  desktop-api:
-    vesselbao:
-      base-url: ${VESSELBAO_API_URL:https://svc.data.myvessel.cn}
-      client-id: ${VESSELBAO_CLIENT_ID:cstc_api27}
-      client-secret: ${VESSELBAO_CLIENT_SECRET:16ab2f0875eeb1cba44704a8c88c3605}
-    shipboard:
-      base-url: ${SHIPBOARD_HTTP_SERVER_URL:http://10.17.17.133:8080}
-      boat-near-endpoint: ${BOAT_NEAR_API_ENDPOINT:/api/v1/ksh/getBoatNearApplyByMmsiOrTime}
   # 对应的公钥放在前端项目中的 utils/rsaUtils 类中
   rsaPrivateKey: ${KEYSTONE_RSA_PRIVATE_KEY}
   datasource:

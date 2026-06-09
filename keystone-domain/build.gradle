@@ -1,4 +1,5 @@
 dependencies {
+    api project(':keystone-framework-domain')
     api project(':keystone-infrastructure')
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

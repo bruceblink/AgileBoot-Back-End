@@ -24,10 +24,8 @@ tasks.named('processResources') {
 }
 
 dependencies {
+    implementation project(':keystone-framework-spring-boot-starter')
     implementation project(':keystone-domain')
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    implementation 'org.flywaydb:flyway-core'
-    implementation 'org.flywaydb:flyway-mysql'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
