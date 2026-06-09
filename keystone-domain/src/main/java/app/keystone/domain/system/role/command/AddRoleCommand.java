@@ -2,9 +2,10 @@ package app.keystone.domain.system.role.command;
 
 import app.keystone.common.annotation.ExcelColumn;
 import java.util.List;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -43,8 +44,10 @@ public class AddRoleCommand {
     @ExcelColumn(name = "数据范围")
     private String dataScope;
 
-    @PositiveOrZero
-    private String status;
+    @NotNull(message = "角色状态不能为空")
+    @Min(value = 0, message = "角色状态值无效")
+    @Max(value = 1, message = "角色状态值无效")
+    private Integer status;
 
     @NotNull
     private List<Long> menuIds;
