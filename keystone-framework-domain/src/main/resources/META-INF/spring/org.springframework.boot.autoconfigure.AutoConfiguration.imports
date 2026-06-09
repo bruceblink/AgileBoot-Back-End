@@ -1,0 +1,2 @@
+app.keystone.framework.domain.autoconfigure.KeystoneFrameworkInfrastructureAutoConfiguration
+app.keystone.framework.domain.autoconfigure.KeystoneFrameworkDomainAutoConfiguration

@@ -1,7 +1,7 @@
 -- ----------------------------
 -- 字典类型表
 -- ----------------------------
-create table sys_dict_type
+create table if not exists sys_dict_type
 (
     dict_id     bigint auto_increment comment '字典主键'
         primary key,
@@ -20,7 +20,7 @@ create table sys_dict_type
 -- ----------------------------
 -- 字典数据表
 -- ----------------------------
-create table sys_dict_data
+create table if not exists sys_dict_data
 (
     dict_code   bigint auto_increment comment '字典编码'
         primary key,
@@ -44,7 +44,7 @@ create table sys_dict_data
 -- ----------------------------
 -- 初始数据：常用字典类型
 -- ----------------------------
-INSERT INTO sys_dict_type (dict_id, dict_name, dict_type, status, remark, creator_id, updater_id, create_time, update_time, deleted)
+INSERT IGNORE INTO sys_dict_type (dict_id, dict_name, dict_type, status, remark, creator_id, updater_id, create_time, update_time, deleted)
 VALUES (1, '系统是否', 'common.yesOrNo', 1, '系统是否列表', NULL, NULL, NOW(), NOW(), 0),
        (2, '通用状态', 'common.status', 1, '通用状态列表', NULL, NULL, NOW(), NOW(), 0),
        (3, '用户性别', 'sysUser.sex', 1, '用户性别列表', NULL, NULL, NOW(), NOW(), 0),
@@ -61,7 +61,7 @@ VALUES (1, '系统是否', 'common.yesOrNo', 1, '系统是否列表', NULL, NULL
 -- ----------------------------
 -- 初始数据：字典数据
 -- ----------------------------
-INSERT INTO sys_dict_data (dict_type, dict_label, dict_value, dict_sort, is_default, list_class, status, remark, creator_id, updater_id, create_time, update_time, deleted)
+INSERT IGNORE INTO sys_dict_data (dict_type, dict_label, dict_value, dict_sort, is_default, list_class, status, remark, creator_id, updater_id, create_time, update_time, deleted)
 VALUES
 -- 系统是否
 ('common.yesOrNo', '是', '1', 1, 0, '', 1, '是', NULL, NULL, NOW(), NOW(), 0),

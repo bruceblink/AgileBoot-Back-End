@@ -6,7 +6,7 @@ plugins {
 
 allprojects {
     group = 'app.keystone'
-    version = '3.6.0'
+    version = '3.6.1'
 }
 
 subprojects {
@@ -153,7 +153,64 @@ subprojects {
         testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
         compileOnly 'org.springframework.boot:spring-boot-configuration-processor'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-        implementation 'com.baomidou:mybatis-plus-spring-boot3-starter:3.5.5'
+        if (project.name != 'keystone-framework-spring-boot-starter') {
+            api 'com.baomidou:mybatis-plus-spring-boot3-starter:3.5.5'
+        }
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+}
+
+def frameworkPublicationDescriptions = [
+    'keystone-common': 'Keystone framework common utilities, DTOs, enums, and shared configuration',
+    'keystone-infrastructure': 'Keystone framework infrastructure, security, cache, MyBatis, and web configuration',
+    'keystone-framework-domain': 'Keystone framework domain services and system domain model',
+    'keystone-framework-admin': 'Keystone framework admin web layer and security integration',
+    'keystone-framework-spring-boot-starter': 'Spring Boot starter that aggregates Keystone framework modules'
+]
+
+configure([
+    project(':keystone-common'),
+    project(':keystone-infrastructure'),
+    project(':keystone-framework-domain'),
+    project(':keystone-framework-admin'),
+    project(':keystone-framework-spring-boot-starter')
+]) {
+    def publicationName = project.name
+    def publicationDescription = frameworkPublicationDescriptions[publicationName]
+
+    apply plugin: 'maven-publish'
+
+    dependencyManagement {
+        generatedPomCustomization {
+            enabled = false
+        }
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+                versionMapping {
+                    usage('java-api') {
+                        fromResolutionOf('runtimeClasspath')
+                    }
+                    usage('java-runtime') {
+                        fromResolutionResult()
+                    }
+                }
+
+                pom {
+                    name = publicationName
+                    description = publicationDescription
+                    url = 'https://github.com/bruceblink/Keystone'
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://opensource.org/licenses/MIT'
+                        }
+                    }
+                }
+            }
+        }
     }
 }
