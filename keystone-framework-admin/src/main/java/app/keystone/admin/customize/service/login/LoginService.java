@@ -34,12 +34,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.google.code.kaptcha.Producer;
 import jakarta.annotation.Resource;
 import java.awt.image.BufferedImage;
-import java.security.KeyFactory;
 import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.interfaces.RSAPrivateCrtKey;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
@@ -70,6 +65,8 @@ import org.springframework.util.StringUtils;
 public class LoginService {
 
     private final TokenService tokenService;
+
+    private final KeystoneRsaKeyService keystoneRsaKeyService;
 
     private final RedisCacheService redisCache;
 
@@ -251,21 +248,7 @@ public class LoginService {
     }
 
     public RsaPublicKeyDTO getRsaPublicKey() {
-        try {
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            PrivateKey privateKey = generatePrivateKey(keyFactory);
-            if (!(privateKey instanceof RSAPrivateCrtKey rsaPrivateKey)) {
-                throw new ApiException(ErrorCode.Internal.INTERNAL_ERROR, "Invalid RSA private key");
-            }
-            RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(
-                rsaPrivateKey.getModulus(), rsaPrivateKey.getPublicExponent());
-            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-            return new RsaPublicKeyDTO(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
-        } catch (ApiException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ApiException(e, ErrorCode.Internal.INTERNAL_ERROR, e.getMessage());
-        }
+        return new RsaPublicKeyDTO(keystoneRsaKeyService.getPublicKeyBase64());
     }
 
     /**
@@ -363,7 +346,7 @@ public class LoginService {
 
     public String decryptPassword(String originalPassword) {
         try {
-            PrivateKey privateKey = generatePrivateKey(KeyFactory.getInstance("RSA"));
+            PrivateKey privateKey = keystoneRsaKeyService.getPrivateKey();
             Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] decryptBytes = cipher.doFinal(Base64.getDecoder().decode(originalPassword));
@@ -371,11 +354,6 @@ public class LoginService {
         } catch (Exception e) {
             throw new ApiException(e, ErrorCode.Business.LOGIN_ERROR, e.getMessage());
         }
-    }
-
-    private PrivateKey generatePrivateKey(KeyFactory keyFactory) throws Exception {
-        byte[] privateKeyBytes = Base64.getDecoder().decode(KeystoneConfig.getRsaPrivateKey());
-        return keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes));
     }
 
     private boolean isCaptchaOn() {

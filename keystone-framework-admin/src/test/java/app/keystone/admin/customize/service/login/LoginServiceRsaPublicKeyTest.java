@@ -73,6 +73,7 @@ class LoginServiceRsaPublicKeyTest {
 
         return new LoginService(
             mock(TokenService.class),
+            new KeystoneRsaKeyService(),
             mock(RedisCacheService.class),
             mock(LocalCacheService.class),
             mock(AuthenticationManager.class),

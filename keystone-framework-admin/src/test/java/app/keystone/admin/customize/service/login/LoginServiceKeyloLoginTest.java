@@ -70,6 +70,7 @@ class LoginServiceKeyloLoginTest {
     void setUp() {
         loginService = spy(new LoginService(
             tokenService,
+            mock(KeystoneRsaKeyService.class),
             redisCache,
             localCache,
             authenticationManager,

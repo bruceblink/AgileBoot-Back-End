@@ -35,6 +35,7 @@ class LoginServiceConfigTest {
         DictApplicationService dictApplicationService = mock(DictApplicationService.class);
         LoginService loginService = new LoginService(
             mock(TokenService.class),
+            mock(KeystoneRsaKeyService.class),
             mock(RedisCacheService.class),
             localCache,
             mock(AuthenticationManager.class),
