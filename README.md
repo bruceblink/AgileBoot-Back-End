@@ -128,9 +128,10 @@ cp .env.example .env
 - `KEYLO_LEGACY_TOKEN_LOGIN_ENABLED=false` 可关闭兼容保留的 `/login/keylo`
 - `SPRING_PROFILES_ACTIVE` 默认为 `prod`，容器运行时走部署配置
 
-#### 生成登录 RSA 密钥对
+#### 生成 Keystone RSA 密钥对
 
-后端 `/login` 使用 RSA 私钥解密密码，建议统一使用仓库内的 Python 脚本生成密钥对：
+后端 `/login` 使用 RSA 私钥解密密码，Keystone access token 使用同一私钥以 RS256 签名。
+建议统一使用仓库内的 Python 脚本生成密钥对：
 
 ```bash
 python scripts/secret_tool.py generate-rsa
@@ -145,9 +146,9 @@ python scripts/secret_tool.py generate-rsa --bits 3072
 输出说明：
 
 - `KEYSTONE_RSA_PRIVATE_KEY`：配置到后端环境变量，格式为 `PKCS#8 DER + Base64`
-- `KEYSTONE_RSA_PUBLIC_KEY`：对应公钥，格式为 `X.509 DER + Base64`
+- `KEYSTONE_RSA_PUBLIC_KEY`：对应公钥，格式为 `X.509 DER + Base64`，也可用于验签 Keystone RS256 JWT
 
-当前后端实际必须配置的是 `KEYSTONE_RSA_PRIVATE_KEY`。公钥可通过 `/login/rsa-public-key` 接口提供给前端动态获取。
+当前后端实际必须配置的是 `KEYSTONE_RSA_PRIVATE_KEY`。公钥可通过 `/login/rsa-public-key` 接口提供给前端和其他服务动态获取。
 
 ### 挂载自定义 application.yml
 
