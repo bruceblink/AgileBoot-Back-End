@@ -63,6 +63,7 @@ class TokenServiceTest {
             .getPayload();
 
         assertNotNull(claims.getId());
+        assertThat(claims.getIssuer()).isEqualTo("keystone");
         assertNotNull(claims.getIssuedAt());
         assertNotNull(claims.getExpiration());
         assertNotNull(claims.get(Token.LOGIN_USER_KEY));

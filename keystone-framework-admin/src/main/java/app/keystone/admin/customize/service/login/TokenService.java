@@ -42,6 +42,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TokenService {
 
+    private static final String TOKEN_ISSUER = "keystone";
+
     /**
      * 自定义令牌标识
      */
@@ -469,6 +471,7 @@ public class TokenService {
         Date expiresAt = new Date(currentTimeMillis + TimeUnit.SECONDS.toMillis(expirationSeconds));
         return Jwts.builder()
             .claims(claims)
+            .issuer(TOKEN_ISSUER)
             .id(UUID.randomUUID().toString())
             .issuedAt(issuedAt)
             .expiration(expiresAt)
