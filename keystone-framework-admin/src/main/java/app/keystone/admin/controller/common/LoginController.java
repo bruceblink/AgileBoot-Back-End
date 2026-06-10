@@ -86,7 +86,7 @@ public class LoginController {
         return ResponseDTO.ok(captchaImg);
     }
 
-    @Operation(summary = "获取登录 RSA 公钥", description = "客户端使用该公钥加密 /login 密码")
+    @Operation(summary = "获取 Keystone RSA 公钥", description = "客户端使用该公钥加密 /login 密码，并可用于验签 Keystone RS256 JWT")
     @RateLimit(key = RateLimitKey.LOGIN_RSA_PUBLIC_KEY, time = 60, maxCount = 60, cacheType = CacheType.REDIS,
         limitType = LimitType.IP)
     @GetMapping("/login/rsa-public-key")
