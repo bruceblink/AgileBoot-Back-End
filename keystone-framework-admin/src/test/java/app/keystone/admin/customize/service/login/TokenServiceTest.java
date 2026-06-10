@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import app.keystone.common.config.KeystoneConfig;
 import app.keystone.common.constant.Constants.Token;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode.Business;
@@ -20,15 +21,31 @@ import app.keystone.infrastructure.user.web.SystemLoginUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class TokenServiceTest {
+
+    private KeyPair keyPair;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        keyPair = generateKeyPair();
+        KeystoneConfig keystoneConfig = new KeystoneConfig();
+        keystoneConfig.setRsaPrivateKey(Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()));
+        setKeystoneConfig(keystoneConfig);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        setKeystoneConfig(null);
+    }
 
     @Test
     @SuppressWarnings("unchecked")
@@ -43,8 +60,7 @@ class TokenServiceTest {
         redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
         redisCacheService.loginAccountCache = loginAccountCache;
         when(loginAccountCache.setIfAbsent(eq("1"), anyString(), eq(604800), eq(TimeUnit.SECONDS))).thenReturn(true);
-        TokenService tokenService = new TokenService(redisCacheService);
-        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        TokenService tokenService = new TokenService(redisCacheService, new KeystoneRsaKeyService());
         setField(tokenService, "expirationSeconds", 1800L);
         setField(tokenService, "refreshExpirationSeconds", 604800L);
 
@@ -56,13 +72,14 @@ class TokenServiceTest {
             eq(604800), eq(TimeUnit.SECONDS));
         verify(loginAccountCache).setIfAbsent(eq("1"), anyString(), eq(604800), eq(TimeUnit.SECONDS));
 
-        Claims claims = Jwts.parser()
-            .verifyWith(signingKey("0123456789abcdef0123456789abcdef"))
+        var jws = Jwts.parser()
+            .verifyWith(keyPair.getPublic())
             .build()
-            .parseSignedClaims(issuedToken.getToken())
-            .getPayload();
+            .parseSignedClaims(issuedToken.getToken());
+        Claims claims = jws.getPayload();
 
         assertNotNull(claims.getId());
+        assertThat(jws.getHeader().getAlgorithm()).isEqualTo("RS256");
         assertThat(claims.getIssuer()).isEqualTo("keystone");
         assertNotNull(claims.getIssuedAt());
         assertNotNull(claims.getExpiration());
@@ -87,7 +104,7 @@ class TokenServiceTest {
         redisCacheService.loginRefreshTokenCache = loginRefreshTokenCache;
         redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
         redisCacheService.loginAccountCache = loginAccountCache;
-        TokenService tokenService = new TokenService(redisCacheService);
+        TokenService tokenService = new TokenService(redisCacheService, new KeystoneRsaKeyService());
         setField(tokenService, "expirationSeconds", 1800L);
         setField(tokenService, "refreshExpirationSeconds", 604800L);
 
@@ -124,8 +141,7 @@ class TokenServiceTest {
         redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
         redisCacheService.loginAccountCache = loginAccountCache;
         when(loginAccountCache.setIfAbsent(eq("1"), anyString(), eq(604800), eq(TimeUnit.SECONDS))).thenReturn(true);
-        TokenService tokenService = new TokenService(redisCacheService);
-        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        TokenService tokenService = new TokenService(redisCacheService, new KeystoneRsaKeyService());
         setField(tokenService, "expirationSeconds", 1800L);
         setField(tokenService, "refreshExpirationSeconds", 604800L);
 
@@ -162,8 +178,7 @@ class TokenServiceTest {
         redisCacheService.loginRefreshTokenCache = loginRefreshTokenCache;
         redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
         redisCacheService.loginAccountCache = loginAccountCache;
-        TokenService tokenService = new TokenService(redisCacheService);
-        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        TokenService tokenService = new TokenService(redisCacheService, new KeystoneRsaKeyService());
         setField(tokenService, "expirationSeconds", 1800L);
         setField(tokenService, "refreshExpirationSeconds", 604800L);
 
@@ -199,8 +214,7 @@ class TokenServiceTest {
         redisCacheService.loginRefreshTokenCache = loginRefreshTokenCache;
         redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
         redisCacheService.loginAccountCache = loginAccountCache;
-        TokenService tokenService = new TokenService(redisCacheService);
-        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        TokenService tokenService = new TokenService(redisCacheService, new KeystoneRsaKeyService());
         setField(tokenService, "expirationSeconds", 1800L);
         setField(tokenService, "refreshExpirationSeconds", 604800L);
 
@@ -229,7 +243,7 @@ class TokenServiceTest {
         redisCacheService.loginRefreshTokenCache = loginRefreshTokenCache;
         redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
         redisCacheService.loginAccountCache = loginAccountCache;
-        TokenService tokenService = new TokenService(redisCacheService);
+        TokenService tokenService = new TokenService(redisCacheService, new KeystoneRsaKeyService());
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         loginUser.setCachedKey("token-id");
@@ -256,8 +270,7 @@ class TokenServiceTest {
         redisCacheService.loginRefreshTokenCache = loginRefreshTokenCache;
         redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
         redisCacheService.loginAccountCache = loginAccountCache;
-        TokenService tokenService = new TokenService(redisCacheService);
-        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        TokenService tokenService = new TokenService(redisCacheService, new KeystoneRsaKeyService());
         setField(tokenService, "expirationSeconds", 1800L);
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
@@ -288,8 +301,7 @@ class TokenServiceTest {
         redisCacheService.loginRefreshTokenCache = loginRefreshTokenCache;
         redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
         redisCacheService.loginAccountCache = loginAccountCache;
-        TokenService tokenService = new TokenService(redisCacheService);
-        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        TokenService tokenService = new TokenService(redisCacheService, new KeystoneRsaKeyService());
         setField(tokenService, "expirationSeconds", 1800L);
 
         String token = generateToken(tokenService, "token-id", "refresh-session-id", 1L, "admin");
@@ -319,8 +331,7 @@ class TokenServiceTest {
         redisCacheService.loginRefreshLockCache = loginRefreshLockCache;
         redisCacheService.loginAccountCache = loginAccountCache;
         when(loginAccountCache.setIfAbsent(eq("1"), anyString(), eq(604800), eq(TimeUnit.SECONDS))).thenReturn(true);
-        TokenService tokenService = new TokenService(redisCacheService);
-        setField(tokenService, "secret", "0123456789abcdef0123456789abcdef");
+        TokenService tokenService = new TokenService(redisCacheService, new KeystoneRsaKeyService());
         setField(tokenService, "expirationSeconds", 1800L);
         setField(tokenService, "refreshExpirationSeconds", 604800L);
         setField(tokenService, "refreshSlidingExpirationEnabled", false);
@@ -355,11 +366,6 @@ class TokenServiceTest {
         verify(loginRefreshLockCache).delete(refreshSessionId);
     }
 
-    private SecretKey signingKey(String secret) {
-        byte[] keyBytes = Arrays.copyOf(secret.getBytes(StandardCharsets.UTF_8), 64);
-        return new SecretKeySpec(keyBytes, "HmacSHA512");
-    }
-
     private String generateToken(TokenService tokenService, String cachedKey, String refreshSessionId, Long userId,
         String username) throws Exception {
         java.lang.reflect.Method method = TokenService.class.getDeclaredMethod("generateToken", java.util.Map.class);
@@ -387,5 +393,17 @@ class TokenServiceTest {
         Field field = target.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
         field.set(target, value);
+    }
+
+    private KeyPair generateKeyPair() throws Exception {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        return generator.generateKeyPair();
+    }
+
+    private void setKeystoneConfig(KeystoneConfig keystoneConfig) throws Exception {
+        Field instanceField = KeystoneConfig.class.getDeclaredField("instance");
+        instanceField.setAccessible(true);
+        instanceField.set(null, keystoneConfig);
     }
 }
