@@ -15,15 +15,12 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import jakarta.servlet.http.HttpServletRequest;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -50,12 +47,6 @@ public class TokenService {
     @Value("${token.header}")
     private String header;
 
-    /**
-     * 令牌秘钥
-     */
-    @Value("${token.secret}")
-    private String secret;
-
     @Value("${token.expirationSeconds:1800}")
     private long expirationSeconds;
 
@@ -69,6 +60,8 @@ public class TokenService {
     private long refreshLockSeconds;
 
     private final RedisCacheService redisCache;
+
+    private final KeystoneRsaKeyService keystoneRsaKeyService;
 
     /**
      * 获取用户身份信息
@@ -443,12 +436,6 @@ public class TokenService {
         return Math.toIntExact(refreshLockSeconds);
     }
 
-
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = Arrays.copyOf(secret.getBytes(StandardCharsets.UTF_8), 64);
-        return new SecretKeySpec(keyBytes, "HmacSHA512");
-    }
-
     /**
      * 从数据声明生成令牌
      *
@@ -475,7 +462,7 @@ public class TokenService {
             .id(UUID.randomUUID().toString())
             .issuedAt(issuedAt)
             .expiration(expiresAt)
-            .signWith(getSigningKey())
+            .signWith(keystoneRsaKeyService.getPrivateKey(), Jwts.SIG.RS256)
             .compact();
     }
 
@@ -534,7 +521,7 @@ public class TokenService {
      */
     private Claims parseToken(String token) {
         return Jwts.parser()
-            .verifyWith(getSigningKey())
+            .verifyWith(keystoneRsaKeyService.getPublicKey())
             .build()
             .parseSignedClaims(token)
             .getPayload();
