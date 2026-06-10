@@ -14,7 +14,7 @@ import org.springframework.mock.env.MockEnvironment;
 class ProductionSecurityPropertiesValidatorTest {
 
     @Test
-    void run_shouldFailFast_whenProdUsesUnsafeDefaults() throws Exception {
+    void run_shouldFailFast_whenProdMissingRsaPrivateKey() throws Exception {
         MockEnvironment environment = new MockEnvironment();
         environment.setActiveProfiles("prod");
         KeyloProperties keyloProperties = new KeyloProperties();
@@ -23,13 +23,12 @@ class ProductionSecurityPropertiesValidatorTest {
         provisioningProperties.setEnabled(false);
         ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
             environment, keyloProperties, provisioningProperties);
-        setField(validator, "tokenSecret", "sdhfkjshBN6rr32df38");
-        setField(validator, "rsaPrivateKey", "production-rsa-private-key");
+        setField(validator, "rsaPrivateKey", "");
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> validator.run(null));
 
-        assertTrue(exception.getMessage().contains("token.secret"));
-        assertTrue(exception.getMessage().contains("TOKEN_SECRET"));
+        assertTrue(exception.getMessage().contains("keystone.rsaPrivateKey"));
+        assertTrue(exception.getMessage().contains("KEYSTONE_RSA_PRIVATE_KEY"));
     }
 
     @Test
@@ -48,7 +47,6 @@ class ProductionSecurityPropertiesValidatorTest {
         provisioningProperties.setEnabled(false);
         ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
             environment, keyloProperties, provisioningProperties);
-        setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
         setField(validator, "rsaPrivateKey", "production-rsa-private-key");
         setField(validator, "authMode", "mixed");
 
@@ -65,7 +63,6 @@ class ProductionSecurityPropertiesValidatorTest {
         provisioningProperties.setEnabled(false);
         ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
             environment, keyloProperties, provisioningProperties);
-        setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
         setField(validator, "rsaPrivateKey", "production-rsa-private-key");
         setField(validator, "authMode", "mixed");
 
@@ -82,7 +79,6 @@ class ProductionSecurityPropertiesValidatorTest {
         provisioningProperties.setEnabled(false);
         ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
             environment, keyloProperties, provisioningProperties);
-        setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
         setField(validator, "rsaPrivateKey", "production-rsa-private-key");
         setField(validator, "authMode", "local");
 
@@ -99,7 +95,6 @@ class ProductionSecurityPropertiesValidatorTest {
         provisioningProperties.setEnabled(false);
         ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
             environment, keyloProperties, provisioningProperties);
-        setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
         setField(validator, "rsaPrivateKey", "production-rsa-private-key");
         setField(validator, "authMode", "mixed");
 
@@ -115,7 +110,6 @@ class ProductionSecurityPropertiesValidatorTest {
         environment.setActiveProfiles("test");
         ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
             environment, new KeyloProperties(), new KeyloUserProvisioningProperties());
-        setField(validator, "tokenSecret", "short");
 
         assertDoesNotThrow(() -> validator.run(null));
     }
@@ -142,7 +136,6 @@ class ProductionSecurityPropertiesValidatorTest {
         provisioningProperties.setAdminClientSecret("");
         ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
             environment, keyloProperties, provisioningProperties);
-        setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
         setField(validator, "rsaPrivateKey", "production-rsa-private-key");
         setField(validator, "authMode", "mixed");
 
@@ -172,7 +165,6 @@ class ProductionSecurityPropertiesValidatorTest {
         provisioningProperties.setEnabled(false);
         ProductionSecurityPropertiesValidator validator = new ProductionSecurityPropertiesValidator(
             environment, keyloProperties, provisioningProperties);
-        setField(validator, "tokenSecret", "0123456789abcdef0123456789abcdef");
         setField(validator, "rsaPrivateKey", "MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8-sample");
 
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> validator.run(null));

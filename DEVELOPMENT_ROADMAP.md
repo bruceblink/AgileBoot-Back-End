@@ -39,7 +39,7 @@ keystone-common          # 通用 DTO、枚举、异常、工具类、文件工�
 |------|------|------|
 | RBAC 管理 | 已完成 | 用户、角色、部门、岗位、菜单等 CRUD |
 | 登录认证 | 已完成 | 本地账号、Keylo 凭证登录、Keylo token 兼容登录 |
-| 生产弱密钥校验 | 已完成 | prod profile 拦截默认 token secret、示例 RSA 私钥、示例 Keylo 管理密钥 |
+| 生产弱密钥校验 | 已完成 | prod profile 拦截示例 RSA 私钥、示例 Keylo 管理密钥 |
 | Keylo 兼容接口治理 | 已完成 | `/login/keylo` 可通过 `KEYLO_LEGACY_TOKEN_LOGIN_ENABLED=false` 关闭 |
 | 用户同步注册 | 已完成 | 新增 Keystone 用户时可选同步注册 Keylo |
 | 数据权限 | 已完成 | 多种数据范围检查器 |
