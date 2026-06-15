@@ -6,16 +6,20 @@ import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.common.exception.error.ErrorCode.Business;
 import app.keystone.common.exception.error.ErrorCode.Client;
 import app.keystone.common.exception.error.ErrorCode.Internal;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -26,6 +30,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionInterceptor {
+
+    private static final String INVALID_PARAMETER_MESSAGE = "参数错误";
 
     /**
      * 权限校验异常
@@ -90,8 +96,7 @@ public class GlobalExceptionInterceptor {
     @ExceptionHandler(BindException.class)
     public ResponseDTO<?> handleBindException(BindException e) {
         log.error(e.getMessage(), e);
-        String message = e.getAllErrors().get(0).getDefaultMessage();
-        return ResponseDTO.fail(new ApiException(ErrorCode.Client.COMMON_REQUEST_PARAMETERS_INVALID, message));
+        return invalidParameterResponse();
     }
 
     /**
@@ -100,9 +105,26 @@ public class GlobalExceptionInterceptor {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseDTO<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.error(e.getMessage(), e);
-        var fieldError = e.getBindingResult().getFieldError();
-        String message = fieldError == null ? e.getMessage() : fieldError.getDefaultMessage();
-        return ResponseDTO.fail(new ApiException(ErrorCode.Client.COMMON_REQUEST_PARAMETERS_INVALID, message));
+        return invalidParameterResponse();
+    }
+
+    /**
+     * 请求参数异常
+     */
+    @ExceptionHandler({
+        MethodArgumentTypeMismatchException.class,
+        MissingServletRequestParameterException.class,
+        HttpMessageNotReadableException.class,
+        ConstraintViolationException.class
+    })
+    public ResponseDTO<?> handleInvalidParameterException(Exception e, HttpServletRequest request) {
+        log.error("请求地址'{}',参数错误'{}'", request.getRequestURI(), e.getMessage(), e);
+        return invalidParameterResponse();
+    }
+
+    private ResponseDTO<?> invalidParameterResponse() {
+        return ResponseDTO.build(null, ErrorCode.Client.COMMON_REQUEST_PARAMETERS_INVALID.code(),
+            INVALID_PARAMETER_MESSAGE);
     }
 
 
