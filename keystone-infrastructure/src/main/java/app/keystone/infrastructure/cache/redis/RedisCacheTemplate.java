@@ -49,9 +49,11 @@ public class RedisCacheTemplate<T> {
         String cachedKey = generateKey(id);
         Optional<T> optional = caffeineCache.get(cachedKey);
 
-        if (optional == null || !optional.isPresent()) {
+        if (optional.isEmpty()) {
             T objectFromDb = getObjectFromDb(id);
-            set(id, objectFromDb);
+            if (objectFromDb != null) {
+                set(id, objectFromDb);
+            }
             return objectFromDb;
         }
 
@@ -66,7 +68,7 @@ public class RedisCacheTemplate<T> {
         String cachedKey = generateKey(id);
         log.debug("find the caffeine cache of key: {}", cachedKey);
         Optional<T> optional = caffeineCache.get(cachedKey);
-        return optional != null ? optional.orElse(null) : null;
+        return optional.isPresent() ? optional.orElse(null) : null;
     }
 
     /**
@@ -88,7 +90,7 @@ public class RedisCacheTemplate<T> {
     public T getObjectOnlyInCacheByKey(String cachedKey) {
         log.debug("find the caffeine cache of key: {}", cachedKey);
         Optional<T> optional = caffeineCache.get(cachedKey);
-        return optional != null ? optional.orElse(null) : null;
+        return optional.isPresent() ? optional.orElse(null) : null;
     }
 
 
