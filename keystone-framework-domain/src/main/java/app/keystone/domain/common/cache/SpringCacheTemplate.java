@@ -21,11 +21,10 @@ public class SpringCacheTemplate<T> {
     }
 
     public T get(Object id) {
-        return getObjectById(id);
-    }
-
-    public T getObjectById(Object id) {
-        T cachedValue = getObjectOnlyInCacheById(id);
+        if (id == null) {
+            return null;
+        }
+        T cachedValue = getFromCache(id);
         if (cachedValue != null) {
             return cachedValue;
         }
@@ -36,7 +35,18 @@ public class SpringCacheTemplate<T> {
         return value;
     }
 
-    public T getObjectOnlyInCacheById(Object id) {
+    /**
+     * @deprecated use {@link #get(Object)}.
+     */
+    @Deprecated
+    public T getObjectById(Object id) {
+        return get(id);
+    }
+
+    public T getFromCache(Object id) {
+        if (id == null) {
+            return null;
+        }
         Cache cache = cache();
         if (cache == null) {
             return null;
@@ -50,14 +60,28 @@ public class SpringCacheTemplate<T> {
         return value;
     }
 
+    /**
+     * @deprecated use {@link #getFromCache(Object)}.
+     */
+    @Deprecated
+    public T getObjectOnlyInCacheById(Object id) {
+        return getFromCache(id);
+    }
+
     public void set(Object id, T value) {
+        if (id == null || value == null) {
+            return;
+        }
         Cache cache = cache();
-        if (cache != null && value != null) {
+        if (cache != null) {
             cache.put(id, value);
         }
     }
 
     public void delete(Object id) {
+        if (id == null) {
+            return;
+        }
         Cache cache = cache();
         if (cache != null) {
             cache.evict(id);

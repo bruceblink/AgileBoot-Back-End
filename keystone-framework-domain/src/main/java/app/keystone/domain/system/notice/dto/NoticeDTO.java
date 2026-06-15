@@ -21,7 +21,7 @@ public class NoticeDTO {
             this.status = entity.getStatus();
             this.createTime = entity.getCreateTime();
 
-            SysUserEntity cacheUser = CacheCenter.userCache().getObjectById(entity.getCreatorId());
+            SysUserEntity cacheUser = CacheCenter.userCache().get(entity.getCreatorId());
             if (cacheUser != null) {
                 this.creatorName = cacheUser.getUsername();
             }

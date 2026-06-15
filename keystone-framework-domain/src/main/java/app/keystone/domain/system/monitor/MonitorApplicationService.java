@@ -67,7 +67,7 @@ public class MonitorApplicationService {
     }
 
     public List<OnlineUserDTO> getOnlineUserList(String username, String ipAddress) {
-        Collection<String> keys = redisTemplate.keys(CacheKeyEnum.LOGIN_USER_KEY.key() + "*");
+        Collection<String> keys = redisTemplate.keys(CacheKeyEnum.LOGIN_USER_KEY.prefix() + "*");
         if (keys == null || keys.isEmpty()) {
             return Collections.emptyList();
         }
@@ -90,7 +90,7 @@ public class MonitorApplicationService {
 
     private SystemLoginUser getOnlineUserByRedisKey(String redisKey) {
         try {
-            return redisCacheService.loginUserCache.getObjectOnlyInRedisById(getLoginUserTokenId(redisKey));
+            return redisCacheService.loginUserCache.getFromRedis(getLoginUserTokenId(redisKey));
         } catch (RuntimeException e) {
             log.warn("Failed to load online user from redis key: {}", redisKey, e);
             return null;
@@ -98,7 +98,7 @@ public class MonitorApplicationService {
     }
 
     private String getLoginUserTokenId(String redisKey) {
-        return StringUtils.removeStart(redisKey, CacheKeyEnum.LOGIN_USER_KEY.key());
+        return StringUtils.removeStart(redisKey, CacheKeyEnum.LOGIN_USER_KEY.prefix());
     }
 
     public ServerInfo getServerInfo() {

@@ -312,7 +312,7 @@ public class LoginService {
      * @param captchaCodeKey 验证码对应的缓存key
      */
     public void validateCaptcha(String username, String captchaCode, String captchaCodeKey) {
-        String captcha = redisCache.captchaCache.getObjectById(captchaCodeKey);
+        String captcha = redisCache.captchaCache.get(captchaCodeKey);
         redisCache.captchaCache.delete(captchaCodeKey);
         if (captcha == null) {
             ThreadPoolManager.execute(asyncTaskFactory.loginInfoTask(username, LoginStatusEnum.LOGIN_FAIL,
