@@ -115,10 +115,10 @@ class TokenServiceTest {
         existingRefreshSession.setAccountId("1");
         existingRefreshSession.setCurrentTokenId("existing-token-id");
         existingRefreshSession.setExpiresAt(System.currentTimeMillis() + 60_000);
-        when(loginAccountCache.getObjectOnlyInRedisById("1")).thenReturn("existing-refresh-session-id");
-        when(loginRefreshTokenCache.getObjectOnlyInRedisById("existing-refresh-session-id"))
+        when(loginAccountCache.getFromRedis("1")).thenReturn("existing-refresh-session-id");
+        when(loginRefreshTokenCache.getFromRedis("existing-refresh-session-id"))
             .thenReturn(existingRefreshSession);
-        when(loginUserCache.getObjectOnlyInRedisById("existing-token-id")).thenReturn(existingLoginUser);
+        when(loginUserCache.getFromRedis("existing-token-id")).thenReturn(existingLoginUser);
 
         assertThatThrownBy(() -> tokenService.createTokenAndPutUserInCache(loginUser))
             .isInstanceOf(ApiException.class)
@@ -150,12 +150,12 @@ class TokenServiceTest {
         existingLoginUser.setCachedKey("existing-token-id");
         LoginRefreshSession existingRefreshSession = refreshSession(
             "existing-refresh-session-id", "1", "existing-token-id", existingLoginUser);
-        when(loginAccountCache.getObjectOnlyInRedisById("1"))
+        when(loginAccountCache.getFromRedis("1"))
             .thenReturn("existing-refresh-session-id")
             .thenReturn("existing-refresh-session-id");
-        when(loginRefreshTokenCache.getObjectOnlyInRedisById("existing-refresh-session-id"))
+        when(loginRefreshTokenCache.getFromRedis("existing-refresh-session-id"))
             .thenReturn(existingRefreshSession);
-        when(loginUserCache.getObjectOnlyInRedisById("existing-token-id")).thenReturn(existingLoginUser);
+        when(loginUserCache.getFromRedis("existing-token-id")).thenReturn(existingLoginUser);
 
         TokenService.IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser, true);
 
@@ -185,12 +185,12 @@ class TokenServiceTest {
         SystemLoginUser loginUser = new SystemLoginUser(1L, false, "testk", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         LoginRefreshSession existingRefreshSession = refreshSession(
             "existing-refresh-session-id", "1", "missing-token-id", loginUser);
-        when(loginAccountCache.getObjectOnlyInRedisById("1"))
+        when(loginAccountCache.getFromRedis("1"))
             .thenReturn("existing-refresh-session-id")
             .thenReturn("existing-refresh-session-id");
-        when(loginRefreshTokenCache.getObjectOnlyInRedisById("existing-refresh-session-id"))
+        when(loginRefreshTokenCache.getFromRedis("existing-refresh-session-id"))
             .thenReturn(existingRefreshSession);
-        when(loginUserCache.getObjectOnlyInRedisById("missing-token-id")).thenReturn(null);
+        when(loginUserCache.getFromRedis("missing-token-id")).thenReturn(null);
         when(loginAccountCache.setIfAbsent(eq("1"), anyString(), eq(604800), eq(TimeUnit.SECONDS))).thenReturn(true);
 
         TokenService.IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser);
@@ -219,8 +219,8 @@ class TokenServiceTest {
         setField(tokenService, "refreshExpirationSeconds", 604800L);
 
         SystemLoginUser loginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
-        when(loginAccountCache.getObjectOnlyInRedisById("1")).thenReturn("expired-refresh-session-id");
-        when(loginRefreshTokenCache.getObjectOnlyInRedisById("expired-refresh-session-id")).thenReturn(null);
+        when(loginAccountCache.getFromRedis("1")).thenReturn("expired-refresh-session-id");
+        when(loginRefreshTokenCache.getFromRedis("expired-refresh-session-id")).thenReturn(null);
         when(loginAccountCache.setIfAbsent(eq("1"), anyString(), eq(604800), eq(TimeUnit.SECONDS))).thenReturn(true);
 
         TokenService.IssuedToken issuedToken = tokenService.createTokenAndPutUserInCache(loginUser);
@@ -248,8 +248,8 @@ class TokenServiceTest {
         SystemLoginUser loginUser = new SystemLoginUser(1L, false, "admin", "pwd", RoleInfo.EMPTY_ROLE, 1L);
         loginUser.setCachedKey("token-id");
         LoginRefreshSession refreshSession = refreshSession("refresh-session-id", "1", "token-id", loginUser);
-        when(loginAccountCache.getObjectOnlyInRedisById("1")).thenReturn("refresh-session-id");
-        when(loginRefreshTokenCache.getObjectOnlyInRedisById("refresh-session-id")).thenReturn(refreshSession);
+        when(loginAccountCache.getFromRedis("1")).thenReturn("refresh-session-id");
+        when(loginRefreshTokenCache.getFromRedis("refresh-session-id")).thenReturn(refreshSession);
 
         tokenService.removeLoginUser(loginUser);
 
@@ -277,9 +277,9 @@ class TokenServiceTest {
         loginUser.setCachedKey("token-id");
         String token = generateToken(tokenService, "token-id", "refresh-session-id", 1L, "admin");
         LoginRefreshSession refreshSession = refreshSession("refresh-session-id", "1", "token-id", loginUser);
-        when(loginUserCache.getObjectOnlyInRedisById("token-id")).thenReturn(loginUser);
-        when(loginRefreshTokenCache.getObjectOnlyInRedisById("refresh-session-id")).thenReturn(refreshSession);
-        when(loginAccountCache.getObjectOnlyInRedisById("1")).thenReturn("refresh-session-id");
+        when(loginUserCache.getFromRedis("token-id")).thenReturn(loginUser);
+        when(loginRefreshTokenCache.getFromRedis("refresh-session-id")).thenReturn(refreshSession);
+        when(loginAccountCache.getFromRedis("1")).thenReturn("refresh-session-id");
 
         SystemLoginUser removedLoginUser = tokenService.removeLoginUserByToken(token);
 
@@ -306,9 +306,9 @@ class TokenServiceTest {
 
         String token = generateToken(tokenService, "token-id", "refresh-session-id", 1L, "admin");
         LoginRefreshSession refreshSession = refreshSession("refresh-session-id", "1", "token-id", null);
-        when(loginUserCache.getObjectOnlyInRedisById("token-id")).thenReturn(null);
-        when(loginRefreshTokenCache.getObjectOnlyInRedisById("refresh-session-id")).thenReturn(refreshSession);
-        when(loginAccountCache.getObjectOnlyInRedisById("1")).thenReturn("refresh-session-id");
+        when(loginUserCache.getFromRedis("token-id")).thenReturn(null);
+        when(loginRefreshTokenCache.getFromRedis("refresh-session-id")).thenReturn(refreshSession);
+        when(loginAccountCache.getFromRedis("1")).thenReturn("refresh-session-id");
 
         SystemLoginUser removedLoginUser = tokenService.removeLoginUserByToken(token);
 
@@ -345,10 +345,10 @@ class TokenServiceTest {
         verify(loginRefreshTokenCache).set(eq(refreshSessionId), refreshSessionCaptor.capture(), eq(604800),
             eq(TimeUnit.SECONDS));
         LoginRefreshSession refreshSession = refreshSessionCaptor.getValue();
-        when(loginRefreshTokenCache.getObjectOnlyInRedisById(refreshSessionId)).thenReturn(refreshSession);
-        when(loginAccountCache.getObjectOnlyInRedisById("1")).thenReturn(refreshSessionId);
+        when(loginRefreshTokenCache.getFromRedis(refreshSessionId)).thenReturn(refreshSession);
+        when(loginAccountCache.getFromRedis("1")).thenReturn(refreshSessionId);
         org.mockito.Mockito.doAnswer(invocation -> {
-            when(loginRefreshLockCache.getObjectOnlyInRedisById(refreshSessionId)).thenReturn(invocation.getArgument(1));
+            when(loginRefreshLockCache.getFromRedis(refreshSessionId)).thenReturn(invocation.getArgument(1));
             return true;
         }).when(loginRefreshLockCache).setIfAbsent(eq(refreshSessionId), anyString(), eq(10), eq(TimeUnit.SECONDS));
 

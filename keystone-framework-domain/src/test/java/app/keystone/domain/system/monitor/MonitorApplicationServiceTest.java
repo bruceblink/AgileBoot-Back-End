@@ -28,9 +28,9 @@ class MonitorApplicationServiceTest {
     void getOnlineUserList_shouldLoadUsersByTokenIdFromRedis() {
         redisCacheService.loginUserCache = loginUserCache;
         SystemLoginUser loginUser = loginUser("token-1", "admin");
-        when(redisTemplate.keys(CacheKeyEnum.LOGIN_USER_KEY.key() + "*"))
-            .thenReturn(Set.of(CacheKeyEnum.LOGIN_USER_KEY.key() + "token-1"));
-        when(loginUserCache.getObjectOnlyInRedisById("token-1")).thenReturn(loginUser);
+        when(redisTemplate.keys(CacheKeyEnum.LOGIN_USER_KEY.prefix() + "*"))
+            .thenReturn(Set.of(CacheKeyEnum.LOGIN_USER_KEY.prefix() + "token-1"));
+        when(loginUserCache.getFromRedis("token-1")).thenReturn(loginUser);
 
         List<OnlineUserDTO> onlineUsers = monitorApplicationService.getOnlineUserList(null, null);
 
@@ -44,13 +44,13 @@ class MonitorApplicationServiceTest {
     void getOnlineUserList_shouldSkipBrokenCacheEntry() {
         redisCacheService.loginUserCache = loginUserCache;
         SystemLoginUser loginUser = loginUser("token-1", "admin");
-        when(redisTemplate.keys(CacheKeyEnum.LOGIN_USER_KEY.key() + "*"))
+        when(redisTemplate.keys(CacheKeyEnum.LOGIN_USER_KEY.prefix() + "*"))
             .thenReturn(Set.of(
-                CacheKeyEnum.LOGIN_USER_KEY.key() + "token-1",
-                CacheKeyEnum.LOGIN_USER_KEY.key() + "broken-token"
+                CacheKeyEnum.LOGIN_USER_KEY.prefix() + "token-1",
+                CacheKeyEnum.LOGIN_USER_KEY.prefix() + "broken-token"
             ));
-        when(loginUserCache.getObjectOnlyInRedisById("token-1")).thenReturn(loginUser);
-        when(loginUserCache.getObjectOnlyInRedisById("broken-token")).thenThrow(new IllegalStateException("bad data"));
+        when(loginUserCache.getFromRedis("token-1")).thenReturn(loginUser);
+        when(loginUserCache.getFromRedis("broken-token")).thenThrow(new IllegalStateException("bad data"));
 
         List<OnlineUserDTO> onlineUsers = monitorApplicationService.getOnlineUserList(null, null);
 
@@ -65,13 +65,13 @@ class MonitorApplicationServiceTest {
         SystemLoginUser admin = loginUser("token-1", "admin");
         SystemLoginUser tester = loginUser("token-2", "tester");
         tester.getLoginInfo().setIpAddress("10.0.0.2");
-        when(redisTemplate.keys(CacheKeyEnum.LOGIN_USER_KEY.key() + "*"))
+        when(redisTemplate.keys(CacheKeyEnum.LOGIN_USER_KEY.prefix() + "*"))
             .thenReturn(Set.of(
-                CacheKeyEnum.LOGIN_USER_KEY.key() + "token-1",
-                CacheKeyEnum.LOGIN_USER_KEY.key() + "token-2"
+                CacheKeyEnum.LOGIN_USER_KEY.prefix() + "token-1",
+                CacheKeyEnum.LOGIN_USER_KEY.prefix() + "token-2"
             ));
-        when(loginUserCache.getObjectOnlyInRedisById("token-1")).thenReturn(admin);
-        when(loginUserCache.getObjectOnlyInRedisById("token-2")).thenReturn(tester);
+        when(loginUserCache.getFromRedis("token-1")).thenReturn(admin);
+        when(loginUserCache.getFromRedis("token-2")).thenReturn(tester);
 
         List<OnlineUserDTO> onlineUsers = monitorApplicationService.getOnlineUserList("tester", "10.0.0.2");
 

@@ -129,7 +129,7 @@ public class DictApplicationService {
         SpringCacheTemplate<List<SysDictDataEntity>> cache = CacheCenter.dictDataCache();
         List<SysDictDataEntity> list = cache == null
             ? dictDataService.listByDictType(dictType)
-            : cache.getObjectById(dictType);
+            : cache.get(dictType);
         if (list == null) {
             return Collections.emptyList();
         }
@@ -142,7 +142,7 @@ public class DictApplicationService {
             return loadDictionaryDataMap();
         }
 
-        Map<String, List<DictionaryData>> dictionary = cache.getObjectOnlyInCacheById(ALL_DICTIONARY_DATA_CACHE_KEY);
+        Map<String, List<DictionaryData>> dictionary = cache.getFromCache(ALL_DICTIONARY_DATA_CACHE_KEY);
         if (dictionary != null) {
             return dictionary;
         }

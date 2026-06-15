@@ -77,7 +77,7 @@ public class UserApplicationService {
     public CurrentLoginUserDTO getLoginUserInfo(SystemLoginUser loginUser) {
         CurrentLoginUserDTO permissionDTO = new CurrentLoginUserDTO();
 
-        permissionDTO.setUserInfo(new UserDTO(CacheCenter.userCache().getObjectById(loginUser.getUserId())));
+        permissionDTO.setUserInfo(new UserDTO(CacheCenter.userCache().get(loginUser.getUserId())));
         permissionDTO.setRoleKey(loginUser.getRoleInfo().getRoleKey());
         permissionDTO.setPermissions(loginUser.getRoleInfo().getMenuPermissions());
 
