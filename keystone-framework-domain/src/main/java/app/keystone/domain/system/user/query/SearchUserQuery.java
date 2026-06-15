@@ -28,7 +28,6 @@ public class SearchUserQuery<T> extends AbstractPageQuery<T> {
             .like(StringUtils.isNotEmpty(phoneNumber), "u.phone_number", likeValue(phoneNumber))
             .eq(userId != null, "u.user_id", userId)
             .eq(status != null, "u.status", status)
-            .eq("u.deleted", 0)
             .and(deptId != null, o ->
                 o.eq("u.dept_id", deptId)
                     .or()

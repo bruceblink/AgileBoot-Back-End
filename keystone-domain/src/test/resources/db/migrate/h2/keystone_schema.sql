@@ -14,7 +14,6 @@ create table sys_config
     update_time     datetime                 null comment '更新时间',
     create_time     datetime                 null comment '创建时间',
     remark          varchar(128)             null comment '备注',
-    deleted         int    default 0  not null comment '逻辑删除'
 );
 
 create sequence if not exists sys_dict_type_seq start with 13 increment by 1;
@@ -29,7 +28,6 @@ create table sys_dict_type
     updater_id  bigint                  null comment '更新者ID',
     create_time datetime                null comment '创建时间',
     update_time datetime                null comment '更新时间',
-    deleted     tinyint      default 0  not null comment '逻辑删除'
 );
 
 create sequence if not exists sys_dict_data_seq start with 37 increment by 1;
@@ -49,7 +47,6 @@ create table sys_dict_data
     updater_id  bigint                  null comment '更新者ID',
     create_time datetime                null comment '创建时间',
     update_time datetime                null comment '更新时间',
-    deleted     tinyint      default 0  not null comment '逻辑删除'
 );
 
 create sequence if not exists sys_dept_seq start with 11 increment by 1;
@@ -69,7 +66,6 @@ create table sys_dept
     create_time  datetime               null comment '创建时间',
     updater_id   bigint                 null comment '更新者ID',
     update_time  datetime               null comment '更新时间',
-    deleted      tinyint  default 0  not null comment '逻辑删除'
 );
 
 create sequence if not exists sys_login_info_seq start with 1 increment by 1;
@@ -84,7 +80,6 @@ create table sys_login_info
     status           smallint     default 0  not null comment '登录状态（1成功 0失败）',
     msg              varchar(255) default '' not null comment '提示消息',
     login_time       datetime                null comment '访问时间',
-    deleted          tinyint   default 0  not null comment '逻辑删除'
 );
 
 create sequence if not exists sys_menu_seq start with 63 increment by 1;
@@ -106,7 +101,6 @@ create table sys_menu
     create_time datetime                   null comment '创建时间',
     updater_id  bigint                     null comment '更新者ID',
     update_time datetime                   null comment '更新时间',
-    deleted     tinyint       default 0    not null comment '逻辑删除'
 );
 
 create sequence if not exists sys_notice_seq start with 3 increment by 1;
@@ -122,7 +116,6 @@ create table sys_notice
     updater_id     bigint                  null comment '更新者ID',
     update_time    datetime                null comment '更新时间',
     remark         varchar(255) default '' not null comment '备注',
-    deleted        tinyint   default 0  not null comment '逻辑删除'
 );
 
 create sequence if not exists sys_operation_log_seq start with 1 increment by 1;
@@ -146,7 +139,6 @@ create table sys_operation_log
     status            smallint      default 1  not null comment '操作状态（1正常 0异常）',
     error_stack       varchar(2048) default '' null comment '错误消息',
     operation_time    datetime                 not null comment '操作时间',
-    deleted           tinyint    default 0  not null comment '逻辑删除'
 );
 
 create sequence if not exists sys_post_seq start with 5 increment by 1;
@@ -162,7 +154,6 @@ create table sys_post
     create_time  datetime               null comment '创建时间',
     updater_id   bigint                 null,
     update_time  datetime               null comment '更新时间',
-    deleted      tinyint  default 0  not null comment '逻辑删除'
 );
 
 create sequence if not exists sys_role_seq start with 4 increment by 1;
@@ -180,7 +171,6 @@ create table sys_role
     updater_id   bigint                   null comment '更新者ID',
     update_time  datetime                 null comment '更新时间',
     remark       varchar(512)             null comment '备注',
-    deleted      tinyint    default 0  not null comment '删除标志（0代表存在 1代表删除）'
 );
 
 create table sys_role_menu
@@ -214,7 +204,6 @@ create table sys_user
     updater_id   bigint                  null comment '更新者ID',
     update_time  datetime                null comment '更新时间',
     remark       varchar(512)            null comment '备注',
-    deleted      tinyint   default 0  not null comment '删除标志（0代表存在 1代表删除）'
 );
 
 alter table sys_user add column external_user_id varchar(128) null;

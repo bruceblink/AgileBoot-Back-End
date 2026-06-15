@@ -33,8 +33,7 @@ public interface SysUserMapper extends BaseMapper<SysUserEntity> {
     @Select("SELECT DISTINCT r.* "
         + "FROM sys_role r "
         + " LEFT JOIN sys_user u ON u.role_id = r.role_id "
-        + "WHERE r.deleted = 0 "
-        + " AND u.user_id = #{userId}")
+        + "WHERE u.user_id = #{userId}")
     List<SysRoleEntity> getRolesByUserId(Long userId);
 
     /**
@@ -46,8 +45,7 @@ public interface SysUserMapper extends BaseMapper<SysUserEntity> {
     @Select("SELECT p.* "
         + "FROM sys_post p "
         + " LEFT JOIN sys_user u ON p.post_id = u.post_id "
-        + "WHERE u.user_id = #{userId} "
-        + " AND p.deleted = 0")
+        + "WHERE u.user_id = #{userId}")
     List<SysPostEntity> getPostsByUserId(Long userId);
 
     /**
@@ -61,8 +59,8 @@ public interface SysUserMapper extends BaseMapper<SysUserEntity> {
         + " LEFT JOIN sys_role_menu rm ON m.menu_id = rm.menu_id "
         + " LEFT JOIN sys_user u ON rm.role_id = u.role_id "
         + " LEFT JOIN sys_role r ON r.role_id = u.role_id "
-        + "WHERE m.status = 1 AND m.deleted = 0 "
-        + " AND r.status = 1 AND r.deleted = 0 "
+        + "WHERE m.status = 1 "
+        + " AND r.status = 1 "
         + " AND u.user_id = #{userId}")
     Set<String> getMenuPermsByUserId(Long userId);
 

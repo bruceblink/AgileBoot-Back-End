@@ -3,7 +3,6 @@ package app.keystone.domain.system.log.db;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import io.swagger.annotations.ApiModel;
@@ -64,11 +63,6 @@ public class SysLoginInfoEntity extends Model<SysLoginInfoEntity> {
     @ApiModelProperty("访问时间")
     @TableField("login_time")
     private Date loginTime;
-
-    @ApiModelProperty("逻辑删除")
-    @TableField("deleted")
-    @TableLogic
-    private Boolean deleted;
 
 
     @Override
