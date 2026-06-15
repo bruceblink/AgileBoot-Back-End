@@ -60,6 +60,7 @@ public class UserModel extends SysUserEntity {
     public void loadAddUserCommand(AddUserCommand command) {
         if (command != null) {
             BeanUtils.copyProperties(command, this, "userId");
+            normalizeBlankEmail();
         }
     }
 
@@ -75,13 +76,13 @@ public class UserModel extends SysUserEntity {
             this.setSex(command.getSex());
             this.setNickname(command.getNickName());
             this.setPhoneNumber(command.getPhoneNumber());
-            this.setEmail(command.getEmail());
+            this.setEmail(StringUtils.trimToNull(command.getEmail()));
         }
     }
 
 
     public void checkUsernameIsUnique() {
-        if (userService.isUserNameDuplicated(getUsername())) {
+        if (StringUtils.isNotEmpty(getUsername()) && userService.isUserNameDuplicated(getUsername(), getUserId())) {
             throw new ApiException(ErrorCode.Business.USER_NAME_IS_NOT_UNIQUE);
         }
     }
@@ -114,6 +115,10 @@ public class UserModel extends SysUserEntity {
         if (StringUtils.isNotEmpty(getEmail()) && userService.isEmailDuplicated(getEmail(), getUserId())) {
             throw new ApiException(ErrorCode.Business.USER_EMAIL_IS_NOT_UNIQUE);
         }
+    }
+
+    private void normalizeBlankEmail() {
+        setEmail(StringUtils.trimToNull(getEmail()));
     }
 
     public void checkCanBeDelete(SystemLoginUser loginUser) {

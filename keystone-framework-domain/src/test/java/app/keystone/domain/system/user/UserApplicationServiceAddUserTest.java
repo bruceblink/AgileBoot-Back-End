@@ -15,6 +15,7 @@ import app.keystone.domain.system.post.db.SysPostService;
 import app.keystone.domain.system.role.db.SysRoleService;
 import app.keystone.domain.system.user.command.AddUserCommand;
 import app.keystone.domain.system.user.command.ResetPasswordCommand;
+import app.keystone.domain.system.user.command.UpdateUserCommand;
 import app.keystone.domain.system.user.db.SysUserService;
 import app.keystone.domain.system.user.keylo.KeyloUserProvisioningResult;
 import app.keystone.domain.system.user.keylo.KeyloUserProvisioningService;
@@ -90,6 +91,25 @@ class UserApplicationServiceAddUserTest {
 
         assertNotNull(exception);
         assertEquals(ErrorCode.Business.LOGIN_KEYLO_PROVISION_FAILED, exception.getErrorCode());
+    }
+
+    @Test
+    void updateUser_shouldRejectDuplicateUsername() {
+        UpdateUserCommand command = new UpdateUserCommand();
+        command.setUserId(1001L);
+        command.setUsername("existing-user");
+
+        UserModel userModel = mock(UserModel.class);
+        when(userModelFactory.loadById(1001L)).thenReturn(userModel);
+        doThrow(new ApiException(ErrorCode.Business.USER_NAME_IS_NOT_UNIQUE))
+            .when(userModel).checkUsernameIsUnique();
+
+        ApiException exception = assertThrows(ApiException.class, () -> userApplicationService.updateUser(command));
+
+        assertEquals(ErrorCode.Business.USER_NAME_IS_NOT_UNIQUE, exception.getErrorCode());
+        verify(userModel).loadUpdateUserCommand(command);
+        verify(userModel).checkUsernameIsUnique();
+        verify(userModel, never()).updateById();
     }
 
     @Test

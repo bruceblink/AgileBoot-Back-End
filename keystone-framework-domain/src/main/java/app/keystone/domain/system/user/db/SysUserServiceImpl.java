@@ -23,10 +23,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
 
 
     @Override
-    public boolean isUserNameDuplicated(String username) {
+    public boolean isUserNameDuplicated(String username, Long userId) {
         QueryWrapper<SysUserEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("username", username);
-        return this.count(queryWrapper) > 0;
+        queryWrapper.ne(userId != null, "user_id", userId)
+            .eq("username", username);
+        return baseMapper.exists(queryWrapper);
     }
 
 
