@@ -161,7 +161,7 @@ keystone:
       credential-password-field: ${KEYLO_CREDENTIAL_PASSWORD_FIELD:client_secret}
       credential-verify-url: ${KEYLO_CREDENTIAL_VERIFY_URL:${keystone.auth.keylo.base-url}/v1/auth/token}
       provisioning:
-        enabled: ${KEYLO_PROVISIONING_ENABLED:true}
+        enabled: ${KEYLO_PROVISIONING_ENABLED:false}
         admin-client-id: ${KEYLO_ADMIN_CLIENT_ID:cli-admin-root}
         admin-client-secret: ${KEYLO_ADMIN_CLIENT_SECRET:replace-with-strong-admin-secret}
         create-user-url: ${KEYLO_CREATE_USER_URL:${keystone.auth.keylo.base-url}/v1/admin/users}

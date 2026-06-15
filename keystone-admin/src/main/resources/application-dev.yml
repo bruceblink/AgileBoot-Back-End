@@ -3,9 +3,9 @@
 
 keystone:
   file-base-dir: ${KEYSTONE_FILE_BASE_DIR:D:/keystone-dev}
-  # 开发环境默认提供一把示例 RSA 私钥，便于本地联调登录。
-  # 如需更换，可执行：python scripts/secret_tool.py generate-rsa
-  rsaPrivateKey: ${KEYSTONE_RSA_PRIVATE_KEY:MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAKHoeQr6sIzfsUDMIdXK2FNzqnG+vnnUrTsJGF1f82MJ10cC5Aw53/ntHl+IjCBU0R8KwPVwjJLoDwhaPgO0ktHa3b0l6E+mqIVIniE20Nws3E0mJhFwJC/IxB7JAg8TkuNzflzvZjAO1ACwgkKGxq7Iutz4TocLeCfUkObXwc1fAgMBAAECgYAWwCzqDwnp8bDdkxGaEhPNvi4QJ6ZqRilFZ2TGEiqIGyTl9JEI6sT/QIOJFw3hqSltfDxbAMKwDe221b9rE9+hZhE2rrpwcTKuehob9Z8CObYeUHR9HG7Qb2tYRElvSCWo74iz2zajXAvJLjIE4MPuPYqXC5zOabH+EJ/eaOzVwQJBANmRkMlb+qzp1GWuqFMHP+5MeYhFwUHVX7fxKNA24oHldX8zjPIZ6d3vaRfliTvxOaz1T80acvJkkb7zHBmaW38CQQC+gfF8Lg+nvBY/S3wfOPL8FcntP16jdFhNNZmbOxq72ZmCfl5Zk5cYNBc4rDSrd9Sj4TkLLug+wrK6Wr117P4hAkBOVxnZR2NVy8SM8HzvmJauiZ7hMKzLtbcHlrBpeLnKqALM0JUZv7b0EPa4ghAOI2fvHU2kvrdRDGFmbkdZ+LilAkBnX8eT5MKl+A/yZJmDr7laRNB/poVKGNXZf55Md3P4Pwlnn/6+iLHSdmGrZPZnnOyLyKjVgqyPccLeEGMCXIlBAkAt2OMwss16OH2x79OcfBrabU5iCVbDHg56JYGbWP8KcPfvspxtL/4TdACRsa+yCMcI6L29Q4wn791SEEnE834a}
+  # 开发环境默认提供一把 2048-bit 示例 RSA 私钥，便于本地联调登录。
+  # 如需更换，可执行：python scripts/secret_tool.py generate-rsa --bits 2048
+  rsaPrivateKey: ${KEYSTONE_RSA_PRIVATE_KEY:MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCh2rmwrQaZduGdz9MjhouRexYAyBjfQejv3XPeo/06XI3ed4gwFmHuq0teifcw3ZlYnIMyvlC0g6hMCr85ocyWfCvini+jFdWjn4J1gf8AOgHpc/gxp940MWZ5lhQ4Ga0uWLxhBBqi/19dcZsKpPayFANVKgdnaMSxAWuMZOAjxl1WJQ6BuqSgIajeIjQ+PXNVfNSvhzf+2J7CLSlrqziV5NOVLdlW31S42FtHvWop7muYSNxG3Im/3TA3JmcUuBrzTlpusHJ+zD6uBGT+x03Pj7lrhdthPkjz6CJu4/fYI5biei/cYxd1oKcmT5qL4jGLD3JgNuxvr19VDuaaxR3pAgMBAAECggEAHLfvH9Krq5pE8Rf5mkGazR7+afgXNbH/r2PnVddaLLtUbuddsk6eZNdfAbDQPArt1SO8Qco0DruXppp3kLXNU9xHeyffQvwyUpyQbOI6iWNBiJdLsB/dlPw49xTylHu111XmYv5z7X0LgkyQmoRnw3Q6nSdedfJIiDG80AXsIVyeOypkK/oOz1r/lJ+fj4kpGygmfTVXZ6SIh5E1wUIN+c9zMPok+3hRk97xMCGXKWkyH/BmEX1z1GCqi2Bje6jQhqtkTyjaZyHU2/5/2MvgwZZFVkTp9VWzNogOV2OOzWnH5jPMy4lZDsIsb9FCgvc7gTaleglwX6OdiAtxD/I9UwKBgQDZGm6OOnbUHjnn/IswLMXtRuon1QnFc3I5aqMDuXbRQLGycrtTjliqv+/+LE2FdARw7uP9Y12YvTBz3gvsyxrhI2fm1j0hsglUh5mth/SN1uBHZZJcUVW3kLUc5D1f+x0iiYgEHwUh23LgxwWeYxDcZgBjOV9qEkdusZhD0v9bwwKBgQC+2kW48pRh81z5GsIP2ovAkMNm5K/ILsjly+p/0JFB2v8sne6yykqmfWG6/O3pPuH3Brm/tP//IwDxwVWXOZ0iOTifXvdN8DBthxZZH7doADEai9cR83CTJMJaMKUodS3gUd0ivT4oJWVTPA+VUq9D5bUrEtUI1015b3nTXqJA4wKBgFZqJPNL5hyMY3Qpm6VzTN0jSvTL4XXMe/zKq1RCMD8eRxzGejXKBRUCDR7Yt4qVIWdqTyl+sbSoKW8VRR3dwjc3BpZlVDPjT79rsgnWgcsral5A2b8RSNMmMFDtsFhR9cjXgWJSjpJpbRJ3ZY8j04RGvYTBQ29PE0vGONtWUvpNAoGBAK3HXdkLuKR/zdZc0PtSihHrPqE/9fcW8oKbbIi5RqpqWBMuMxzFKbfzTrvOdmr9gQ9HJncyvi54lvGKkv7BzRxOcgpblF95Jv90E5tPT9b45b1AO7LysTyqKfWpeZkfKYipwetR2XkApARoGeBji4cNcCsqWKRWNwstwAYAk0j1AoGBANhEvbZlm9fMTtK76TE+R7h3yASIRhLTS6i9C+HogfTtaaEzUJTpFWh7UFd/fep8XTwCLTxGfa0jOsMD/Mb0yNOgZBD75buoOx+xbCzvEoA9tf1e1SGPYLy+5hs3uQMAh3KQyuPXBreYB0hCEWQUNsn2BvfxMG/a2nesiMcUp15L}
   auth:
     # 本地开发默认对接 Keylo；如需本地账号密码登录，可设置 KEYSTONE_AUTH_MODE=local 且 KEYSTONE_AUTH_KEYLO_ENABLED=false。
     mode: ${KEYSTONE_AUTH_MODE:local}
@@ -17,8 +17,8 @@ keystone:
       jwk-set-uri: ${KEYLO_JWK_SET_URI:http://localhost:2345/.well-known/jwks.json}
       audiences: ${KEYLO_AUDIENCES:admin-backend,sys_test}
       provisioning:
-        enabled: ${KEYLO_PROVISIONING_ENABLED:true}
-        admin-client-secret: ${KEYLO_ADMIN_CLIENT_SECRET:replace-with-strong-admin-secret}
+        enabled: ${KEYLO_PROVISIONING_ENABLED:false}
+        admin-client-secret: cli-admin-root#312
   datasource:
     password-encryption:
       encrypt-key: ${KEYSTONE_DATASOURCE_ENCRYPT_KEY:}
@@ -34,7 +34,7 @@ spring:
     dynamic:
       datasource:
         master:
-          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:33066/keystone?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://10.17.17.7:33066/ship-db?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
           username: ${SPRING_DATASOURCE_USERNAME:root}
           password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:docker/.secrets/.database_password.enc}
 
@@ -50,7 +50,7 @@ spring:
 
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      host: ${SPRING_DATA_REDIS_HOST:10.17.17.7}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       username: ${SPRING_DATA_REDIS_USERNAME:keystone}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
