@@ -36,11 +36,12 @@ public interface SysUserService extends IService<SysUserEntity> {
     boolean isEmailDuplicated(String email, Long userId);
 
     /**
-     * 检测用户名是否
+     * 检测用户名是否唯一
      * @param userName 用户名
+     * @param userId 用户id
      * @return 校验结果
      */
-    boolean isUserNameDuplicated(String userName);
+    boolean isUserNameDuplicated(String userName, Long userId);
 
     /**
      * 获取用户的角色

@@ -38,8 +38,8 @@ class UserModelTest {
         userWithNewName.setUserId(USER_ID);
         userWithNewName.setUsername("user 2");
 
-        when(userService.isUserNameDuplicated("user 1")).thenReturn(true);
-        when(userService.isUserNameDuplicated("user 2")).thenReturn(false);
+        when(userService.isUserNameDuplicated("user 1", USER_ID)).thenReturn(true);
+        when(userService.isUserNameDuplicated("user 2", USER_ID)).thenReturn(false);
 
         ApiException exception = assertThrows(ApiException.class, userWithSameName::checkUsernameIsUnique);
         Assertions.assertEquals(Business.USER_NAME_IS_NOT_UNIQUE, exception.getErrorCode());
@@ -77,7 +77,7 @@ class UserModelTest {
 
         ApiException exception = assertThrows(ApiException.class, userWithSameEmail::checkEmailIsUnique);
         Assertions.assertEquals(Business.USER_EMAIL_IS_NOT_UNIQUE, exception.getErrorCode());
-        Assertions.assertDoesNotThrow(userWithNewNumber::checkPhoneNumberIsUnique);
+        Assertions.assertDoesNotThrow(userWithNewNumber::checkEmailIsUnique);
     }
 
     @Test

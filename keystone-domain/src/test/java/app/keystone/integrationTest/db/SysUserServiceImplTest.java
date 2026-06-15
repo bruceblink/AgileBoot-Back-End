@@ -32,9 +32,13 @@ class SysUserServiceImplTest {
     @Test
     @Rollback
     void testIsUserNameDuplicated() {
-        boolean isDuplicated = userService.isUserNameDuplicated("admin");
+        boolean addWithSame = userService.isUserNameDuplicated("admin", null);
+        boolean updateWithSame = userService.isUserNameDuplicated("admin", 1L);
+        boolean addWithoutSame = userService.isUserNameDuplicated("admin1", null);
 
-        Assertions.assertTrue(isDuplicated);
+        Assertions.assertTrue(addWithSame);
+        Assertions.assertFalse(updateWithSame);
+        Assertions.assertFalse(addWithoutSame);
     }
 
 
