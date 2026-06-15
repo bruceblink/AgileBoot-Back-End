@@ -28,7 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.exceptions.PersistenceException;
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,7 +69,11 @@ public class DictApplicationService {
         DictTypeModel model = dictTypeModelFactory.create();
         model.loadAddCommand(command);
         model.checkDictTypeUnique(null);
-        model.insert();
+        try {
+            model.insert();
+        } catch (DataIntegrityViolationException | PersistenceException e) {
+            throwDictTypeExistsWhenDuplicateKey(e);
+        }
         invalidateDictionaryCaches(command.getDictType());
     }
 
@@ -74,7 +81,11 @@ public class DictApplicationService {
         DictTypeModel model = dictTypeModelFactory.loadById(command.getDictId());
         String oldDictType = model.getDictType();
         model.loadUpdateCommand(command);
-        model.updateById();
+        try {
+            model.updateById();
+        } catch (DataIntegrityViolationException | PersistenceException e) {
+            throwDictTypeExistsWhenDuplicateKey(e);
+        }
         // 若字典类型标识变更，同步更新字典数据中的 dictType 并刷新缓存
         if (!oldDictType.equals(command.getDictType())) {
             dictDataService.lambdaUpdate()
@@ -210,6 +221,29 @@ public class DictApplicationService {
         if (dictionaryDataMapCache != null) {
             dictionaryDataMapCache.delete(ALL_DICTIONARY_DATA_CACHE_KEY);
         }
+    }
+
+    private void throwDictTypeExistsWhenDuplicateKey(RuntimeException e) {
+        if (isDuplicateKey(e)) {
+            throw new ApiException(e, ErrorCode.Business.DICT_TYPE_IS_NOT_UNIQUE);
+        }
+        throw e;
+    }
+
+    private boolean isDuplicateKey(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof DuplicateKeyException) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null
+                && (message.contains("Duplicate entry") || message.contains("Unique index or primary key violation"))) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private DictionaryData toDictionaryData(SysDictDataEntity entity) {
