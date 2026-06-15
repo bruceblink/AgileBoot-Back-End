@@ -32,8 +32,8 @@ public class DictTypeQuery extends AbstractPageQuery<SysDictTypeEntity> {
     public QueryWrapper<SysDictTypeEntity> addQueryCondition() {
         this.timeRangeColumn = "create_time";
         return new QueryWrapper<SysDictTypeEntity>()
-            .like(StringUtils.isNotEmpty(dictName), "dict_name", dictName)
-            .like(StringUtils.isNotEmpty(dictType), "dict_type", dictType)
+            .like(StringUtils.isNotEmpty(dictName), "dict_name", likeValue(dictName))
+            .like(StringUtils.isNotEmpty(dictType), "dict_type", likeValue(dictType))
             .eq(status != null, "status", status);
     }
 }

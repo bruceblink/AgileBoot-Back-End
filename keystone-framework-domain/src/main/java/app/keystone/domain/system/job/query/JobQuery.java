@@ -32,8 +32,8 @@ public class JobQuery extends AbstractPageQuery<SysJobEntity> {
     public QueryWrapper<SysJobEntity> addQueryCondition() {
         this.timeRangeColumn = "create_time";
         return new QueryWrapper<SysJobEntity>()
-            .like(StringUtils.isNotEmpty(jobName), "job_name", jobName)
-            .like(StringUtils.isNotEmpty(jobGroup), "job_group", jobGroup)
+            .like(StringUtils.isNotEmpty(jobName), "job_name", likeValue(jobName))
+            .like(StringUtils.isNotEmpty(jobGroup), "job_group", likeValue(jobGroup))
             .eq(status != null, "status", status);
     }
 }

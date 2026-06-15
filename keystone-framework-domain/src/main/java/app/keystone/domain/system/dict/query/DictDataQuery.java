@@ -33,7 +33,7 @@ public class DictDataQuery extends AbstractPageQuery<SysDictDataEntity> {
         this.timeRangeColumn = "create_time";
         return new QueryWrapper<SysDictDataEntity>()
             .eq(StringUtils.isNotEmpty(dictType), "dict_type", dictType)
-            .like(StringUtils.isNotEmpty(dictLabel), "dict_label", dictLabel)
+            .like(StringUtils.isNotEmpty(dictLabel), "dict_label", likeValue(dictLabel))
             .eq(status != null, "status", status)
             .orderByAsc("dict_sort");
     }
