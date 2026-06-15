@@ -30,6 +30,6 @@ public class DeptQuery extends AbstractQuery<SysDeptEntity> {
         return new QueryWrapper<SysDeptEntity>()
             .eq(status != null, "status", status)
             .eq(parentId != null, "parent_id", parentId)
-            .like(StringUtils.isNotEmpty(deptName), "dept_name", deptName);
+            .like(StringUtils.isNotEmpty(deptName), "dept_name", likeValue(deptName));
     }
 }

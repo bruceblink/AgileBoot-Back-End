@@ -23,7 +23,7 @@ public class PostQuery extends AbstractPageQuery<SysPostEntity> {
         QueryWrapper<SysPostEntity> queryWrapper = new QueryWrapper<SysPostEntity>()
             .eq(status != null, "status", status)
             .eq(StringUtils.isNotEmpty(postCode), "post_code", postCode)
-            .like(StringUtils.isNotEmpty(postName), "post_name", postName);
+            .like(StringUtils.isNotEmpty(postName), "post_name", likeValue(postName));
         // 当前端没有选择排序字段时，则使用post_sort字段升序排序（在父类AbstractQuery中默认为升序）
         if (StringUtils.isEmpty(this.getOrderColumn())) {
             this.setOrderColumn("post_sort");

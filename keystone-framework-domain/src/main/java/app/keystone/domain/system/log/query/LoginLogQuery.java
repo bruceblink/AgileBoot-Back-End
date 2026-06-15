@@ -22,9 +22,9 @@ public class LoginLogQuery extends AbstractPageQuery<SysLoginInfoEntity> {
     @Override
     public QueryWrapper<SysLoginInfoEntity> addQueryCondition() {
         QueryWrapper<SysLoginInfoEntity> queryWrapper = new QueryWrapper<SysLoginInfoEntity>()
-            .like(StringUtils.isNotEmpty(ipAddress), "ip_address", ipAddress)
+            .like(StringUtils.isNotEmpty(ipAddress), "ip_address", likeValue(ipAddress))
             .eq(StringUtils.isNotEmpty(status), "status", status)
-            .like(StringUtils.isNotEmpty(username), "username", username);
+            .like(StringUtils.isNotEmpty(username), "username", likeValue(username));
 
         addSortCondition(queryWrapper);
 

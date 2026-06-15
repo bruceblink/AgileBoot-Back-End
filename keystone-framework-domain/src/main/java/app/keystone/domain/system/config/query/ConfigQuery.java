@@ -31,7 +31,7 @@ public class ConfigQuery extends AbstractPageQuery<SysConfigEntity> {
     @Override
     public QueryWrapper<SysConfigEntity> addQueryCondition() {
         QueryWrapper<SysConfigEntity> queryWrapper = new QueryWrapper<SysConfigEntity>()
-            .like(StringUtils.isNotEmpty(configName), "config_name", configName)
+            .like(StringUtils.isNotEmpty(configName), "config_name", likeValue(configName))
             .eq(StringUtils.isNotEmpty(configKey), "config_key", configKey)
             .eq(isAllowChange != null, "is_allow_change", isAllowChange);
 

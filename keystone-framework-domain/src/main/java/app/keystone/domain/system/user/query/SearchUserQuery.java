@@ -24,8 +24,8 @@ public class SearchUserQuery<T> extends AbstractPageQuery<T> {
     public QueryWrapper<T> addQueryCondition() {
         QueryWrapper<T> queryWrapper = new QueryWrapper<>();
 
-        queryWrapper.like(StringUtils.isNotEmpty(username), "username", username)
-            .like(StringUtils.isNotEmpty(phoneNumber), "u.phone_number", phoneNumber)
+        queryWrapper.like(StringUtils.isNotEmpty(username), "username", likeValue(username))
+            .like(StringUtils.isNotEmpty(phoneNumber), "u.phone_number", likeValue(phoneNumber))
             .eq(userId != null, "u.user_id", userId)
             .eq(status != null, "u.status", status)
             .eq("u.deleted", 0)

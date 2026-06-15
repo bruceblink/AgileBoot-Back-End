@@ -1,5 +1,6 @@
 package app.keystone.common.core.page;
 
+import app.keystone.common.utils.sql.SqlLikeUtils;
 import app.keystone.common.utils.time.DatePickUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -44,6 +45,10 @@ public abstract class AbstractQuery<T> {
     }
 
     public abstract QueryWrapper<T> addQueryCondition();
+
+    protected String likeValue(String value) {
+        return SqlLikeUtils.escape(value);
+    }
 
     public void addSortCondition(QueryWrapper<T> queryWrapper) {
         if (queryWrapper == null || StringUtils.isEmpty(orderColumn)) {
