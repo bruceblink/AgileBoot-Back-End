@@ -1,21 +1,26 @@
 package app.keystone.domain.system.dict;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import app.keystone.common.enums.dictionary.DictionaryData;
+import app.keystone.common.exception.ApiException;
+import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.domain.common.cache.CacheCenter;
 import app.keystone.domain.common.cache.LocalCacheService;
 import app.keystone.domain.common.cache.RedisCacheService;
 import app.keystone.domain.common.cache.SpringCacheService;
+import app.keystone.domain.system.dict.command.AddDictTypeCommand;
 import app.keystone.domain.system.dict.command.AddDictDataCommand;
 import app.keystone.domain.system.dict.db.SysDictDataEntity;
 import app.keystone.domain.system.dict.db.SysDictDataService;
 import app.keystone.domain.system.dict.db.SysDictTypeEntity;
 import app.keystone.domain.system.dict.db.SysDictTypeService;
+import app.keystone.domain.system.dict.model.DictTypeModel;
 import app.keystone.domain.system.dict.model.DictTypeModelFactory;
 import app.keystone.domain.system.post.db.SysPostService;
 import app.keystone.domain.system.role.db.SysRoleService;
@@ -27,6 +32,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.support.SimpleCacheManager;
 
@@ -34,13 +40,15 @@ class DictApplicationServiceTest {
 
     private SysDictTypeService dictTypeService;
     private SysDictDataService dictDataService;
+    private DictTypeModelFactory dictTypeModelFactory;
     private DictApplicationService service;
 
     @BeforeEach
     void setUp() {
         dictTypeService = mock(SysDictTypeService.class);
         dictDataService = mock(SysDictDataService.class);
-        service = new DictApplicationService(mock(DictTypeModelFactory.class), dictTypeService, dictDataService);
+        dictTypeModelFactory = mock(DictTypeModelFactory.class);
+        service = new DictApplicationService(dictTypeModelFactory, dictTypeService, dictDataService);
 
         SimpleCacheManager cacheManager = new SimpleCacheManager();
         cacheManager.setCaches(List.of(
@@ -122,6 +130,21 @@ class DictApplicationServiceTest {
         verify(dictDataService, times(2)).list(ArgumentMatchers.<Wrapper<SysDictDataEntity>>any());
     }
 
+    @Test
+    void addDictType_shouldReturnBusinessErrorWhenUniqueConstraintConflicts() {
+        AddDictTypeCommand command = new AddDictTypeCommand();
+        command.setDictName("重复类型");
+        command.setDictType("duplicate.type");
+        command.setStatus(1);
+        when(dictTypeService.isDictTypeUnique("duplicate.type", null)).thenReturn(true);
+        when(dictTypeModelFactory.create()).thenReturn(new DuplicateInsertDictTypeModel(dictTypeService));
+
+        ApiException exception = assertThrows(ApiException.class, () -> service.addDictType(command));
+
+        assertEquals(ErrorCode.Business.DICT_TYPE_IS_NOT_UNIQUE, exception.getErrorCode());
+        assertEquals("该字典类型已存在", exception.getMessage());
+    }
+
     private SysDictTypeEntity dictType(Long id, String type) {
         SysDictTypeEntity entity = new SysDictTypeEntity();
         entity.setDictId(id);
@@ -139,5 +162,17 @@ class DictApplicationServiceTest {
         entity.setListClass(cssTag);
         entity.setStatus(1);
         return entity;
+    }
+
+    private static class DuplicateInsertDictTypeModel extends DictTypeModel {
+
+        DuplicateInsertDictTypeModel(SysDictTypeService dictTypeService) {
+            super(dictTypeService);
+        }
+
+        @Override
+        public boolean insert() {
+            throw new DuplicateKeyException("Duplicate entry for key 'dict_type_uniq_idx'");
+        }
     }
 }
