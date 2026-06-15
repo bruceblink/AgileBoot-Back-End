@@ -203,14 +203,11 @@ public class CodeGenerator {
             .enableActiveRecord()
 //                    .versionColumnName("version")
 //                    .versionPropertyName("version")
-            // deleted的字段设置成tinyint  长度为1
-            .logicDeleteColumnName("deleted")
-//                    .logicDeletePropertyName("deleteFlag")
             .naming(NamingStrategy.underline_to_camel)
             .columnNaming(NamingStrategy.underline_to_camel)
             // 如果不需要BaseEntity  请注释掉以下两行
 //            .superClass(BaseEntity.class)
-//            .addSuperEntityColumns("creator_id", "create_time", "creator_name", "updater_id", "update_time", "updater_name", "deleted")
+//            .addSuperEntityColumns("creator_id", "create_time", "creator_name", "updater_id", "update_time", "updater_name")
 //                    .addIgnoreColumns("age")
             // 两种配置方式 都可以
             .addTableFills(new Column("create_time", FieldFill.INSERT))
@@ -225,7 +222,8 @@ public class CodeGenerator {
             entityBuilder
                 .superClass(BaseEntity.class)
                 .addSuperEntityColumns("creator_id", "create_time", "creator_name", "updater_id", "update_time",
-                    "updater_name", "deleted");
+                    "updater_name")
+                .addIgnoreColumns("deleted");
         }
 
         entityBuilder.build();

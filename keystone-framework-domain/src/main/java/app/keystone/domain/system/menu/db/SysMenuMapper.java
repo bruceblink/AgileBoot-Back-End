@@ -30,7 +30,6 @@ public interface SysMenuMapper extends BaseMapper<SysMenuEntity> {
         + " LEFT JOIN sys_user u ON rm.role_id = u.role_id "
         + "WHERE u.user_id = #{userId} "
         + " AND m.status = 1 "
-        + " AND m.deleted = 0 "
         + "ORDER BY m.parent_id")
     List<SysMenuEntity> selectMenuListByUserId(@Param("userId")Long userId);
 
@@ -45,7 +44,6 @@ public interface SysMenuMapper extends BaseMapper<SysMenuEntity> {
         + "FROM sys_menu m "
         + " LEFT JOIN sys_role_menu rm ON m.menu_id = rm.menu_id "
         + "WHERE rm.role_id = #{roleId} "
-        + " AND m.deleted = 0 "
         + "GROUP BY m.menu_id ")
     List<Long> selectMenuIdsByRoleId(@Param("roleId") Long roleId);
 
