@@ -1,7 +1,7 @@
 package app.keystone.domain.system.role.command;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,8 +12,8 @@ import lombok.EqualsAndHashCode;
 @Data
 public class UpdateRoleCommand extends AddRoleCommand {
 
-    @NotNull
-    @PositiveOrZero
+    @NotNull(message = "角色ID不能为空")
+    @Positive(message = "角色ID必须为正数")
     private Long roleId;
 
 }
