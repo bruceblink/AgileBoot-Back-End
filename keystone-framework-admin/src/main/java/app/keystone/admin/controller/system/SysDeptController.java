@@ -13,7 +13,9 @@ import app.keystone.common.enums.common.BusinessTypeEnum;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -57,7 +59,7 @@ public class SysDeptController extends BaseController {
     @Operation(summary = "部门详情")
     @PreAuthorize("@permission.has('system:dept:query')")
     @GetMapping(value = "/dept/{deptId}")
-    public ResponseDTO<DeptDTO> getInfo(@PathVariable Long deptId) {
+    public ResponseDTO<DeptDTO> getInfo(@PathVariable @NotNull @Positive Long deptId) {
         DeptDTO dept = deptApplicationService.getDeptInfo(deptId);
         return ResponseDTO.ok(dept);
     }
@@ -79,7 +81,7 @@ public class SysDeptController extends BaseController {
     @PreAuthorize("@permission.has('system:dept:add')")
     @AccessLog(title = "部门管理", businessType = BusinessTypeEnum.ADD)
     @PostMapping("/dept")
-    public ResponseDTO<Void> add(@RequestBody AddDeptCommand addCommand) {
+    public ResponseDTO<Void> add(@Valid @RequestBody AddDeptCommand addCommand) {
         deptApplicationService.addDept(addCommand);
         return ResponseDTO.ok();
     }
@@ -91,7 +93,8 @@ public class SysDeptController extends BaseController {
     @PreAuthorize("@permission.has('system:dept:edit') AND @dataScope.checkDeptId(#updateCommand.deptId)")
     @AccessLog(title = "部门管理", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping("/dept/{deptId}")
-    public ResponseDTO<Void> edit(@PathVariable("deptId")Long deptId, @RequestBody UpdateDeptCommand updateCommand) {
+    public ResponseDTO<Void> edit(@PathVariable("deptId") @NotNull @Positive Long deptId,
+        @Valid @RequestBody UpdateDeptCommand updateCommand) {
         updateCommand.setDeptId(deptId);
         deptApplicationService.updateDept(updateCommand);
         return ResponseDTO.ok();
@@ -104,7 +107,7 @@ public class SysDeptController extends BaseController {
     @PreAuthorize("@permission.has('system:dept:remove') AND @dataScope.checkDeptId(#deptId)")
     @AccessLog(title = "部门管理", businessType = BusinessTypeEnum.DELETE)
     @DeleteMapping("/dept/{deptId}")
-    public ResponseDTO<Void> remove(@PathVariable @NotNull Long deptId) {
+    public ResponseDTO<Void> remove(@PathVariable @NotNull @Positive Long deptId) {
         deptApplicationService.removeDept(deptId);
         return ResponseDTO.ok();
     }
