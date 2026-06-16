@@ -1,6 +1,8 @@
 package app.keystone.domain.system.log.command;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -14,9 +16,13 @@ import lombok.Data;
 @Schema(description = "客户端操作日志录入参数")
 public class AddOperationLogCommand {
 
+    @Min(value = 0, message = "业务类型值无效")
+    @Max(value = 8, message = "业务类型值无效")
     @Schema(description = "业务类型（0其它 1新增 2修改 3删除 4授权 5导出 6导入 7强退 8清空）")
     private Integer businessType;
 
+    @Min(value = -1, message = "请求方式值无效")
+    @Max(value = 4, message = "请求方式值无效")
     @Schema(description = "请求方式（1 GET 2 POST 3 PUT 4 DELETE -1 UNKNOWN）")
     private Integer requestMethod;
 
@@ -32,6 +38,8 @@ public class AddOperationLogCommand {
     @Schema(description = "调用方法")
     private String calledMethod;
 
+    @Min(value = 1, message = "操作类别值无效")
+    @Max(value = 3, message = "操作类别值无效")
     @Schema(description = "操作类别（1其它 2Web用户 3手机端用户）")
     private Integer operatorType;
 
@@ -43,6 +51,8 @@ public class AddOperationLogCommand {
     @Schema(description = "返回参数")
     private String operationResult;
 
+    @Min(value = 0, message = "操作状态值无效")
+    @Max(value = 1, message = "操作状态值无效")
     @Schema(description = "操作状态（1正常 0异常）")
     private Integer status;
 

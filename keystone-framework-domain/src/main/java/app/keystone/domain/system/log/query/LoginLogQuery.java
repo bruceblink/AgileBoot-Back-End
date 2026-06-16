@@ -3,6 +3,7 @@ package app.keystone.domain.system.log.query;
 import app.keystone.common.core.page.AbstractPageQuery;
 import app.keystone.domain.system.log.db.SysLoginInfoEntity;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 public class LoginLogQuery extends AbstractPageQuery<SysLoginInfoEntity> {
 
     private String ipAddress;
+    @Pattern(regexp = "^[0-3]$", message = "登录状态值无效")
     private String status;
     private String username;
 
