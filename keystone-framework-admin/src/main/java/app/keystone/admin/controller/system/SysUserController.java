@@ -24,6 +24,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,6 +49,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "用户API", description = "用户相关的增删查改")
 @RestController
 @RequestMapping("/system/users")
+@Validated
 @RequiredArgsConstructor
 public class SysUserController extends BaseController {
 
@@ -56,7 +61,7 @@ public class SysUserController extends BaseController {
     @Operation(summary = "用户列表")
     @PreAuthorize("@permission.has('system:user:list') AND @dataScope.checkDeptId(#query == null ? null : #query.deptId)")
     @GetMapping
-    public ResponseDTO<PageDTO<UserDTO>> userList(SearchUserQuery<SearchUserDO> query) {
+    public ResponseDTO<PageDTO<UserDTO>> userList(@Validated SearchUserQuery<SearchUserDO> query) {
         PageDTO<UserDTO> page = userApplicationService.getUserList(query);
         return ResponseDTO.ok(page);
     }
@@ -65,7 +70,7 @@ public class SysUserController extends BaseController {
     @AccessLog(title = "用户管理", businessType = BusinessTypeEnum.EXPORT)
     @PreAuthorize("@permission.has('system:user:export')")
     @GetMapping("/excel")
-    public void exportUserByExcel(HttpServletResponse response, SearchUserQuery<SearchUserDO> query) {
+    public void exportUserByExcel(HttpServletResponse response, @Validated SearchUserQuery<SearchUserDO> query) {
         PageDTO<UserDTO> userList = userApplicationService.getUserList(query);
         CustomExcelUtil.writeToResponse(userList.getRows(), UserDTO.class, response);
     }
@@ -100,7 +105,8 @@ public class SysUserController extends BaseController {
     @Operation(summary = "用户详情")
     @PreAuthorize("@permission.has('system:user:query')")
     @GetMapping("/{userId}")
-    public ResponseDTO<UserDetailDTO> getUserDetailInfo(@PathVariable(value = "userId", required = false) Long userId) {
+    public ResponseDTO<UserDetailDTO> getUserDetailInfo(
+        @PathVariable(value = "userId", required = false) @NotNull @Positive Long userId) {
         UserDetailDTO userDetailInfo = userApplicationService.getUserDetailInfo(userId);
         return ResponseDTO.ok(userDetailInfo);
     }
@@ -122,10 +128,12 @@ public class SysUserController extends BaseController {
      * 修改用户
      */
     @Operation(summary = "修改用户")
-    @PreAuthorize("@permission.has('system:user:edit') AND @dataScope.checkUserId(#command.userId)")
+    @PreAuthorize("@permission.has('system:user:edit') AND @dataScope.checkUserId(#userId)")
     @AccessLog(title = "用户管理", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping("/{userId}")
-    public ResponseDTO<Void> edit(@Validated @RequestBody UpdateUserCommand command) {
+    public ResponseDTO<Void> edit(@PathVariable @NotNull @Positive Long userId,
+        @Validated @RequestBody UpdateUserCommand command) {
+        command.setUserId(userId);
         userApplicationService.updateUser(command);
         return ResponseDTO.ok();
     }
@@ -137,7 +145,7 @@ public class SysUserController extends BaseController {
     @PreAuthorize("@permission.has('system:user:remove') AND @dataScope.checkUserIds(#userIds)")
     @AccessLog(title = "用户管理", businessType = BusinessTypeEnum.DELETE)
     @DeleteMapping("/{userIds}")
-    public ResponseDTO<Void> remove(@PathVariable List<Long> userIds) {
+    public ResponseDTO<Void> remove(@PathVariable @NotNull @NotEmpty List<@Positive Long> userIds) {
         BulkOperationCommand<Long> bulkDeleteCommand = new BulkOperationCommand<>(userIds);
         SystemLoginUser loginUser = AuthenticationUtils.getSystemLoginUser();
         userApplicationService.deleteUsers(loginUser, bulkDeleteCommand);
@@ -151,7 +159,8 @@ public class SysUserController extends BaseController {
     @PreAuthorize("@permission.has('system:user:resetPwd') AND @dataScope.checkUserId(#userId)")
     @AccessLog(title = "用户管理", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping("/{userId}/password")
-    public ResponseDTO<Void> resetPassword(@PathVariable Long userId, @RequestBody ResetPasswordCommand command) {
+    public ResponseDTO<Void> resetPassword(@PathVariable @NotNull @Positive Long userId,
+        @Valid @RequestBody ResetPasswordCommand command) {
         command.setUserId(userId);
         userApplicationService.resetUserPassword(command);
         return ResponseDTO.ok();
@@ -161,10 +170,11 @@ public class SysUserController extends BaseController {
      * 状态修改
      */
     @Operation(summary = "修改用户状态")
-    @PreAuthorize("@permission.has('system:user:edit') AND @dataScope.checkUserId(#command.userId)")
+    @PreAuthorize("@permission.has('system:user:edit') AND @dataScope.checkUserId(#userId)")
     @AccessLog(title = "用户管理", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping("/{userId}/status")
-    public ResponseDTO<Void> changeStatus(@PathVariable Long userId, @RequestBody ChangeStatusCommand command) {
+    public ResponseDTO<Void> changeStatus(@PathVariable @NotNull @Positive Long userId,
+        @Valid @RequestBody ChangeStatusCommand command) {
         command.setUserId(userId);
         userApplicationService.changeUserStatus(command);
         return ResponseDTO.ok();
