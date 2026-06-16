@@ -1,6 +1,7 @@
 package app.keystone.domain.system.menu.command;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,6 +13,7 @@ import lombok.EqualsAndHashCode;
 public class UpdateMenuCommand extends AddMenuCommand {
 
     @NotNull
+    @Positive
     private Long menuId;
 
 }

@@ -16,7 +16,9 @@ import app.keystone.common.enums.common.BusinessTypeEnum;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -61,7 +63,7 @@ public class SysMenuController extends BaseController {
     @Operation(summary = "菜单详情")
     @PreAuthorize("@permission.has('system:menu:query')")
     @GetMapping(value = "/{menuId}")
-    public ResponseDTO<MenuDetailDTO> menuInfo(@PathVariable @NotNull @PositiveOrZero Long menuId) {
+    public ResponseDTO<MenuDetailDTO> menuInfo(@PathVariable @NotNull @Positive Long menuId) {
         MenuDetailDTO menu = menuApplicationService.getMenuInfo(menuId);
         return ResponseDTO.ok(menu);
     }
@@ -87,7 +89,7 @@ public class SysMenuController extends BaseController {
     @PreAuthorize("@permission.has('system:menu:add')")
     @AccessLog(title = "菜单管理", businessType = BusinessTypeEnum.ADD)
     @PostMapping
-    public ResponseDTO<Void> add(@RequestBody AddMenuCommand addCommand) {
+    public ResponseDTO<Void> add(@Valid @RequestBody AddMenuCommand addCommand) {
         menuApplicationService.addMenu(addCommand);
         return ResponseDTO.ok();
     }
@@ -99,7 +101,8 @@ public class SysMenuController extends BaseController {
     @PreAuthorize("@permission.has('system:menu:edit')")
     @AccessLog(title = "菜单管理", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping("/{menuId}")
-    public ResponseDTO<Void> edit(@PathVariable("menuId") Long menuId, @RequestBody UpdateMenuCommand updateCommand) {
+    public ResponseDTO<Void> edit(@PathVariable("menuId") @NotNull @Positive Long menuId,
+        @Valid @RequestBody UpdateMenuCommand updateCommand) {
         updateCommand.setMenuId(menuId);
         menuApplicationService.updateMenu(updateCommand);
         return ResponseDTO.ok();
@@ -112,7 +115,7 @@ public class SysMenuController extends BaseController {
     @PreAuthorize("@permission.has('system:menu:remove')")
     @AccessLog(title = "菜单管理", businessType = BusinessTypeEnum.DELETE)
     @DeleteMapping("/{menuId}")
-    public ResponseDTO<Void> remove(@PathVariable("menuId") Long menuId) {
+    public ResponseDTO<Void> remove(@PathVariable("menuId") @NotNull @Positive Long menuId) {
         menuApplicationService.remove(menuId);
         return ResponseDTO.ok();
     }
