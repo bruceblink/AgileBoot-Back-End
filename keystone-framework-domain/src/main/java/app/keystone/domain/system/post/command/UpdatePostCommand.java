@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 public class UpdatePostCommand extends AddPostCommand {
 
     @NotNull(message = "岗位ID不能为空")
-    @Positive
+    @Positive(message = "岗位ID必须为正数")
     private Long postId;
 
 }

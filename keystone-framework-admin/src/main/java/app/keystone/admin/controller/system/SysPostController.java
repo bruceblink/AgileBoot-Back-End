@@ -16,8 +16,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -78,7 +80,7 @@ public class SysPostController extends BaseController {
     @Operation(summary = "职位详情")
     @PreAuthorize("@permission.has('system:post:query')")
     @GetMapping(value = "/{postId}")
-    public ResponseDTO<PostDTO> getInfo(@PathVariable Long postId) {
+    public ResponseDTO<PostDTO> getInfo(@PathVariable @NotNull @Positive Long postId) {
         PostDTO post = postApplicationService.getPostInfo(postId);
         return ResponseDTO.ok(post);
     }
@@ -90,7 +92,7 @@ public class SysPostController extends BaseController {
     @PreAuthorize("@permission.has('system:post:add')")
     @AccessLog(title = "岗位管理", businessType = BusinessTypeEnum.ADD)
     @PostMapping
-    public ResponseDTO<Void> add(@RequestBody AddPostCommand addCommand) {
+    public ResponseDTO<Void> add(@Valid @RequestBody AddPostCommand addCommand) {
         postApplicationService.addPost(addCommand);
         return ResponseDTO.ok();
     }
@@ -102,7 +104,7 @@ public class SysPostController extends BaseController {
     @PreAuthorize("@permission.has('system:post:edit')")
     @AccessLog(title = "岗位管理", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping
-    public ResponseDTO<Void> edit(@RequestBody UpdatePostCommand updateCommand) {
+    public ResponseDTO<Void> edit(@Valid @RequestBody UpdatePostCommand updateCommand) {
         postApplicationService.updatePost(updateCommand);
         return ResponseDTO.ok();
     }
@@ -114,7 +116,7 @@ public class SysPostController extends BaseController {
     @PreAuthorize("@permission.has('system:post:remove')")
     @AccessLog(title = "岗位管理", businessType = BusinessTypeEnum.DELETE)
     @DeleteMapping
-    public ResponseDTO<Void> remove(@RequestParam @NotNull @NotEmpty List<Long> ids) {
+    public ResponseDTO<Void> remove(@RequestParam @NotNull @NotEmpty List<@Positive Long> ids) {
         postApplicationService.deletePost(new BulkOperationCommand<>(ids));
         return ResponseDTO.ok();
     }
