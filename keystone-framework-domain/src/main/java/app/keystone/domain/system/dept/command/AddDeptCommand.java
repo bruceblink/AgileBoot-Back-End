@@ -1,6 +1,8 @@
 package app.keystone.domain.system.dept.command;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -51,7 +53,8 @@ public class AddDeptCommand {
     @Size(max = 50, message = "邮箱长度不能超过50个字符")
     private String email;
 
-
+    @Min(value = 0, message = "部门状态值无效")
+    @Max(value = 1, message = "部门状态值无效")
     private Integer status;
 
 
