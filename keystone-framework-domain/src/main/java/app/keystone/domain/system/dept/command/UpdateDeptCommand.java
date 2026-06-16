@@ -1,7 +1,7 @@
 package app.keystone.domain.system.dept.command;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 public class UpdateDeptCommand extends AddDeptCommand {
 
     @NotNull
-    @PositiveOrZero
+    @Positive
     private Long deptId;
 
 }
