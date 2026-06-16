@@ -4,6 +4,8 @@ import app.keystone.common.core.page.AbstractPageQuery;
 import app.keystone.domain.system.job.db.SysJobEntity;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -26,6 +28,8 @@ public class JobQuery extends AbstractPageQuery<SysJobEntity> {
     private String jobGroup;
 
     @Schema(description = "状态")
+    @Min(value = 0, message = "任务状态值无效")
+    @Max(value = 1, message = "任务状态值无效")
     private Integer status;
 
     @Override

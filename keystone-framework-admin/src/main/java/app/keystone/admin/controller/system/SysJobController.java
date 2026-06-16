@@ -48,7 +48,7 @@ public class SysJobController extends BaseController {
     @Operation(summary = "定时任务列表")
     @PreAuthorize("@permission.has('system:job:list')")
     @GetMapping
-    public ResponseDTO<PageDTO<JobDTO>> list(JobQuery query) {
+    public ResponseDTO<PageDTO<JobDTO>> list(@Validated JobQuery query) {
         return ResponseDTO.ok(jobApplicationService.getJobList(query));
     }
 
@@ -102,7 +102,7 @@ public class SysJobController extends BaseController {
     @PreAuthorize("@permission.has('system:job:remove')")
     @AccessLog(title = "定时任务", businessType = BusinessTypeEnum.DELETE)
     @DeleteMapping
-    public ResponseDTO<Void> remove(@RequestParam @NotNull @NotEmpty List<Long> jobIds) {
+    public ResponseDTO<Void> remove(@RequestParam @NotNull @NotEmpty List<@Positive Long> jobIds) {
         jobApplicationService.deleteJobs(new BulkOperationCommand<>(jobIds));
         return ResponseDTO.ok();
     }
