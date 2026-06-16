@@ -17,6 +17,8 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +90,7 @@ public class SysNoticeController extends BaseController {
     @PreAuthorize("@permission.has('system:notice:add')")
     @AccessLog(title = "通知公告", businessType = BusinessTypeEnum.ADD)
     @PostMapping
-    public ResponseDTO<Void> add(@RequestBody NoticeAddCommand addCommand) {
+    public ResponseDTO<Void> add(@Valid @RequestBody NoticeAddCommand addCommand) {
         noticeApplicationService.addNotice(addCommand);
         return ResponseDTO.ok();
     }
@@ -100,7 +102,8 @@ public class SysNoticeController extends BaseController {
     @PreAuthorize("@permission.has('system:notice:edit')")
     @AccessLog(title = "通知公告", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping("/{noticeId}")
-    public ResponseDTO<Void> edit(@PathVariable Long noticeId, @RequestBody NoticeUpdateCommand updateCommand) {
+    public ResponseDTO<Void> edit(@PathVariable @NotNull @Positive Long noticeId,
+        @Valid @RequestBody NoticeUpdateCommand updateCommand) {
         updateCommand.setNoticeId(noticeId);
         noticeApplicationService.updateNotice(updateCommand);
         return ResponseDTO.ok();
@@ -113,7 +116,7 @@ public class SysNoticeController extends BaseController {
     @PreAuthorize("@permission.has('system:notice:remove')")
     @AccessLog(title = "通知公告", businessType = BusinessTypeEnum.DELETE)
     @DeleteMapping
-    public ResponseDTO<Void> remove(@RequestParam List<Integer> noticeIds) {
+    public ResponseDTO<Void> remove(@RequestParam @NotNull @NotEmpty List<@Positive Integer> noticeIds) {
         noticeApplicationService.deleteNotice(new BulkOperationCommand<>(noticeIds));
         return ResponseDTO.ok();
     }

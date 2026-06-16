@@ -12,8 +12,8 @@ import lombok.EqualsAndHashCode;
 @Data
 public class NoticeUpdateCommand extends NoticeAddCommand {
 
-    @NotNull
-    @Positive
+    @NotNull(message = "公告ID不能为空")
+    @Positive(message = "公告ID必须为正数")
     protected Long noticeId;
 
 }
