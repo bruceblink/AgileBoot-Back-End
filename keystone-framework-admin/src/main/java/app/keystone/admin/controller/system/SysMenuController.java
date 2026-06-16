@@ -19,7 +19,6 @@ import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -52,7 +51,7 @@ public class SysMenuController extends BaseController {
     @Operation(summary = "菜单列表")
     @PreAuthorize("@permission.has('system:menu:list')")
     @GetMapping
-    public ResponseDTO<List<MenuDTO>> menuList(MenuQuery menuQuery) {
+    public ResponseDTO<List<MenuDTO>> menuList(@Validated MenuQuery menuQuery) {
         List<MenuDTO> menuList = menuApplicationService.getMenuList(menuQuery);
         return ResponseDTO.ok(menuList);
     }
