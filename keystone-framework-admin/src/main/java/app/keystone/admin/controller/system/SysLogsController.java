@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -52,7 +53,7 @@ public class SysLogsController extends BaseController {
     @Operation(summary = "登录日志列表")
     @PreAuthorize("@permission.has('monitor:logininfor:list')")
     @GetMapping("/loginLogs")
-    public ResponseDTO<PageDTO<LoginLogDTO>> loginInfoList(LoginLogQuery query) {
+    public ResponseDTO<PageDTO<LoginLogDTO>> loginInfoList(@Validated LoginLogQuery query) {
         PageDTO<LoginLogDTO> pageDTO = logApplicationService.getLoginInfoList(query);
         return ResponseDTO.ok(pageDTO);
     }
@@ -61,7 +62,7 @@ public class SysLogsController extends BaseController {
     @AccessLog(title = "登录日志", businessType = BusinessTypeEnum.EXPORT)
     @PreAuthorize("@permission.has('monitor:logininfor:export')")
     @GetMapping("/loginLogs/excel")
-    public void loginInfosExcel(HttpServletResponse response, LoginLogQuery query) {
+    public void loginInfosExcel(HttpServletResponse response, @Validated LoginLogQuery query) {
         PageDTO<LoginLogDTO> pageDTO = logApplicationService.getLoginInfoList(query);
         CustomExcelUtil.writeToResponse(pageDTO.getRows(), LoginLogDTO.class, response);
     }
@@ -70,7 +71,7 @@ public class SysLogsController extends BaseController {
     @PreAuthorize("@permission.has('monitor:logininfor:remove')")
     @AccessLog(title = "登录日志", businessType = BusinessTypeEnum.DELETE)
     @DeleteMapping("/loginLogs")
-    public ResponseDTO<Void> removeLoginInfos(@RequestParam @NotNull @NotEmpty List<Long> ids) {
+    public ResponseDTO<Void> removeLoginInfos(@RequestParam @NotNull @NotEmpty List<@Positive Long> ids) {
         logApplicationService.deleteLoginInfo(new BulkOperationCommand<>(ids));
         return ResponseDTO.ok();
     }
@@ -78,7 +79,7 @@ public class SysLogsController extends BaseController {
     @Operation(summary = "操作日志列表")
     @PreAuthorize("@permission.has('monitor:operlog:list')")
     @GetMapping("/operationLogs")
-    public ResponseDTO<PageDTO<OperationLogDTO>> operationLogs(OperationLogQuery query) {
+    public ResponseDTO<PageDTO<OperationLogDTO>> operationLogs(@Validated OperationLogQuery query) {
         PageDTO<OperationLogDTO> pageDTO = logApplicationService.getOperationLogList(query);
         return ResponseDTO.ok(pageDTO);
     }
@@ -118,7 +119,7 @@ public class SysLogsController extends BaseController {
     @AccessLog(title = "操作日志", businessType = BusinessTypeEnum.EXPORT)
     @PreAuthorize("@permission.has('monitor:operlog:export')")
     @GetMapping("/operationLogs/excel")
-    public void operationLogsExcel(HttpServletResponse response, OperationLogQuery query) {
+    public void operationLogsExcel(HttpServletResponse response, @Validated OperationLogQuery query) {
         PageDTO<OperationLogDTO> pageDTO = logApplicationService.getOperationLogList(query);
         CustomExcelUtil.writeToResponse(pageDTO.getRows(), OperationLogDTO.class, response);
     }
@@ -127,7 +128,8 @@ public class SysLogsController extends BaseController {
     @AccessLog(title = "操作日志", businessType = BusinessTypeEnum.DELETE)
     @PreAuthorize("@permission.has('monitor:operlog:remove')")
     @DeleteMapping("/operationLogs")
-    public ResponseDTO<Void> removeOperationLogs(@RequestParam List<Long> operationIds) {
+    public ResponseDTO<Void> removeOperationLogs(
+        @RequestParam @NotNull @NotEmpty List<@Positive Long> operationIds) {
         logApplicationService.deleteOperationLog(new BulkOperationCommand<>(operationIds));
         return ResponseDTO.ok();
     }

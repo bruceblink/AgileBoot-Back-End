@@ -3,6 +3,7 @@ package app.keystone.domain.system.log.query;
 import app.keystone.common.core.page.AbstractPageQuery;
 import app.keystone.domain.system.log.db.SysOperationLogEntity;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 public class OperationLogQuery extends AbstractPageQuery<SysOperationLogEntity> {
 
     private String businessType;
+    @Pattern(regexp = "^[0-1]$", message = "操作状态值无效")
     private String status;
     private String username;
     private String requestModule;
