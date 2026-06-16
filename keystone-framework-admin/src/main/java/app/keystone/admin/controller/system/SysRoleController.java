@@ -53,7 +53,7 @@ public class SysRoleController extends BaseController {
     @Operation(summary = "角色列表")
     @PreAuthorize("@permission.has('system:role:list')")
     @GetMapping("/list")
-    public ResponseDTO<PageDTO<RoleDTO>> list(RoleQuery query) {
+    public ResponseDTO<PageDTO<RoleDTO>> list(@Validated RoleQuery query) {
         PageDTO<RoleDTO> pageDTO = roleApplicationService.getRoleList(query);
         return ResponseDTO.ok(pageDTO);
     }
@@ -62,7 +62,7 @@ public class SysRoleController extends BaseController {
     @AccessLog(title = "角色管理", businessType = BusinessTypeEnum.EXPORT)
     @PreAuthorize("@permission.has('system:role:export')")
     @PostMapping("/export")
-    public void export(HttpServletResponse response, RoleQuery query) {
+    public void export(HttpServletResponse response, @Validated RoleQuery query) {
         PageDTO<RoleDTO> pageDTO = roleApplicationService.getRoleList(query);
         CustomExcelUtil.writeToResponse(pageDTO.getRows(), RoleDTO.class, response);
     }
