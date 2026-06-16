@@ -18,7 +18,10 @@ import app.keystone.infrastructure.user.web.SystemLoginUser;
 import app.keystone.common.enums.common.BusinessTypeEnum;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -36,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "个人信息API", description = "个人信息相关接口")
 @RestController
 @RequestMapping("/system/user/profile")
+@Validated
 @RequiredArgsConstructor
 public class SysProfileController extends BaseController {
 
@@ -58,7 +62,7 @@ public class SysProfileController extends BaseController {
     @Operation(summary = "修改个人信息")
     @AccessLog(title = "个人信息", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping
-    public ResponseDTO<Void> updateProfile(@RequestBody UpdateProfileCommand command) {
+    public ResponseDTO<Void> updateProfile(@Valid @RequestBody UpdateProfileCommand command) {
         SystemLoginUser loginUser = AuthenticationUtils.getSystemLoginUser();
         command.setUserId(loginUser.getUserId());
         userApplicationService.updateUserProfile(command);
@@ -71,7 +75,7 @@ public class SysProfileController extends BaseController {
     @Operation(summary = "重置个人密码")
     @AccessLog(title = "个人信息", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping("/password")
-    public ResponseDTO<Void> updatePassword(@RequestBody UpdateUserPasswordCommand command) {
+    public ResponseDTO<Void> updatePassword(@Valid @RequestBody UpdateUserPasswordCommand command) {
         SystemLoginUser loginUser = AuthenticationUtils.getSystemLoginUser();
         command.setUserId(loginUser.getUserId());
         userApplicationService.updatePasswordBySelf(loginUser, command);
@@ -84,7 +88,7 @@ public class SysProfileController extends BaseController {
     @Operation(summary = "修改个人头像")
     @AccessLog(title = "用户头像", businessType = BusinessTypeEnum.MODIFY)
     @PostMapping("/avatar")
-    public ResponseDTO<UploadFileDTO> avatar(@RequestParam("avatarfile") MultipartFile file) {
+    public ResponseDTO<UploadFileDTO> avatar(@RequestParam("avatarfile") @NotNull MultipartFile file) {
         if (file.isEmpty()) {
             throw new ApiException(ErrorCode.Business.USER_UPLOAD_FILE_FAILED);
         }
