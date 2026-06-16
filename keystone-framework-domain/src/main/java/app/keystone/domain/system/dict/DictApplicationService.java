@@ -247,11 +247,6 @@ public class DictApplicationService {
     }
 
     private DictionaryData toDictionaryData(SysDictDataEntity entity) {
-        try {
-            return new DictionaryData(entity.getDictLabel(), Integer.valueOf(entity.getDictValue()), entity.getListClass());
-        } catch (NumberFormatException e) {
-            throw new ApiException(e, ErrorCode.Internal.INTERNAL_ERROR,
-                "字典值必须是整数：" + entity.getDictType() + "=" + entity.getDictValue());
-        }
+        return new DictionaryData(entity.getDictLabel(), entity.getDictValue(), entity.getListClass());
     }
 }

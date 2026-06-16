@@ -69,12 +69,12 @@ class DictApplicationServiceTest {
             dictType(3L, "sysUser.sex")
         ));
         when(dictDataService.list(ArgumentMatchers.<Wrapper<SysDictDataEntity>>any())).thenReturn(List.of(
-            dictData("common.status", "正常", "1", 1, ""),
-            dictData("common.status", "停用", "0", 2, "danger"),
-            dictData("sysUser.status", "冻结", "3", 3, "warning"),
-            dictData("sysUser.sex", "女", "0", 1, ""),
-            dictData("sysUser.sex", "男", "1", 2, ""),
-            dictData("sysUser.sex", "未知", "2", 3, "")
+            dictData("common.status", "正常", 1, 1, ""),
+            dictData("common.status", "停用", 0, 2, "danger"),
+            dictData("sysUser.status", "冻结", 3, 3, "warning"),
+            dictData("sysUser.sex", "女", 0, 1, ""),
+            dictData("sysUser.sex", "男", 1, 2, ""),
+            dictData("sysUser.sex", "未知", 2, 3, "")
         ));
 
         Map<String, List<DictionaryData>> dictionary = service.getDictionaryDataMap();
@@ -98,7 +98,7 @@ class DictApplicationServiceTest {
             dictType(1L, "common.status")
         ));
         when(dictDataService.list(ArgumentMatchers.<Wrapper<SysDictDataEntity>>any())).thenReturn(List.of(
-            dictData("common.status", "正常", "1", 1, "")
+            dictData("common.status", "正常", 1, 1, "")
         ));
 
         service.getDictionaryDataMap();
@@ -114,12 +114,12 @@ class DictApplicationServiceTest {
             dictType(1L, "common.status")
         ));
         when(dictDataService.list(ArgumentMatchers.<Wrapper<SysDictDataEntity>>any()))
-            .thenReturn(List.of(dictData("common.status", "正常", "1", 1, "")))
-            .thenReturn(List.of(dictData("common.status", "停用", "0", 2, "danger")));
+            .thenReturn(List.of(dictData("common.status", "正常", 1, 1, "")))
+            .thenReturn(List.of(dictData("common.status", "停用", 0, 2, "danger")));
         AddDictDataCommand command = new AddDictDataCommand();
         command.setDictType("common.status");
         command.setDictLabel("停用");
-        command.setDictValue("0");
+        command.setDictValue(0);
         command.setStatus(1);
 
         service.getDictionaryDataMap();
@@ -153,7 +153,7 @@ class DictApplicationServiceTest {
         return entity;
     }
 
-    private SysDictDataEntity dictData(String type, String label, String value, Integer sort, String cssTag) {
+    private SysDictDataEntity dictData(String type, String label, Integer value, Integer sort, String cssTag) {
         SysDictDataEntity entity = new SysDictDataEntity();
         entity.setDictType(type);
         entity.setDictLabel(label);

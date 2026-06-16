@@ -28,9 +28,9 @@ public class UpdateDictDataCommand {
     @Schema(description = "字典标签")
     private String dictLabel;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "字典键值")
-    private String dictValue;
+    private Integer dictValue;
 
     @Schema(description = "字典排序")
     private Integer dictSort;

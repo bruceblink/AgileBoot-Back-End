@@ -39,7 +39,7 @@ public class SysDictDataEntity extends BaseEntity<SysDictDataEntity> {
 
     @ApiModelProperty("字典键值")
     @TableField("dict_value")
-    private String dictValue;
+    private Integer dictValue;
 
     @ApiModelProperty("字典排序")
     @TableField("dict_sort")
