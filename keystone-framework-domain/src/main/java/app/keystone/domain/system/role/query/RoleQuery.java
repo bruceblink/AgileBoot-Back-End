@@ -25,16 +25,15 @@ public class RoleQuery extends AbstractPageQuery<SysRoleEntity> {
 
     @Override
     public QueryWrapper<SysRoleEntity> addQueryCondition() {
-        QueryWrapper<SysRoleEntity> queryWrapper = new QueryWrapper<SysRoleEntity>()
-            .eq(status != null, "status", status)
-            .eq(StringUtils.isNotEmpty(roleKey), "role_key", roleKey)
-            .like(StringUtils.isNotEmpty(roleName), "role_name", likeValue(roleName));
 
 //        this.addTimeCondition(queryWrapper, "create_time");
 
 //        this.setOrderColumn("role_sort");
 //        this.addSortCondition(queryWrapper);
 
-        return queryWrapper;
+        return new QueryWrapper<SysRoleEntity>()
+            .eq(status != null, "status", status)
+            .eq(StringUtils.isNotEmpty(roleKey), "role_key", roleKey)
+            .like(StringUtils.isNotEmpty(roleName), "role_name", likeValue(roleName));
     }
 }
