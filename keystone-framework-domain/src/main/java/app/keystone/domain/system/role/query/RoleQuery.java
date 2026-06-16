@@ -3,6 +3,7 @@ package app.keystone.domain.system.role.query;
 import app.keystone.common.core.page.AbstractPageQuery;
 import app.keystone.domain.system.role.db.SysRoleEntity;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +19,7 @@ public class RoleQuery extends AbstractPageQuery<SysRoleEntity> {
 
     private String roleKey;
 
+    @Pattern(regexp = "^[0-1]$", message = "角色状态值无效")
     private String status;
 
 
