@@ -178,7 +178,7 @@ public class UserApplicationService {
     public void changeUserStatus(ChangeStatusCommand command) {
         UserModel userModel = userModelFactory.loadById(command.getUserId());
 
-        userModel.setStatus(command.getStatus() == null ? null : Integer.valueOf(command.getStatus()));
+        userModel.setStatus(command.getStatus());
         userModel.updateById();
 
         CacheCenter.userCache().delete(userModel.getUserId());
