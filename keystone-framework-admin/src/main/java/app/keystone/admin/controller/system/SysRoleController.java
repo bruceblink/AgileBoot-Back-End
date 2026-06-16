@@ -152,7 +152,7 @@ public class SysRoleController extends BaseController {
     @PreAuthorize("@permission.has('system:role:list')")
     @GetMapping("/{roleId}/allocated/list")
     public ResponseDTO<PageDTO<UserDTO>> allocatedUserList(@PathVariable("roleId") @NotNull @Positive Long roleId,
-        AllocatedRoleQuery query) {
+        @Validated AllocatedRoleQuery query) {
         query.setRoleId(roleId);
         PageDTO<UserDTO> page = roleApplicationService.getAllocatedUserList(query);
         return ResponseDTO.ok(page);
@@ -165,7 +165,7 @@ public class SysRoleController extends BaseController {
     @PreAuthorize("@permission.has('system:role:list')")
     @GetMapping("/{roleId}/unallocated/list")
     public ResponseDTO<PageDTO<UserDTO>> unallocatedUserList(@PathVariable("roleId") @NotNull @Positive Long roleId,
-        UnallocatedRoleQuery query) {
+        @Validated UnallocatedRoleQuery query) {
         query.setRoleId(roleId);
         PageDTO<UserDTO> page = roleApplicationService.getUnallocatedUserList(query);
         return ResponseDTO.ok(page);
