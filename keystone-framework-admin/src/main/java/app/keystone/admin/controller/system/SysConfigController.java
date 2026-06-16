@@ -45,7 +45,7 @@ public class SysConfigController extends BaseController {
     @Operation(summary = "参数列表", description = "分页获取配置参数列表")
     @PreAuthorize("@permission.has('system:config:list')")
     @GetMapping("/configs")
-    public ResponseDTO<PageDTO<ConfigDTO>> list(ConfigQuery query) {
+    public ResponseDTO<PageDTO<ConfigDTO>> list(@Validated ConfigQuery query) {
         PageDTO<ConfigDTO> page = configApplicationService.getConfigList(query);
         return ResponseDTO.ok(page);
     }
