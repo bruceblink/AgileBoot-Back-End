@@ -25,7 +25,6 @@ public class AddUserCommand {
     private String username;
 
     @ExcelColumn(name = "昵称")
-    @NotBlank(message = "用户昵称不能为空")
     @Size(max = 32, message = "用户昵称长度不能超过32个字符")
     private String nickname;
 
