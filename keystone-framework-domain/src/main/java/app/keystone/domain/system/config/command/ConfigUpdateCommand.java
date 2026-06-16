@@ -13,7 +13,6 @@ import lombok.Data;
 @Schema
 public class ConfigUpdateCommand {
 
-    @NotNull
     @Positive
     private Long configId;
 
