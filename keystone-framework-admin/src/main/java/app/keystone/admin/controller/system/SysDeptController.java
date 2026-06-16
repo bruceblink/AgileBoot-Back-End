@@ -48,7 +48,7 @@ public class SysDeptController extends BaseController {
     @Operation(summary = "部门列表")
     @PreAuthorize("@permission.has('system:dept:list')")
     @GetMapping("/depts")
-    public ResponseDTO<List<DeptDTO>> list(DeptQuery query) {
+    public ResponseDTO<List<DeptDTO>> list(@Validated DeptQuery query) {
         List<DeptDTO> deptList = deptApplicationService.getDeptList(query);
         return ResponseDTO.ok(deptList);
     }
@@ -90,7 +90,7 @@ public class SysDeptController extends BaseController {
      * 修改部门
      */
     @Operation(summary = "修改部门")
-    @PreAuthorize("@permission.has('system:dept:edit') AND @dataScope.checkDeptId(#updateCommand.deptId)")
+    @PreAuthorize("@permission.has('system:dept:edit') AND @dataScope.checkDeptId(#deptId)")
     @AccessLog(title = "部门管理", businessType = BusinessTypeEnum.MODIFY)
     @PutMapping("/dept/{deptId}")
     public ResponseDTO<Void> edit(@PathVariable("deptId") @NotNull @Positive Long deptId,
