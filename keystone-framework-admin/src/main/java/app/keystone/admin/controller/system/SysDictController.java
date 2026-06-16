@@ -17,6 +17,7 @@ import app.keystone.domain.system.dict.query.DictTypeQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
@@ -50,7 +51,7 @@ public class SysDictController extends BaseController {
     @Operation(summary = "字典类型列表", description = "分页获取字典类型列表")
     @PreAuthorize("@permission.has('system:dict:list')")
     @GetMapping({"/dict/types", "/dict/type/list"})
-    public ResponseDTO<PageDTO<DictTypeDTO>> listDictTypes(DictTypeQuery query) {
+    public ResponseDTO<PageDTO<DictTypeDTO>> listDictTypes(@Validated DictTypeQuery query) {
         return ResponseDTO.ok(dictApplicationService.getDictTypeList(query));
     }
 
@@ -95,13 +96,13 @@ public class SysDictController extends BaseController {
     @Operation(summary = "字典数据列表", description = "分页获取字典数据列表")
     @PreAuthorize("@permission.has('system:dict:list')")
     @GetMapping("/dict/data/list")
-    public ResponseDTO<PageDTO<DictDataDTO>> listDictData(DictDataQuery query) {
+    public ResponseDTO<PageDTO<DictDataDTO>> listDictData(@Validated DictDataQuery query) {
         return ResponseDTO.ok(dictApplicationService.getDictDataList(query));
     }
 
     @Operation(summary = "根据字典类型获取字典数据", description = "供前端下拉框使用")
     @GetMapping("/dict/data/type/{dictType}")
-    public ResponseDTO<List<DictDataDTO>> getDictDataByType(@PathVariable String dictType) {
+    public ResponseDTO<List<DictDataDTO>> getDictDataByType(@PathVariable @NotBlank String dictType) {
         return ResponseDTO.ok(dictApplicationService.getDictDataByType(dictType));
     }
 
