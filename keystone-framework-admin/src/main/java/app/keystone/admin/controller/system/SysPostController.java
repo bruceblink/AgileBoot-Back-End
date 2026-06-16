@@ -53,7 +53,7 @@ public class SysPostController extends BaseController {
     @Operation(summary = "职位列表")
     @PreAuthorize("@permission.has('system:post:list')")
     @GetMapping("/list")
-    public ResponseDTO<PageDTO<PostDTO>> list(PostQuery query) {
+    public ResponseDTO<PageDTO<PostDTO>> list(@Validated PostQuery query) {
         PageDTO<PostDTO> pageDTO = postApplicationService.getPostList(query);
         return ResponseDTO.ok(pageDTO);
     }
@@ -69,7 +69,7 @@ public class SysPostController extends BaseController {
     @AccessLog(title = "岗位管理", businessType = BusinessTypeEnum.EXPORT)
     @PreAuthorize("@permission.has('system:post:export')")
     @GetMapping("/excel")
-    public void export(HttpServletResponse response, PostQuery query) {
+    public void export(HttpServletResponse response, @Validated PostQuery query) {
         List<PostDTO> all = postApplicationService.getPostListAll(query);
         CustomExcelUtil.writeToResponse(all, PostDTO.class, response);
     }

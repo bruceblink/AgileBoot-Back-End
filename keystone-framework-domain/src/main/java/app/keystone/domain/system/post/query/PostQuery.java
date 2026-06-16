@@ -3,6 +3,8 @@ package app.keystone.domain.system.post.query;
 import app.keystone.common.core.page.AbstractPageQuery;
 import app.keystone.domain.system.post.db.SysPostEntity;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +18,8 @@ public class PostQuery extends AbstractPageQuery<SysPostEntity> {
 
     private String postCode;
     private String postName;
+    @Min(value = 0, message = "岗位状态值无效")
+    @Max(value = 1, message = "岗位状态值无效")
     private Integer status;
 
     @Override
