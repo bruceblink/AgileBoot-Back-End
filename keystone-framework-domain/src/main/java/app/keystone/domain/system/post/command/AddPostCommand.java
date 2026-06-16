@@ -1,8 +1,9 @@
 package app.keystone.domain.system.post.command;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -29,9 +30,12 @@ public class AddPostCommand {
     @NotNull(message = "显示顺序不能为空")
     protected Integer postSort;
 
+    @Size(max = 512, message = "备注长度不能超过512个字符")
     protected String remark;
 
-    @PositiveOrZero
-    protected String status;
+    @NotNull(message = "岗位状态不能为空")
+    @Min(value = 0, message = "岗位状态值无效")
+    @Max(value = 1, message = "岗位状态值无效")
+    protected Integer status;
 
 }
