@@ -6,6 +6,7 @@ import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.common.exception.error.ErrorCode.Business;
 import app.keystone.common.exception.error.ErrorCode.Client;
 import app.keystone.common.exception.error.ErrorCode.Internal;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -96,7 +100,7 @@ public class GlobalExceptionInterceptor {
     @ExceptionHandler(BindException.class)
     public ResponseDTO<?> handleBindException(BindException e) {
         log.error(e.getMessage(), e);
-        return invalidParameterResponse();
+        return invalidParameterResponse(resolveValidationMessage(e.getBindingResult()));
     }
 
     /**
@@ -105,7 +109,7 @@ public class GlobalExceptionInterceptor {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseDTO<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.error(e.getMessage(), e);
-        return invalidParameterResponse();
+        return invalidParameterResponse(resolveValidationMessage(e.getBindingResult()));
     }
 
     /**
@@ -115,16 +119,54 @@ public class GlobalExceptionInterceptor {
         MethodArgumentTypeMismatchException.class,
         MissingServletRequestParameterException.class,
         HttpMessageNotReadableException.class,
-        ConstraintViolationException.class
     })
     public ResponseDTO<?> handleInvalidParameterException(Exception e, HttpServletRequest request) {
         log.error("请求地址'{}',参数错误'{}'", request.getRequestURI(), e.getMessage(), e);
         return invalidParameterResponse();
     }
 
+    /**
+     * Bean Validation异常
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseDTO<?> handleConstraintViolationException(ConstraintViolationException e,
+        HttpServletRequest request) {
+        log.error("请求地址'{}',参数错误'{}'", request.getRequestURI(), e.getMessage(), e);
+        return invalidParameterResponse(resolveValidationMessage(e));
+    }
+
     private ResponseDTO<?> invalidParameterResponse() {
+        return invalidParameterResponse(INVALID_PARAMETER_MESSAGE);
+    }
+
+    private ResponseDTO<?> invalidParameterResponse(String message) {
         return ResponseDTO.build(null, ErrorCode.Client.COMMON_REQUEST_PARAMETERS_INVALID.code(),
-            INVALID_PARAMETER_MESSAGE);
+            hasText(message) ? message : INVALID_PARAMETER_MESSAGE);
+    }
+
+    private String resolveValidationMessage(BindingResult bindingResult) {
+        return bindingResult.getAllErrors().stream()
+            .filter(this::isValidationError)
+            .map(ObjectError::getDefaultMessage)
+            .filter(GlobalExceptionInterceptor::hasText)
+            .findFirst()
+            .orElse(INVALID_PARAMETER_MESSAGE);
+    }
+
+    private String resolveValidationMessage(ConstraintViolationException exception) {
+        return exception.getConstraintViolations().stream()
+            .map(ConstraintViolation::getMessage)
+            .filter(GlobalExceptionInterceptor::hasText)
+            .findFirst()
+            .orElse(INVALID_PARAMETER_MESSAGE);
+    }
+
+    private boolean isValidationError(ObjectError error) {
+        return !(error instanceof FieldError fieldError) || !fieldError.isBindingFailure();
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
 
