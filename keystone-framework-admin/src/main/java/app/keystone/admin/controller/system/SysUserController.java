@@ -10,6 +10,7 @@ import app.keystone.domain.system.user.command.AddUserCommand;
 import app.keystone.domain.system.user.command.ChangeStatusCommand;
 import app.keystone.domain.system.user.command.ResetPasswordCommand;
 import app.keystone.domain.system.user.command.UpdateUserCommand;
+import app.keystone.domain.system.user.command.UserCommandGroups;
 import app.keystone.domain.system.user.dto.UserDTO;
 import app.keystone.domain.system.user.dto.UserDetailDTO;
 import app.keystone.domain.system.user.query.SearchUserQuery;
@@ -23,6 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -110,7 +112,8 @@ public class SysUserController extends BaseController {
     @PreAuthorize("@permission.has('system:user:add') AND @dataScope.checkDeptId(#command.deptId)")
     @AccessLog(title = "用户管理", businessType = BusinessTypeEnum.ADD)
     @PostMapping
-    public ResponseDTO<Void> add(@Validated @RequestBody AddUserCommand command) {
+    public ResponseDTO<Void> add(
+        @Validated({Default.class, UserCommandGroups.Create.class}) @RequestBody AddUserCommand command) {
         userApplicationService.addUser(command);
         return ResponseDTO.ok();
     }
