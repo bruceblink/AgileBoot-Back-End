@@ -54,7 +54,7 @@ public class SysNoticeController extends BaseController {
     @Operation(summary = "公告列表")
     @PreAuthorize("@permission.has('system:notice:list')")
     @GetMapping
-    public ResponseDTO<PageDTO<NoticeDTO>> list(NoticeQuery query) {
+    public ResponseDTO<PageDTO<NoticeDTO>> list(@Validated NoticeQuery query) {
         PageDTO<NoticeDTO> pageDTO = noticeApplicationService.getNoticeList(query);
         return ResponseDTO.ok(pageDTO);
     }
@@ -67,7 +67,7 @@ public class SysNoticeController extends BaseController {
     @DS("slave")
     @PreAuthorize("@permission.has('system:notice:list')")
     @GetMapping("/database/slave")
-    public ResponseDTO<PageDTO<NoticeDTO>> listFromSlave(NoticeQuery query) {
+    public ResponseDTO<PageDTO<NoticeDTO>> listFromSlave(@Validated NoticeQuery query) {
         PageDTO<NoticeDTO> pageDTO = noticeApplicationService.getNoticeList(query);
         return ResponseDTO.ok(pageDTO);
     }
