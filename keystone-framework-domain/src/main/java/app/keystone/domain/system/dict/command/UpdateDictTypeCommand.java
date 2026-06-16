@@ -16,7 +16,6 @@ import lombok.Data;
 @Schema(description = "修改字典类型")
 public class UpdateDictTypeCommand {
 
-    @NotNull
     @Positive
     @Schema(description = "字典主键")
     private Long dictId;

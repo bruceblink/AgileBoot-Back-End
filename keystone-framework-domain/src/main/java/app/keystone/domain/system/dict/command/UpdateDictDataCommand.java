@@ -16,7 +16,6 @@ import lombok.Data;
 @Schema(description = "修改字典数据")
 public class UpdateDictDataCommand {
 
-    @NotNull
     @Positive
     @Schema(description = "字典编码")
     private Long dictCode;
