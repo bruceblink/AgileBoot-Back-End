@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 /**
@@ -21,14 +22,17 @@ public class AddRoleCommand {
      */
     @NotBlank(message = "角色名称不能为空")
     @Size(max = 30, message = "角色名称长度不能超过30个字符")
+    @Pattern(regexp = "^[a-zA-Z0-9\\u4e00-\\u9fa5]+$", message = "角色名称只能包含数字、字母和汉字")
     private String roleName;
 
     /**
      * 角色权限
      */
-    @ExcelColumn(name = "角色权限")
-    @NotBlank(message = "权限字符不能为空")
-    @Size(max = 100, message = "权限字符长度不能超过100个字符")
+    @ExcelColumn(name = "角色权限标识")
+    @NotBlank(message = "权限标识字符不能为空")
+    @Size(max = 100, message = "权限标识字符长度不能超过100个字符")
+    @Pattern(regexp = "^[a-zA-Z]([a-zA-Z0-9-]*[a-zA-Z0-9])?$",
+             message = "权限标识必须以字母开头，只能包含字母、数字和中划线，且中划线不能出现在首尾")
     private String roleKey;
 
     /**
