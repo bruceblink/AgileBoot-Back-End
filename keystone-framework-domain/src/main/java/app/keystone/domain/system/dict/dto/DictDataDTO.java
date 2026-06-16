@@ -32,7 +32,7 @@ public class DictDataDTO {
     private Long dictCode;
     private String dictType;
     private String dictLabel;
-    private String dictValue;
+    private Integer dictValue;
     private Integer dictSort;
     private Integer isDefault;
     private String cssClass;
