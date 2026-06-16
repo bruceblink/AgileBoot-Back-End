@@ -12,6 +12,7 @@ import app.keystone.admin.customize.aop.accessLog.AccessLog;
 import app.keystone.common.enums.common.BusinessTypeEnum;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,8 @@ public class SysConfigController extends BaseController {
     @AccessLog(title = "参数管理", businessType = BusinessTypeEnum.MODIFY)
     @Operation(summary = "配置修改", description = "配置修改")
     @PutMapping(value = "/config/{configId}")
-    public ResponseDTO<Void> edit(@NotNull @Positive @PathVariable Long configId, @RequestBody ConfigUpdateCommand config) {
+    public ResponseDTO<Void> edit(@NotNull @Positive @PathVariable Long configId,
+        @Valid @RequestBody ConfigUpdateCommand config) {
         config.setConfigId(configId);
         configApplicationService.updateConfig(config);
         return ResponseDTO.ok();
