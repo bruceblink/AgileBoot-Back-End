@@ -91,6 +91,15 @@ public class SysDictController extends BaseController {
         return ResponseDTO.ok();
     }
 
+    @Operation(summary = "刷新字典缓存")
+    @PreAuthorize("@permission.has('system:dict:remove')")
+    @AccessLog(title = "字典管理", businessType = BusinessTypeEnum.CLEAN)
+    @DeleteMapping("/dict/cache")
+    public ResponseDTO<Void> refreshCache() {
+        dictApplicationService.refreshCaches();
+        return ResponseDTO.ok();
+    }
+
     // ======================== 字典数据 ========================
 
     @Operation(summary = "字典数据列表", description = "分页获取字典数据列表")

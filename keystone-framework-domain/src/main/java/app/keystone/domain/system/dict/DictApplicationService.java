@@ -206,6 +206,19 @@ public class DictApplicationService {
         invalidateDictionaryCaches(entity.getDictType());
     }
 
+    public void refreshCaches() {
+        SpringCacheTemplate<List<SysDictDataEntity>> dictDataCache = CacheCenter.dictDataCache();
+        if (dictDataCache != null) {
+            dictDataCache.invalidateAll();
+        }
+
+        SpringCacheTemplate<Map<String, List<DictionaryData>>> dictionaryDataMapCache =
+            CacheCenter.dictionaryDataMapCache();
+        if (dictionaryDataMapCache != null) {
+            dictionaryDataMapCache.invalidateAll();
+        }
+    }
+
     private void invalidateDictionaryCaches(String... dictTypes) {
         SpringCacheTemplate<List<SysDictDataEntity>> dictDataCache = CacheCenter.dictDataCache();
         if (dictDataCache != null) {

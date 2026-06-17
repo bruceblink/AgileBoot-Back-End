@@ -132,6 +132,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 
         CONFIG_VALUE_IS_NOT_IN_OPTIONS(10602, "参数键值不存在列表中", "Business.CONFIG_VALUE_IS_NOT_IN_OPTIONS"),
 
+        CONFIG_KEY_IS_NOT_UNIQUE(10603, "参数键名:{} 已存在", "Business.CONFIG_KEY_IS_NOT_UNIQUE"),
+
         // ------------------------------- POST --------------------------------------------
 
         POST_NAME_IS_NOT_UNIQUE(10701, "岗位名称:{}, 已存在", "Business.POST_NAME_IS_NOT_UNIQUE"),

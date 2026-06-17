@@ -3,6 +3,7 @@ package app.keystone.admin.controller.system;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -58,5 +59,14 @@ class SysDictControllerTest {
             .andExpect(jsonPath("$.data.length()").value(1));
 
         verify(service).getDictDataByType("sys_user_sex");
+    }
+
+    @Test
+    void refreshCacheShouldRefreshDictCaches() throws Exception {
+        mockMvc.perform(delete("/system/dict/cache"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0));
+
+        verify(service).refreshCaches();
     }
 }

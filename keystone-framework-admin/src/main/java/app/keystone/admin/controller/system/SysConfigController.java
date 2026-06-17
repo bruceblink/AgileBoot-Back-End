@@ -3,8 +3,8 @@ package app.keystone.admin.controller.system;
 import app.keystone.common.core.base.BaseController;
 import app.keystone.common.core.dto.ResponseDTO;
 import app.keystone.common.core.page.PageDTO;
-import app.keystone.domain.common.cache.CacheCenter;
 import app.keystone.domain.system.config.ConfigApplicationService;
+import app.keystone.domain.system.config.command.ConfigAddCommand;
 import app.keystone.domain.system.config.command.ConfigUpdateCommand;
 import app.keystone.domain.system.config.dto.ConfigDTO;
 import app.keystone.domain.system.config.query.ConfigQuery;
@@ -21,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -61,6 +62,18 @@ public class SysConfigController extends BaseController {
         return ResponseDTO.ok(config);
     }
 
+    /**
+     * 新增参数配置
+     */
+    @PreAuthorize("@permission.has('system:config:add')")
+    @AccessLog(title = "参数管理", businessType = BusinessTypeEnum.ADD)
+    @Operation(summary = "配置新增", description = "配置新增")
+    @PostMapping(value = "/config")
+    public ResponseDTO<Void> add(@Valid @RequestBody ConfigAddCommand config) {
+        configApplicationService.addConfig(config);
+        return ResponseDTO.ok();
+    }
+
 
     /**
      * 修改参数配置
@@ -84,7 +97,7 @@ public class SysConfigController extends BaseController {
     @AccessLog(title = "参数管理", businessType = BusinessTypeEnum.CLEAN)
     @DeleteMapping("/configs/cache")
     public ResponseDTO<Void> refreshCache() {
-        CacheCenter.configCache().invalidateAll();
+        configApplicationService.refreshCaches();
         return ResponseDTO.ok();
     }
 }
