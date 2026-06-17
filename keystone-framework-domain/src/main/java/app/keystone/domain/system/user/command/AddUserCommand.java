@@ -23,7 +23,7 @@ public class AddUserCommand {
     @ExcelColumn(name = "用户名")
     @NotBlank(message = "用户名不能为空")
     @Size(max = 64, message = "用户名长度不能超过64个字符")
-    @Pattern(regexp = "^[a-zA-Z][a-zA-Z0-9]*$", message = "用户名只允许字母和数字，且首字符必须为字母")
+    @Pattern(regexp = "^[a-zA-Z_][a-zA-Z0-9_]*$", message = "用户名只允许字母、数字和下划线，且首字符不能为数字")
     private String username;
 
     @ExcelColumn(name = "昵称")
