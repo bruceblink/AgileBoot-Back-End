@@ -34,7 +34,7 @@ spring:
     dynamic:
       datasource:
         master:
-          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://10.17.17.7:33066/ship-db?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+          url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:33066/keystone?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
           username: ${SPRING_DATASOURCE_USERNAME:root}
           password-file: ${SPRING_DATASOURCE_PASSWORD_FILE:docker/.secrets/.database_password.enc}
 
@@ -50,7 +50,7 @@ spring:
 
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:10.17.17.7}
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       username: ${SPRING_DATA_REDIS_USERNAME:keystone}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
