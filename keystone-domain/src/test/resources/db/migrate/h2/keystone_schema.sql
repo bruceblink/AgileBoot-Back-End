@@ -213,3 +213,253 @@ create unique index uk_sys_user_username on sys_user (username);
 create unique index uk_sys_user_email on sys_user (email);
 
 CREATE ALIAS FIND_IN_SET FOR "app.keystone.infrastructure.mybatisplus.MySqlFunction.findInSet";
+
+create table if not exists device_list_table
+(
+    devid         varchar(32)  default '' not null primary key,
+    shipname_cn   varchar(64)  default '' not null,
+    shipname_en   varchar(64)  default '' not null,
+    mmsi          varchar(16)  default '' not null,
+    lng           varchar(16)  default '0.000000' not null,
+    lat           varchar(16)  default '0.000000' not null,
+    navstatus     varchar(16)  default '靠泊' not null,
+    version       varchar(32)  default '0.0.0',
+    online        varchar(8)   default '0',
+    create_time   datetime default current_timestamp,
+    type          varchar(45),
+    speed         varchar(45)  default '0',
+    company_id    int,
+    sync_platform varchar(8)   default '0',
+    cn_code       varchar(255)
+);
+
+create table if not exists device_dictionary_type
+(
+    dict_type    varchar(64) not null primary key,
+    dict_name    varchar(64) not null,
+    category     varchar(32) default 'device' not null,
+    scope        varchar(16) default 'device' not null,
+    status       tinyint default 1 not null,
+    sort         int default 0 not null,
+    remark       varchar(255),
+    aliases_json text,
+    created_at   datetime,
+    updated_at   datetime
+);
+
+create table if not exists device_dictionary_item
+(
+    id           varchar(128) not null primary key,
+    dict_type    varchar(64) not null,
+    item_value   int not null,
+    item_label   varchar(255) not null,
+    parent_value varchar(128),
+    group_key    varchar(64),
+    sort         int default 0 not null,
+    status       tinyint default 1 not null,
+    devid        varchar(45) default '-1' not null,
+    source       varchar(32) default 'manual' not null,
+    extra_json   text,
+    created_at   datetime,
+    updated_at   datetime,
+    constraint fk_device_dictionary_item_type
+        foreign key (dict_type)
+        references device_dictionary_type (dict_type)
+        on update restrict
+        on delete restrict
+);
+
+create table if not exists device_config_module
+(
+    id          varchar(128) not null primary key,
+    module_key  varchar(64) not null,
+    module_name varchar(128) not null,
+    sort        int default 0 not null,
+    status      tinyint default 1 not null,
+    devid       varchar(45) not null,
+    source      varchar(32) default 'manual' not null,
+    extra_json  text,
+    created_at  datetime,
+    updated_at  datetime,
+    constraint uk_device_config_module_key unique (devid, module_key),
+    constraint uk_device_config_module_name unique (devid, module_name)
+);
+
+create table if not exists device_config_item
+(
+    id           varchar(128) not null primary key,
+    config_key   varchar(128) not null,
+    config_value varchar(255) not null,
+    module_key   varchar(64) not null,
+    sort         int default 0 not null,
+    status       tinyint default 1 not null,
+    devid        varchar(45) not null,
+    source       varchar(32) default 'manual' not null,
+    extra_json   text,
+    created_at   datetime,
+    updated_at   datetime,
+    constraint uk_device_config_item_key unique (devid, module_key, config_key),
+    constraint fk_device_config_item_module
+        foreign key (devid, module_key)
+        references device_config_module (devid, module_key)
+        on update cascade
+        on delete cascade
+);
+
+create table if not exists work_order_no_sequence
+(
+    sequence_date    varchar(8) not null primary key,
+    current_sequence int default 0 not null,
+    version          int default 0 not null,
+    create_time      datetime default current_timestamp not null,
+    update_time      datetime default current_timestamp not null,
+    deleted          tinyint default 0 not null
+);
+
+create table if not exists work_order
+(
+    id                   bigint auto_increment primary key,
+    work_order_no        varchar(64) not null unique,
+    work_order_type      varchar(64) not null,
+    priority             varchar(32) not null,
+    status               varchar(32) not null,
+    devid                varchar(32) not null,
+    device_name          varchar(128),
+    shipname_cn          varchar(64),
+    shipname_en          varchar(64),
+    mmsi                 varchar(16),
+    company_id           int,
+    creator_id           bigint,
+    creator_username     varchar(64),
+    creator_nickname     varchar(32),
+    assignee_id          bigint,
+    assignee_username    varchar(64),
+    assignee_nickname    varchar(32),
+    assignee_phone       varchar(18),
+    assignee_email       varchar(128),
+    error_description    varchar(2000),
+    solution             varchar(2000),
+    reject_reason        varchar(1000),
+    expected_finish_time datetime,
+    start_time           datetime,
+    submit_review_time   datetime,
+    finish_time          datetime,
+    overdue_flag         tinyint default 0 not null,
+    source               varchar(32) default 'MANUAL' not null,
+    version              int default 0 not null,
+    creator_id_audit     bigint,
+    updater_id           bigint,
+    create_time          datetime default current_timestamp not null,
+    update_time          datetime default current_timestamp not null,
+    deleted              tinyint default 0 not null
+);
+
+create table if not exists work_order_flow
+(
+    id                bigint auto_increment primary key,
+    work_order_id     bigint not null,
+    work_order_no     varchar(64) not null,
+    from_status       varchar(32),
+    to_status         varchar(32),
+    action_code       varchar(64) not null,
+    action_name       varchar(100),
+    operator_id       bigint,
+    operator_username varchar(64),
+    operator_nickname varchar(32),
+    remark            varchar(1000),
+    operation_time    datetime default current_timestamp not null,
+    deleted           tinyint default 0 not null
+);
+
+create table if not exists work_order_attachment
+(
+    id                bigint auto_increment primary key,
+    work_order_id     bigint not null,
+    work_order_no     varchar(64) not null,
+    file_id           bigint,
+    file_name         varchar(255) not null,
+    file_url          varchar(1024) not null,
+    file_type         varchar(100),
+    file_size         bigint,
+    biz_stage         varchar(32) not null,
+    uploader_id       bigint,
+    uploader_username varchar(64),
+    uploader_nickname varchar(32),
+    create_time       datetime default current_timestamp not null,
+    deleted           tinyint default 0 not null
+);
+
+create table if not exists work_order_transfer_log
+(
+    id                       bigint auto_increment primary key,
+    work_order_id            bigint not null,
+    work_order_no            varchar(64) not null,
+    from_assignee_id         bigint,
+    from_assignee_username   varchar(64),
+    from_assignee_nickname   varchar(32),
+    to_assignee_id           bigint not null,
+    to_assignee_username     varchar(64),
+    to_assignee_nickname     varchar(32),
+    transfer_reason          varchar(1000),
+    operator_id              bigint,
+    operator_username        varchar(64),
+    operator_nickname        varchar(32),
+    create_time              datetime default current_timestamp not null,
+    deleted                  tinyint default 0 not null
+);
+
+create table if not exists work_order_sla_rule
+(
+    id              bigint auto_increment primary key,
+    work_order_type varchar(64) not null,
+    priority        varchar(32) not null,
+    limit_minutes   int not null,
+    status          tinyint default 1 not null,
+    remark          varchar(500),
+    creator_id      bigint,
+    updater_id      bigint,
+    create_time     datetime default current_timestamp not null,
+    update_time     datetime default current_timestamp not null,
+    deleted         tinyint default 0 not null
+);
+
+create table if not exists work_order_responsible_user
+(
+    id               bigint auto_increment primary key,
+    devid            varchar(32) not null,
+    user_id          bigint not null,
+    username         varchar(64),
+    nickname         varchar(32),
+    phone_number     varchar(18),
+    email            varchar(128),
+    responsible_type varchar(32) not null,
+    status           tinyint default 1 not null,
+    remark           varchar(500),
+    creator_id       bigint,
+    updater_id       bigint,
+    create_time      datetime default current_timestamp not null,
+    update_time      datetime default current_timestamp not null,
+    deleted          tinyint default 0 not null
+);
+
+create table if not exists sys_job_log
+(
+    job_log_id      bigint auto_increment primary key,
+    job_id          bigint,
+    job_name        varchar(64) default '' not null,
+    job_group       varchar(64) default '' not null,
+    invoke_target   varchar(255) default '' not null,
+    cron_expression varchar(255),
+    trigger_type    tinyint default 1 not null,
+    status          tinyint default 1 not null,
+    job_message     varchar(500),
+    exception_info  varchar(2000),
+    start_time      datetime not null,
+    end_time        datetime,
+    duration_ms     bigint,
+    create_time     datetime default current_timestamp not null
+);
+
+create index if not exists idx_job_log_job_id on sys_job_log (job_id);
+create index if not exists idx_job_log_start_time on sys_job_log (start_time);
+create index if not exists idx_job_log_status on sys_job_log (status);
