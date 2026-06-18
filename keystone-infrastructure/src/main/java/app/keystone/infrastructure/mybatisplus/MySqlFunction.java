@@ -3,9 +3,7 @@ package app.keystone.infrastructure.mybatisplus;
 import java.util.Arrays;
 
 /**
- * 由于H2不支持大部分Mysql的函数  所以要自己实现
- * 在H2的初始化 h2sql/keystone_schema.sql加上这句
- * CREATE ALIAS FIND_IN_SET FOR "app.keystone.infrastructure.mybatisplus.MySqlFunction.find_in_set";
+ * MySQL compatible helper functions used by mapper SQL.
  *
  * @author likanug
  */

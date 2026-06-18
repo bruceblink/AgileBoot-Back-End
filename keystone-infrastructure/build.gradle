@@ -11,7 +11,6 @@ dependencies {
     api 'org.apache.velocity:velocity-engine-core:2.3'
     runtimeOnly 'mysql:mysql-connector-java:8.0.33'
     runtimeOnly 'org.postgresql:postgresql:42.7.8'
-    runtimeOnly 'com.h2database:h2'
     api 'com.google.guava:guava:33.4.0-jre'
     // Caffeine 本地缓存（Spring Boot BOM 管理版本）
     implementation 'com.github.ben-manes.caffeine:caffeine'

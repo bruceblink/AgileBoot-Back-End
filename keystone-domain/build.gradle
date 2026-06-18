@@ -4,3 +4,56 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
+
+sourceSets {
+    integrationTest {
+        java {
+            srcDir 'src/test/java'
+            include 'app/keystone/integrationTest/**'
+        }
+        resources {
+            srcDir 'src/test/resources'
+        }
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+configurations {
+    named('integrationTestImplementation') {
+        extendsFrom testImplementation
+    }
+    named('integrationTestRuntimeOnly') {
+        extendsFrom testRuntimeOnly
+    }
+}
+
+dependencies {
+    integrationTestRuntimeOnly 'org.flywaydb:flyway-core'
+    integrationTestRuntimeOnly 'org.flywaydb:flyway-mysql'
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs Docker MySQL-backed integration tests for the downstream extension module.'
+    group = 'verification'
+    dependsOn rootProject.tasks.named('resetDbIntegrationDatabases')
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    systemProperty 'KEYSTONE_TEST_DATASOURCE_URL',
+        System.getenv('KEYSTONE_TEST_DATASOURCE_URL')
+            ?: 'jdbc:mysql://localhost:33066/keystone_domain_integration_test?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC'
+    systemProperty 'KEYSTONE_TEST_DATASOURCE_PASSWORD_FILE',
+        System.getenv('KEYSTONE_TEST_DATASOURCE_PASSWORD_FILE')
+            ?: rootProject.file('docker/.secrets/.database_password.enc').absolutePath
+    systemProperty 'KEYSTONE_TEST_DATASOURCE_ENCRYPT_KEY_FILE',
+        System.getenv('KEYSTONE_TEST_DATASOURCE_ENCRYPT_KEY_FILE')
+            ?: rootProject.file('docker/.secrets/.database_password.key').absolutePath
+    systemProperty 'KEYSTONE_TEST_REDIS_PASSWORD_FILE',
+        System.getenv('KEYSTONE_TEST_REDIS_PASSWORD_FILE')
+            ?: rootProject.file('docker/.secrets/.redis_password.enc').absolutePath
+    systemProperty 'KEYSTONE_TEST_REDIS_ENCRYPT_KEY_FILE',
+        System.getenv('KEYSTONE_TEST_REDIS_ENCRYPT_KEY_FILE')
+            ?: rootProject.file('docker/.secrets/.redis_password.key').absolutePath
+    useJUnitPlatform()
+    shouldRunAfter tasks.named('test')
+}

@@ -1,4 +1,4 @@
-# 测试环境配置（H2 + 本地 Redis）
+# 测试环境配置（Docker MySQL + 本地 Redis）
 
 keystone:
   rsaPrivateKey: test-rsa-private-key
@@ -6,32 +6,41 @@ keystone:
     mode: local
     keylo:
       enabled: false
+  datasource:
+    password-encryption:
+      encrypt-key-file: ${KEYSTONE_TEST_DATASOURCE_ENCRYPT_KEY_FILE:docker/.secrets/.database_password.key}
+  redis:
+    password-encryption:
+      encrypt-key-file: ${KEYSTONE_TEST_REDIS_ENCRYPT_KEY_FILE:docker/.secrets/.redis_password.key}
 
 spring:
   datasource:
-    driver-class-name: org.h2.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     dynamic:
+      primary: master
+      strict: false
       datasource:
         master:
-          # H2 内存数据库，MODE=MySQL 兼容 MySQL 语法
-          url: jdbc:h2:mem:keystone;DB_CLOSE_DELAY=-1;MODE=MySQL
-          h2:
-            console:
-              enabled: true
-              settings:
-                trace: true
-                web-allow-others: true
-              path: /h2-console
+          url: ${KEYSTONE_TEST_DATASOURCE_URL:jdbc:mysql://localhost:33066/keystone_admin_integration_test?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+          username: ${KEYSTONE_TEST_DATASOURCE_USERNAME:root}
+          password-file: ${KEYSTONE_TEST_DATASOURCE_PASSWORD_FILE:docker/.secrets/.database_password.enc}
+          driver-class-name: com.mysql.cj.jdbc.Driver
 
   flyway:
-    enabled: false
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    locations:
+      - classpath:db/migrate/common
+      - classpath:db/migrate/mysql
 
   data:
     redis:
-      port: ${SPRING_DATA_REDIS_PORT:36379}
+      host: ${KEYSTONE_TEST_REDIS_HOST:localhost}
+      port: ${KEYSTONE_TEST_REDIS_PORT:6379}
+      username: ${KEYSTONE_TEST_REDIS_USERNAME:keystone}
+      password-file: ${KEYSTONE_TEST_REDIS_PASSWORD_FILE:docker/.secrets/.redis_password.enc}
 
   sql:
     init:
-      platform: mysql
-      schema-locations: classpath:db/migrate/h2/keystone_schema.sql
-      data-locations: classpath:db/migrate/h2/keystone_data.sql
+      mode: never

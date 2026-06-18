@@ -1,32 +1,36 @@
-# 测试环境数据源与 Redis 配置
+# 测试环境数据源与 Redis 配置（Docker MySQL）
 
 spring:
   datasource:
-    driver-class-name: org.h2.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     dynamic:
       primary: master
       strict: false
       datasource:
         master:
-          url: jdbc:h2:mem:keystone;DB_CLOSE_DELAY=-1;MODE=MySQL;NON_KEYWORDS=VALUE
-          h2:
-            console:
-              enabled: true
-              settings:
-                trace: true
-                web-allow-others: true
-              path: /h2-console
+          url: ${KEYSTONE_TEST_DATASOURCE_URL:jdbc:mysql://localhost:33066/keystone_domain_integration_test?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+          username: ${KEYSTONE_TEST_DATASOURCE_USERNAME:root}
+          password-file: ${KEYSTONE_TEST_DATASOURCE_PASSWORD_FILE:docker/.secrets/.database_password.enc}
+          driver-class-name: com.mysql.cj.jdbc.Driver
 
   sql:
     init:
-      platform: mysql
-      schema-locations: classpath:db/migrate/h2/keystone_schema.sql
-      data-locations: classpath:db/migrate/h2/keystone_data.sql
+      mode: never
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    locations:
+      - classpath:db/migrate/common
+      - classpath:db/migrate/mysql
 
   data:
     redis:
-      host: localhost
-      port: 36379
+      host: ${KEYSTONE_TEST_REDIS_HOST:localhost}
+      port: ${KEYSTONE_TEST_REDIS_PORT:6379}
+      username: ${KEYSTONE_TEST_REDIS_USERNAME:keystone}
+      password-file: ${KEYSTONE_TEST_REDIS_PASSWORD_FILE:docker/.secrets/.redis_password.enc}
       database: 0
       timeout: 10s
       lettuce:
@@ -38,3 +42,9 @@ spring:
 
 keystone:
   rsaPrivateKey: test-rsa-private-key
+  datasource:
+    password-encryption:
+      encrypt-key-file: ${KEYSTONE_TEST_DATASOURCE_ENCRYPT_KEY_FILE:docker/.secrets/.database_password.key}
+  redis:
+    password-encryption:
+      encrypt-key-file: ${KEYSTONE_TEST_REDIS_ENCRYPT_KEY_FILE:docker/.secrets/.redis_password.key}

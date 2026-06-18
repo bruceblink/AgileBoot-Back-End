@@ -4,9 +4,27 @@ plugins {
     id 'com.github.spotbugs' version '6.0.27' apply false
 }
 
+def integrationDbPasswordFile = file('docker/.secrets/.database_password')
+
 allprojects {
     group = 'app.keystone'
     version = '3.6.1'
+}
+
+tasks.register('resetDbIntegrationDatabases', Exec) {
+    description = 'Drops and recreates Docker MySQL databases used by integration tests.'
+    group = 'verification'
+    inputs.file(integrationDbPasswordFile)
+    doFirst {
+        String password = integrationDbPasswordFile.text.trim()
+        String resetSql = [
+            'DROP DATABASE IF EXISTS keystone_domain_integration_test;',
+            'CREATE DATABASE keystone_domain_integration_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;',
+            'DROP DATABASE IF EXISTS keystone_admin_integration_test;',
+            'CREATE DATABASE keystone_admin_integration_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
+        ].join(' ')
+        commandLine 'docker', 'exec', '-e', "MYSQL_PWD=${password}", 'infra_mysql', 'mysql', '-uroot', '-e', resetSql
+    }
 }
 
 subprojects {
@@ -98,7 +116,9 @@ subprojects {
     }
 
     tasks.named('test') {
-        useJUnitPlatform()
+        useJUnitPlatform {
+            excludeTags 'db-integration'
+        }
         def baseArgs = [
             '-Xshare:off',
             '-Dnet.bytebuddy.experimental=true',
@@ -121,9 +141,8 @@ subprojects {
     sourceSets {
         test {
             java {
-                // H2-backed Spring integration tests are excluded from the default release gate.
+                // Database-backed Spring integration tests are excluded from the default release gate.
                 exclude 'app/keystone/integrationTest/**'
-                exclude 'app/keystone/admin/config/SwaggerDisabledIntegrationTest.java'
             }
         }
     }

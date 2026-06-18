@@ -52,7 +52,7 @@ src/main/resources/db/migrate/mysql
 不应放入：
 
 - 下游应用业务表迁移
-- H2 集成测试 schema/data
+- 测试专用 schema/data
 - 业务初始化数据
 
 ### keystone-framework-domain
@@ -115,9 +115,9 @@ starter 模块可以放少量测试，用于验证依赖链、自动配置和资
 
 ### keystone-domain
 
-保留为空的下游扩展模块。开源分支不在该模块内放置业务领域代码或业务迁移资源。
+保留为下游扩展模块。开源分支不在该模块内放置业务领域代码或业务迁移资源，也不保留空的主源码目录。
 
-当前 `src/main/java` 应保持无框架运行时代码。框架领域代码、框架定时任务和框架单元测试必须放在 `keystone-framework-domain`。如果下游应用需要自己的业务能力，应放在消费应用自己的领域模块和迁移路径中。
+框架领域代码、框架定时任务和框架单元测试必须放在 `keystone-framework-domain`。如果下游应用需要自己的业务能力，应在消费应用自己的领域模块中创建源码包和迁移路径。
 
 ### keystone-admin
 
@@ -246,15 +246,13 @@ allprojects {
 ```text
 keystone-infrastructure/src/main/resources/db/migrate/common
 keystone-infrastructure/src/main/resources/db/migrate/mysql
-keystone-admin/src/test/resources/db/migrate/h2
-keystone-domain/src/test/resources/db/migrate/h2
 ```
 
 规则：
 
 - `keystone-infrastructure` 只放框架/系统迁移。
 - 下游应用业务迁移不放入开源框架模块。
-- H2 测试数据放对应模块的 `src/test/resources`。
+- 开源分支不维护独立测试数据库 SQL；数据库集成测试使用 Docker MySQL 和 Flyway 主迁移脚本。
 - 不要把业务迁移放回 infrastructure 主资源，否则 starter 会重新携带业务表。
 - 迁移文件名继续使用 `V<版本号>__<描述>.sql`。
 - 已执行过的迁移不要改名、不要改版本号。
@@ -266,14 +264,14 @@ keystone-domain/src/test/resources/db/migrate/h2
 ```powershell
 .\gradlew.bat :keystone-infrastructure:jar :keystone-domain:jar
 jar tf keystone-infrastructure\build\libs\keystone-infrastructure-3.6.1.jar | Select-String "db/migrate"
-jar tf keystone-infrastructure\build\libs\keystone-infrastructure-3.6.1.jar | Select-String "business|db/migrate/h2"
+jar tf keystone-infrastructure\build\libs\keystone-infrastructure-3.6.1.jar | Select-String "business"
 jar tf keystone-domain\build\libs\keystone-domain-3.6.1.jar | Select-String "db/migrate"
 ```
 
 期望：
 
 - infrastructure jar 能看到 `db/migrate/common` 和框架 `db/migrate/mysql`。
-- infrastructure jar 看不到 `business` 和 `db/migrate/h2`。
+- infrastructure jar 看不到 `business`。
 - domain jar 不携带主资源迁移。
 
 ## 测试门禁
@@ -288,6 +286,22 @@ jar tf keystone-domain\build\libs\keystone-domain-3.6.1.jar | Select-String "db/
 
 ```powershell
 .\gradlew.bat :keystone-domain:test :keystone-admin:test :keystone-admin:compileJava
+```
+
+涉及数据库集成测试时，先启动 Docker MySQL 和 Redis：
+
+```powershell
+cd docker
+docker compose up -d mysql redis
+cd ..
+.\gradlew.bat :keystone-domain:integrationTest :keystone-admin:dbIntegrationTest
+```
+
+集成测试任务会重建专用数据库：
+
+```text
+keystone_domain_integration_test
+keystone_admin_integration_test
 ```
 
 涉及发布配置时运行：
@@ -306,8 +320,8 @@ jar tf keystone-domain\build\libs\keystone-domain-3.6.1.jar | Select-String "db/
 - framework domain auto-configuration imports 可加载。
 - infrastructure auto-configuration 扫描 common/infrastructure。
 - starter 类路径可看到框架自动配置。
-- starter 类路径看不到业务迁移和 H2 测试资源。
-- Keystone 主应用测试仍能加载 H2 schema/data。
+- starter 类路径看不到业务迁移和测试数据库脚本。
+- Keystone 主应用数据库集成测试能通过 Docker MySQL 和 Flyway 主迁移脚本启动。
 
 当前关键测试：
 
@@ -318,6 +332,9 @@ keystone-framework-domain/src/test/java/app/keystone/domain/system/SystemExportA
 keystone-framework-domain/src/test/java/app/keystone/domain/system/job/runtime/JobInvokeUtilTest.java
 keystone-framework-domain/src/test/java/app/keystone/domain/system/job/runtime/JobSchedulerManagerTest.java
 keystone-framework-spring-boot-starter/src/test/java/app/keystone/framework/starter/KeystoneFrameworkStarterDependencyTest.java
+keystone-domain/src/test/java/app/keystone/integrationTest/DockerMySqlIntegrationTest.java
+keystone-admin/src/test/java/app/keystone/admin/config/SwaggerEnabledIntegrationTest.java
+keystone-admin/src/test/java/app/keystone/admin/config/SwaggerDisabledIntegrationTest.java
 ```
 
 ## 添加新框架能力的流程

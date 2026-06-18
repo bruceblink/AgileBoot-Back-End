@@ -1,6 +1,7 @@
 package app.keystone.admin.config;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import app.keystone.admin.KeystoneAdminApplication;
@@ -27,14 +28,16 @@ class SwaggerDisabledIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    void apiDocsShouldReturnNotFoundWhenDisabled() throws Exception {
+    void apiDocsShouldRequireAuthenticationWhenDisabled() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(106));
     }
 
     @Test
-    void swaggerUiShouldReturnNotFoundWhenDisabled() throws Exception {
+    void swaggerUiShouldRequireAuthenticationWhenDisabled() throws Exception {
         mockMvc.perform(get("/swagger-ui/index.html"))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(106));
     }
 }

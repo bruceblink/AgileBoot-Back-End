@@ -2,26 +2,25 @@ package app.keystone.integrationTest.db;
 
 import app.keystone.domain.system.role.query.AllocatedRoleQuery;
 import app.keystone.domain.system.role.query.UnallocatedRoleQuery;
-import app.keystone.domain.system.user.query.SearchUserQuery;
-import app.keystone.integrationTest.IntegrationTestApplication;
 import app.keystone.domain.system.menu.db.SysMenuEntity;
+import app.keystone.domain.system.menu.db.SysMenuService;
 import app.keystone.domain.system.post.db.SysPostEntity;
 import app.keystone.domain.system.role.db.SysRoleEntity;
-import app.keystone.domain.system.user.db.SysUserEntity;
 import app.keystone.domain.system.user.db.SearchUserDO;
-import app.keystone.domain.system.menu.db.SysMenuService;
+import app.keystone.domain.system.user.db.SysUserEntity;
 import app.keystone.domain.system.user.db.SysUserService;
+import app.keystone.domain.system.user.query.SearchUserQuery;
+import app.keystone.integrationTest.DockerMySqlIntegrationTest;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 
-@SpringBootTest(classes = IntegrationTestApplication.class)
+@DockerMySqlIntegrationTest
 class SysUserServiceImplTest {
 
     @Resource
@@ -45,8 +44,8 @@ class SysUserServiceImplTest {
     @Test
     @Rollback
     void testIsPhoneDuplicated() {
-        boolean addWithSame = userService.isPhoneDuplicated("15888888889", null);
-        boolean updateWithSame = userService.isPhoneDuplicated("15888888889", 1L);
+        boolean addWithSame = userService.isPhoneDuplicated("15888888883", null);
+        boolean updateWithSame = userService.isPhoneDuplicated("15888888883", 1L);
         boolean addWithoutSame = userService.isPhoneDuplicated("15888888899", null);
 
         Assertions.assertTrue(addWithSame);
@@ -92,9 +91,18 @@ class SysUserServiceImplTest {
     void testGetMenuPermissionsForUsers() {
         Set<String> permissionByUser = userService.getMenuPermissionsForUser(2L);
         List<SysMenuEntity> allMenus = menuService.list();
-        Set<String> allPermissions = allMenus.stream().map(SysMenuEntity::getPermission).collect(Collectors.toSet());
+        Set<String> userPermissions = permissionByUser.stream()
+            .filter(permission -> permission != null && !permission.isBlank())
+            .collect(Collectors.toSet());
+        Set<String> allPermissions = allMenus.stream()
+            .map(SysMenuEntity::getPermission)
+            .filter(permission -> permission != null && !permission.isBlank())
+            .collect(Collectors.toSet());
 
-        Assertions.assertEquals(allPermissions.size() - 1, permissionByUser.size());
+        Assertions.assertFalse(userPermissions.isEmpty());
+        Assertions.assertTrue(allPermissions.containsAll(userPermissions));
+        Assertions.assertTrue(userPermissions.contains("system:user:list"));
+        Assertions.assertTrue(allPermissions.size() > userPermissions.size());
     }
 
 

@@ -1,14 +1,13 @@
 package app.keystone.integrationTest.db;
 
-import app.keystone.integrationTest.IntegrationTestApplication;
 import app.keystone.domain.system.role.db.SysRoleService;
+import app.keystone.integrationTest.DockerMySqlIntegrationTest;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 
-@SpringBootTest(classes = IntegrationTestApplication.class)
+@DockerMySqlIntegrationTest
 class SysRoleServiceImplTest {
 
     @Resource

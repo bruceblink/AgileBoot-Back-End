@@ -199,10 +199,6 @@ docker compose down -v
   - [keystone-infrastructure/src/main/resources/db/migrate/common/V3_3_0__flyway_baseline_marker.sql](keystone-infrastructure/src/main/resources/db/migrate/common/V3_3_0__flyway_baseline_marker.sql) — Flyway 基线标记
   - [keystone-infrastructure/src/main/resources/db/migrate/mysql/V3_3_1__init_core_schema_data.sql](keystone-infrastructure/src/main/resources/db/migrate/mysql/V3_3_1__init_core_schema_data.sql) — 核心结构与初始化数据
   - [keystone-infrastructure/src/main/resources/db/migrate/mysql/V3_3_2__init_dict_schema_data.sql](keystone-infrastructure/src/main/resources/db/migrate/mysql/V3_3_2__init_dict_schema_data.sql) — 字典结构与初始化数据
-  - [keystone-admin/src/test/resources/db/migrate/h2/keystone_schema.sql](keystone-admin/src/test/resources/db/migrate/h2/keystone_schema.sql) — admin H2 测试 schema
-  - [keystone-admin/src/test/resources/db/migrate/h2/keystone_data.sql](keystone-admin/src/test/resources/db/migrate/h2/keystone_data.sql) — admin H2 测试 data
-  - [keystone-domain/src/test/resources/db/migrate/h2/keystone_schema.sql](keystone-domain/src/test/resources/db/migrate/h2/keystone_schema.sql) — domain H2 集成测试 schema
-  - [keystone-domain/src/test/resources/db/migrate/h2/keystone_data.sql](keystone-domain/src/test/resources/db/migrate/h2/keystone_data.sql) — domain H2 集成测试 data
 - Flyway SQL 命名规范：
   - MySQL 迁移脚本统一放在 `keystone-infrastructure/src/main/resources/db/migrate/mysql/`
   - 文件名格式必须为 `V<版本号>__<描述>.sql`，例如 `V3_4_0__add_user_profile_table.sql`
@@ -211,6 +207,10 @@ docker compose down -v
   - 描述部分使用英文小写加下划线，表达本次变更目的，如 `init_order_schema`、`add_user_email_index`
   - 已执行过的 Flyway 脚本不要重命名、不要改版本号；如需继续演进，新增更高版本脚本
   - 脚本内容不得写死数据库名（例如 `use keystone;`），应始终作用于当前 datasource 指向的库
+- 数据库集成测试使用 Docker MySQL 和 Flyway 主迁移脚本：
+  - `docker compose up -d mysql redis`
+  - `.\gradlew.bat :keystone-domain:integrationTest :keystone-admin:dbIntegrationTest`
+  - 任务会重建 `keystone_domain_integration_test` 和 `keystone_admin_integration_test`，不使用开发库 `keystone`
 - 数据库密码加密：[DATABASE_PASSWORD_ENCRYPTION_GUIDE.md](DATABASE_PASSWORD_ENCRYPTION_GUIDE.md)
 - 框架 starter 使用说明：[docs/framework-starter-usage.md](docs/framework-starter-usage.md)
 - 框架 starter 维护文档：[docs/framework-starter-maintenance.md](docs/framework-starter-maintenance.md)

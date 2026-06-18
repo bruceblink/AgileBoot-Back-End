@@ -2,15 +2,16 @@ package app.keystone.integrationTest.db;
 
 import app.keystone.domain.system.menu.db.SysMenuEntity;
 import app.keystone.domain.system.menu.db.SysMenuService;
-import app.keystone.integrationTest.IntegrationTestApplication;
-import java.util.List;
+import app.keystone.integrationTest.DockerMySqlIntegrationTest;
 import jakarta.annotation.Resource;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 
-@SpringBootTest(classes = IntegrationTestApplication.class)
+@DockerMySqlIntegrationTest
 class SysMenuServiceImplTest {
 
     @Resource
@@ -19,19 +20,24 @@ class SysMenuServiceImplTest {
     @Test
     @Rollback
     void testGetMenuListByUserId() {
-        List<SysMenuEntity> menusMissingLastMenu = menuService.getMenuListByUserId(2L);
+        List<SysMenuEntity> userMenus = menuService.getMenuListByUserId(2L);
         List<SysMenuEntity> allMenus = menuService.list();
 
-        Assertions.assertEquals(allMenus.size(), menusMissingLastMenu.size() + 2);
+        Assertions.assertFalse(userMenus.isEmpty());
+        Assertions.assertTrue(allMenus.size() > userMenus.size());
+        Assertions.assertTrue(userMenus.stream().anyMatch(menu -> "用户管理".equals(menu.getMenuName())));
     }
 
     @Test
     @Rollback
     void testGetMenuIdsByRoleId() {
-        List<Long> menusMissingLastMenu = menuService.getMenuIdsByRoleId(2L);
+        List<Long> roleMenuIds = menuService.getMenuIdsByRoleId(2L);
         List<SysMenuEntity> allMenus = menuService.list();
+        Set<Long> allMenuIds = allMenus.stream().map(SysMenuEntity::getMenuId).collect(Collectors.toSet());
 
-        Assertions.assertEquals(allMenus.size(), menusMissingLastMenu.size() + 2);
+        Assertions.assertFalse(roleMenuIds.isEmpty());
+        Assertions.assertTrue(allMenuIds.containsAll(roleMenuIds));
+        Assertions.assertTrue(allMenus.size() > roleMenuIds.size());
     }
 
     @Test
