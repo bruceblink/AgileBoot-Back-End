@@ -1,10 +1,10 @@
 plugins {
     id 'org.springframework.boot' version '3.5.13' apply false
-    id 'io.spring.dependency-management' version '1.1.7' apply false
     id 'com.github.spotbugs' version '6.0.27' apply false
 }
 
 def integrationDbPasswordFile = file('docker/.secrets/.database_password')
+def springBootBom = 'org.springframework.boot:spring-boot-dependencies:3.5.13'
 
 allprojects {
     group = 'app.keystone'
@@ -29,7 +29,6 @@ tasks.register('resetDbIntegrationDatabases', Exec) {
 
 subprojects {
     apply plugin: 'java-library'
-    apply plugin: 'io.spring.dependency-management'
     apply plugin: 'jacoco'
     apply plugin: 'checkstyle'
     apply plugin: 'com.github.spotbugs'
@@ -48,12 +47,6 @@ subprojects {
                 includeGroup 'org.springframework.boot'
                 includeGroupByRegex 'io\\.spring(\\..*)?'
             }
-        }
-    }
-
-    dependencyManagement {
-        imports {
-            mavenBom 'org.springframework.boot:spring-boot-dependencies:3.5.13'
         }
     }
 
@@ -166,6 +159,15 @@ subprojects {
 
     // 对应父 POM <dependencies>：所有子模块继承
     dependencies {
+        api platform(springBootBom)
+        implementation platform(springBootBom)
+        compileOnly platform(springBootBom)
+        annotationProcessor platform(springBootBom)
+        testImplementation platform(springBootBom)
+        testRuntimeOnly platform(springBootBom)
+        testCompileOnly platform(springBootBom)
+        testAnnotationProcessor platform(springBootBom)
+
         compileOnly 'org.projectlombok:lombok:1.18.38'
         annotationProcessor 'org.projectlombok:lombok:1.18.38'
         testCompileOnly 'org.projectlombok:lombok:1.18.38'
@@ -198,12 +200,6 @@ configure([
     def publicationDescription = frameworkPublicationDescriptions[publicationName]
 
     apply plugin: 'maven-publish'
-
-    dependencyManagement {
-        generatedPomCustomization {
-            enabled = false
-        }
-    }
 
     publishing {
         publications {

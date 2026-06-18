@@ -204,6 +204,10 @@ keystone-framework-spring-boot-starter
 发布配置在根 `build.gradle` 中维护：
 
 ```gradle
+dependencies {
+    api platform(springBootBom)
+}
+
 configure([
     project(':keystone-common'),
     project(':keystone-infrastructure'),
@@ -214,6 +218,8 @@ configure([
     apply plugin: 'maven-publish'
 }
 ```
+
+框架模块使用 Gradle 原生 `platform('org.springframework.boot:spring-boot-dependencies:...')` 导入 Spring Boot BOM。不要重新引入 `io.spring.dependency-management` 插件；该插件会给 Maven POM 生成任务挂载不兼容 configuration cache 的自定义逻辑。
 
 本地发布命令：
 
@@ -310,7 +316,7 @@ keystone_admin_integration_test
 .\gradlew.bat :keystone-common:publishToMavenLocal :keystone-infrastructure:publishToMavenLocal :keystone-framework-domain:publishToMavenLocal :keystone-framework-admin:publishToMavenLocal :keystone-framework-spring-boot-starter:publishToMavenLocal
 ```
 
-当前 `GenerateMavenPom` 在 configuration cache 下可能输出 warning。只要任务结果是 `BUILD SUCCESSFUL`，发布可用；后续可以单独处理 configuration-cache 兼容性。
+期望输出应包含 `Configuration cache entry stored.` 或 `Configuration cache entry reused.`，且不应再出现 `GenerateMavenPom` 的 configuration cache warning。
 
 ## 回归测试重点
 
