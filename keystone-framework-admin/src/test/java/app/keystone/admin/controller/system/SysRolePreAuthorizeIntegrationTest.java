@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import app.keystone.admin.KeystoneAdminApplication;
+import app.keystone.admin.customize.service.permission.MenuPermissionService;
 import app.keystone.domain.system.role.RoleApplicationService;
 import app.keystone.domain.system.role.command.UpdateRoleCommand;
 import app.keystone.infrastructure.user.web.DataScopeEnum;
@@ -16,19 +16,16 @@ import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-@SpringBootTest(classes = KeystoneAdminApplication.class)
-@ActiveProfiles("test")
-@TestPropertySource(properties = {
-    "spring.sql.init.mode=never"
-})
+@SpringJUnitConfig(SysRolePreAuthorizeIntegrationTest.TestApplication.class)
 class SysRolePreAuthorizeIntegrationTest {
 
     @Autowired
@@ -87,5 +84,11 @@ class SysRolePreAuthorizeIntegrationTest {
         command.setStatus(1);
         command.setMenuIds(List.of(1L));
         return command;
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @EnableMethodSecurity
+    @Import({SysRoleController.class, MenuPermissionService.class})
+    static class TestApplication {
     }
 }

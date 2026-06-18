@@ -2,7 +2,6 @@ package app.keystone.admin;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 
 /**
  * 启动程序
@@ -14,7 +13,6 @@ import org.springframework.context.annotation.ComponentScan;
  * @author likanug
  */
 @SpringBootApplication
-@ComponentScan(basePackages = "app.keystone.*")
 public class KeystoneAdminApplication {
 
     public static void main(String[] args) {
