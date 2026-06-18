@@ -63,8 +63,7 @@ public class SysRoleController extends BaseController {
     @PreAuthorize("@permission.has('system:role:export')")
     @PostMapping("/export")
     public void export(HttpServletResponse response, @Validated RoleQuery query) {
-        PageDTO<RoleDTO> pageDTO = roleApplicationService.getRoleList(query);
-        CustomExcelUtil.writeToResponse(pageDTO.getRows(), RoleDTO.class, response);
+        CustomExcelUtil.writeToResponse(roleApplicationService.exportRoles(query), RoleDTO.class, response);
     }
 
     /**

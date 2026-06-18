@@ -59,6 +59,10 @@ public class UserApplicationService {
         return new PageDTO<>(userDTOList, userPage.getTotal());
     }
 
+    public List<UserDTO> exportUsers(SearchUserQuery<SearchUserDO> query) {
+        return userService.listUsersByQuery(query).stream().map(UserDTO::new).collect(Collectors.toList());
+    }
+
     public UserProfileDTO getUserProfile(Long userId) {
 
         SysUserEntity userEntity = userService.getById(userId);

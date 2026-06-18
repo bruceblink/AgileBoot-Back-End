@@ -63,8 +63,7 @@ public class SysLogsController extends BaseController {
     @PreAuthorize("@permission.has('monitor:logininfor:export')")
     @GetMapping("/loginLogs/excel")
     public void loginInfosExcel(HttpServletResponse response, @Validated LoginLogQuery query) {
-        PageDTO<LoginLogDTO> pageDTO = logApplicationService.getLoginInfoList(query);
-        CustomExcelUtil.writeToResponse(pageDTO.getRows(), LoginLogDTO.class, response);
+        CustomExcelUtil.writeToResponse(logApplicationService.exportLoginInfos(query), LoginLogDTO.class, response);
     }
 
     @Operation(summary = "删除登录日志")
@@ -120,8 +119,8 @@ public class SysLogsController extends BaseController {
     @PreAuthorize("@permission.has('monitor:operlog:export')")
     @GetMapping("/operationLogs/excel")
     public void operationLogsExcel(HttpServletResponse response, @Validated OperationLogQuery query) {
-        PageDTO<OperationLogDTO> pageDTO = logApplicationService.getOperationLogList(query);
-        CustomExcelUtil.writeToResponse(pageDTO.getRows(), OperationLogDTO.class, response);
+        CustomExcelUtil.writeToResponse(logApplicationService.exportOperationLogs(query), OperationLogDTO.class,
+            response);
     }
 
     @Operation(summary = "删除操作日志")

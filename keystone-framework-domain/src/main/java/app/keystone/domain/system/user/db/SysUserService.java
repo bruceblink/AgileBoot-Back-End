@@ -6,6 +6,7 @@ import app.keystone.domain.system.role.db.SysRoleEntity;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -103,5 +104,12 @@ public interface SysUserService extends IService<SysUserEntity> {
      */
     Page<SearchUserDO> getUserList(AbstractPageQuery<SearchUserDO> query);
 
+    /**
+     * 根据条件查询所有用户列表.
+     *
+     * @param query 查询参数
+     * @return 用户信息集合信息
+     */
+    List<SearchUserDO> listUsersByQuery(AbstractPageQuery<SearchUserDO> query);
 
 }

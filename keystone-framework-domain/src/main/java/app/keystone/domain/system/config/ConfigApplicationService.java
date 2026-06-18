@@ -41,6 +41,10 @@ public class ConfigApplicationService {
         return new PageDTO<>(records, page.getTotal());
     }
 
+    public List<ConfigDTO> exportConfigs(ConfigQuery query) {
+        return configService.list(query.toQueryWrapper()).stream().map(ConfigDTO::new).collect(Collectors.toList());
+    }
+
     public ConfigDTO getConfigInfo(Long id) {
         SysConfigEntity byId = configService.getById(id);
         return new ConfigDTO(byId);

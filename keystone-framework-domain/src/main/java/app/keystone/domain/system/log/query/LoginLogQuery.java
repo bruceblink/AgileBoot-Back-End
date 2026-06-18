@@ -28,12 +28,19 @@ public class LoginLogQuery extends AbstractPageQuery<SysLoginInfoEntity> {
             .eq(StringUtils.isNotEmpty(status), "status", status)
             .like(StringUtils.isNotEmpty(username), "username", likeValue(username));
 
-        addSortCondition(queryWrapper);
-
-        // 可以手动设置  也可以由前端传回
-//        this.timeRangeColumn = "login_time";
-//        addTimeCondition(queryWrapper, "login_time");
+        this.timeRangeColumn = "login_time";
+        if (StringUtils.isEmpty(orderColumn) || StringUtils.isEmpty(orderDirection)) {
+            queryWrapper.orderByDesc("login_time", "info_id");
+        }
 
         return queryWrapper;
+    }
+
+    @Override
+    public void addSortCondition(QueryWrapper<SysLoginInfoEntity> queryWrapper) {
+        super.addSortCondition(queryWrapper);
+        if (queryWrapper != null && ("loginTime".equals(orderColumn) || "login_time".equals(orderColumn))) {
+            queryWrapper.orderByDesc("info_id");
+        }
     }
 }

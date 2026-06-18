@@ -93,4 +93,16 @@ public interface SysUserMapper extends BaseMapper<SysUserEntity> {
     Page<SearchUserDO> getUserList(Page<SearchUserDO> page,
         @Param(Constants.WRAPPER) Wrapper<SearchUserDO> queryWrapper);
 
+    /**
+     * 根据条件查询所有用户列表.
+     *
+     * @param queryWrapper 查询对象
+     * @return 用户信息集合信息
+     */
+    @Select("SELECT u.*, d.dept_name, d.leader_name as dept_leader "
+        + "FROM sys_user u "
+        + " LEFT JOIN sys_dept d ON u.dept_id = d.dept_id "
+        + "${ew.customSqlSegment}")
+    List<SearchUserDO> listUsersByQuery(@Param(Constants.WRAPPER) Wrapper<SearchUserDO> queryWrapper);
+
 }

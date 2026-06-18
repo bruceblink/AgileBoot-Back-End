@@ -71,8 +71,7 @@ public class SysUserController extends BaseController {
     @PreAuthorize("@permission.has('system:user:export')")
     @GetMapping("/excel")
     public void exportUserByExcel(HttpServletResponse response, @Validated SearchUserQuery<SearchUserDO> query) {
-        PageDTO<UserDTO> userList = userApplicationService.getUserList(query);
-        CustomExcelUtil.writeToResponse(userList.getRows(), UserDTO.class, response);
+        CustomExcelUtil.writeToResponse(userApplicationService.exportUsers(query), UserDTO.class, response);
     }
 
     @Operation(summary = "用户列表导入")

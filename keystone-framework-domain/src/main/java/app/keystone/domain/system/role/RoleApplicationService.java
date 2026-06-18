@@ -54,6 +54,10 @@ public class RoleApplicationService {
         return new PageDTO<>(records, page.getTotal());
     }
 
+    public List<RoleDTO> exportRoles(RoleQuery query) {
+        return roleService.list(query.toQueryWrapper()).stream().map(RoleDTO::new).collect(Collectors.toList());
+    }
+
     public RoleDTO getRoleInfo(Long roleId) {
         SysRoleEntity byId = roleService.getById(roleId);
         RoleDTO roleDTO = new RoleDTO(byId);

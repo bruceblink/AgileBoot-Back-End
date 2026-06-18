@@ -53,6 +53,10 @@ public class LogApplicationService {
         return new PageDTO<>(records, page.getTotal());
     }
 
+    public List<LoginLogDTO> exportLoginInfos(LoginLogQuery query) {
+        return loginInfoService.list(query.toQueryWrapper()).stream().map(LoginLogDTO::new).collect(Collectors.toList());
+    }
+
     public void deleteLoginInfo(BulkOperationCommand<Long> deleteCommand) {
         QueryWrapper<SysLoginInfoEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("info_id", deleteCommand.getIds());
@@ -63,6 +67,12 @@ public class LogApplicationService {
         Page<SysOperationLogEntity> page = operationLogService.page(query.toPage(), query.toQueryWrapper());
         List<OperationLogDTO> records = page.getRecords().stream().map(OperationLogDTO::new).collect(Collectors.toList());
         return new PageDTO<>(records, page.getTotal());
+    }
+
+    public List<OperationLogDTO> exportOperationLogs(OperationLogQuery query) {
+        return operationLogService.list(query.toQueryWrapper()).stream()
+            .map(OperationLogDTO::new)
+            .collect(Collectors.toList());
     }
 
     public void deleteOperationLog(BulkOperationCommand<Long> deleteCommand) {
