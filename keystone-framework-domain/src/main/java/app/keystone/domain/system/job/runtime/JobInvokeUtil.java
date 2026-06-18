@@ -1,14 +1,27 @@
 package app.keystone.domain.system.job.runtime;
 
+import app.keystone.common.annotation.JobTask;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
+import app.keystone.domain.system.job.dto.JobInvokeTargetDTO;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.aop.support.AopUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.annotation.Schedules;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Invokes a no-argument Spring bean method configured by a scheduled job.
@@ -28,16 +41,26 @@ public class JobInvokeUtil {
     public void validateInvokeTarget(String invokeTarget) {
         ParsedTarget target = parse(invokeTarget);
         Object bean = getBean(target.beanName());
-        Method method = ReflectionUtils.findMethod(bean.getClass(), target.methodName());
+        Method method = findInvokableMethod(bean, target.methodName());
         if (method == null || method.getParameterCount() != 0) {
             throw new ApiException(ErrorCode.Business.JOB_INVOKE_METHOD_NOT_FOUND, invokeTarget);
         }
     }
 
+    public List<JobInvokeTargetDTO> getAvailableInvokeTargets() {
+        return Arrays.stream(applicationContext.getBeanDefinitionNames())
+            .map(this::getBeanCandidateTargets)
+            .flatMap(List::stream)
+            .sorted(Comparator.comparing(JobInvokeTargetDTO::getGroup)
+                .thenComparing(JobInvokeTargetDTO::getName)
+                .thenComparing(JobInvokeTargetDTO::getInvokeTarget))
+            .toList();
+    }
+
     public void invoke(String invokeTarget) {
         ParsedTarget target = parse(invokeTarget);
         Object bean = getBean(target.beanName());
-        Method method = ReflectionUtils.findMethod(bean.getClass(), target.methodName());
+        Method method = findInvokableMethod(bean, target.methodName());
         if (method == null || method.getParameterCount() != 0) {
             throw new ApiException(ErrorCode.Business.JOB_INVOKE_METHOD_NOT_FOUND, invokeTarget);
         }
@@ -47,6 +70,57 @@ public class JobInvokeUtil {
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new ApiException(e, ErrorCode.Business.JOB_EXECUTE_FAILED, e.getMessage());
         }
+    }
+
+    private List<JobInvokeTargetDTO> getBeanCandidateTargets(String beanName) {
+        Object bean;
+        try {
+            bean = applicationContext.getBean(beanName);
+        } catch (BeansException e) {
+            return List.of();
+        }
+
+        Class<?> targetClass = AopUtils.getTargetClass(bean);
+        return List.of(ReflectionUtils.getUniqueDeclaredMethods(targetClass)).stream()
+            .map(method -> toCandidate(beanName, method))
+            .filter(Objects::nonNull)
+            .toList();
+    }
+
+    private JobInvokeTargetDTO toCandidate(String beanName, Method method) {
+        if (method.getParameterCount() != 0 || Modifier.isStatic(method.getModifiers())) {
+            return null;
+        }
+        JobTask jobTask = AnnotatedElementUtils.findMergedAnnotation(method, JobTask.class);
+        boolean scheduled = AnnotatedElementUtils.hasAnnotation(method, Scheduled.class)
+            || AnnotatedElementUtils.hasAnnotation(method, Schedules.class);
+        if (jobTask == null && !scheduled) {
+            return null;
+        }
+
+        String methodName = method.getName();
+        String name = methodName;
+        String group = scheduled ? "scheduled" : "default";
+        String description = "";
+        if (jobTask != null) {
+            name = StringUtils.hasText(jobTask.name()) ? jobTask.name() : methodName;
+            group = StringUtils.hasText(jobTask.group()) ? jobTask.group() : group;
+            description = jobTask.description();
+        }
+        String invokeTarget = beanName + "." + methodName + "()";
+        return new JobInvokeTargetDTO(invokeTarget, beanName, methodName, name, group, description);
+    }
+
+    private Method findInvokableMethod(Object bean, String methodName) {
+        Method method = ReflectionUtils.findMethod(bean.getClass(), methodName);
+        if (method != null) {
+            return method;
+        }
+        method = ReflectionUtils.findMethod(AopUtils.getTargetClass(bean), methodName);
+        if (method != null && method.getDeclaringClass().isInstance(bean)) {
+            return method;
+        }
+        return null;
     }
 
     private ParsedTarget parse(String invokeTarget) {

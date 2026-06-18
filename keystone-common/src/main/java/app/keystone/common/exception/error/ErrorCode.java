@@ -230,7 +230,8 @@ public enum ErrorCode implements ErrorCodeInterface {
 
         JOB_CRON_EXPRESSION_INVALID(11200, "Cron表达式无效：{}", "Business.JOB_CRON_EXPRESSION_INVALID"),
 
-        JOB_INVOKE_TARGET_INVALID(11201, "调用目标无效，仅支持 springBean.method() 格式", "Business.JOB_INVOKE_TARGET_INVALID"),
+        JOB_INVOKE_TARGET_INVALID(11201, "调用目标无效，请从候选列表选择，或使用 springBean.method() 格式，例如 demoJob.clean()",
+            "Business.JOB_INVOKE_TARGET_INVALID"),
 
         JOB_INVOKE_BEAN_NOT_FOUND(11202, "调用目标Bean不存在：{}", "Business.JOB_INVOKE_BEAN_NOT_FOUND"),
 

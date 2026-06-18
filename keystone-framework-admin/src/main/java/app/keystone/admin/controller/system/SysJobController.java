@@ -11,6 +11,7 @@ import app.keystone.domain.system.job.command.AddJobCommand;
 import app.keystone.domain.system.job.command.UpdateJobCommand;
 import app.keystone.domain.system.job.command.UpdateJobStatusCommand;
 import app.keystone.domain.system.job.dto.JobDTO;
+import app.keystone.domain.system.job.dto.JobInvokeTargetDTO;
 import app.keystone.domain.system.job.query.JobQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,6 +51,13 @@ public class SysJobController extends BaseController {
     @GetMapping
     public ResponseDTO<PageDTO<JobDTO>> list(@Validated JobQuery query) {
         return ResponseDTO.ok(jobApplicationService.getJobList(query));
+    }
+
+    @Operation(summary = "定时任务可调用目标列表")
+    @PreAuthorize("@permission.has('system:job:list')")
+    @GetMapping("/invoke-targets")
+    public ResponseDTO<List<JobInvokeTargetDTO>> invokeTargets() {
+        return ResponseDTO.ok(jobApplicationService.getInvokeTargets());
     }
 
     @Operation(summary = "定时任务详情")

@@ -13,6 +13,7 @@ import app.keystone.domain.system.job.command.UpdateJobStatusCommand;
 import app.keystone.domain.system.job.db.SysJobEntity;
 import app.keystone.domain.system.job.db.SysJobService;
 import app.keystone.domain.system.job.dto.JobDTO;
+import app.keystone.domain.system.job.dto.JobInvokeTargetDTO;
 import app.keystone.domain.system.job.query.JobQuery;
 import app.keystone.domain.system.job.runtime.JobInvokeUtil;
 import app.keystone.domain.system.job.runtime.JobSchedulerManager;
@@ -45,6 +46,10 @@ public class JobApplicationService {
 
     public JobDTO getJobInfo(Long jobId) {
         return new JobDTO(loadJob(jobId));
+    }
+
+    public List<JobInvokeTargetDTO> getInvokeTargets() {
+        return jobInvokeUtil.getAvailableInvokeTargets();
     }
 
     @Transactional(rollbackFor = Exception.class)

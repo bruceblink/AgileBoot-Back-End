@@ -24,7 +24,7 @@ public class AddJobCommand {
     private String jobGroup;
 
     @NotBlank
-    @Schema(description = "调用目标，格式 springBean.method()")
+    @Schema(description = "调用目标，可从 /system/jobs/invoke-targets 获取候选，格式 springBean.method()")
     private String invokeTarget;
 
     @NotBlank
