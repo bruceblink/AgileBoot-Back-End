@@ -12,6 +12,8 @@ import app.keystone.domain.system.job.command.UpdateJobCommand;
 import app.keystone.domain.system.job.command.UpdateJobStatusCommand;
 import app.keystone.domain.system.job.dto.JobDTO;
 import app.keystone.domain.system.job.dto.JobInvokeTargetDTO;
+import app.keystone.domain.system.job.dto.JobLogDTO;
+import app.keystone.domain.system.job.query.JobLogQuery;
 import app.keystone.domain.system.job.query.JobQuery;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -58,6 +60,13 @@ public class SysJobController extends BaseController {
     @GetMapping("/invoke-targets")
     public ResponseDTO<List<JobInvokeTargetDTO>> invokeTargets() {
         return ResponseDTO.ok(jobApplicationService.getInvokeTargets());
+    }
+
+    @Operation(summary = "定时任务运行日志列表")
+    @PreAuthorize("@permission.has('system:job:list')")
+    @GetMapping("/logs")
+    public ResponseDTO<PageDTO<JobLogDTO>> logs(@Validated JobLogQuery query) {
+        return ResponseDTO.ok(jobApplicationService.getJobLogList(query));
     }
 
     @Operation(summary = "定时任务详情")
