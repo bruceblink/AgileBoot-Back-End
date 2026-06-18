@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -28,8 +29,9 @@ public class SysJobLogCleanupTask {
     }
 
     @JobTask(name = "清理定时任务运行日志", group = "系统维护", description = "清理 sys_job_log 表中 30 天之前的历史数据")
-    public void cleanExpiredJobLogs() {
-        Date cutoffTime = Date.from(Instant.now().minus(JOB_LOG_RETENTION_DAYS, ChronoUnit.DAYS));
+    public void cleanExpiredJobLogs(CleanupParams params) {
+        int retentionDays = params == null ? JOB_LOG_RETENTION_DAYS : params.retentionDaysOrDefault();
+        Date cutoffTime = Date.from(Instant.now().minus(retentionDays, ChronoUnit.DAYS));
         QueryWrapper<SysJobLogEntity> wrapper = new QueryWrapper<SysJobLogEntity>()
             .lt("create_time", cutoffTime);
         long expiredCount = jobLogService.count(wrapper);
@@ -38,6 +40,17 @@ public class SysJobLogCleanupTask {
             return;
         }
         jobLogService.remove(wrapper);
-        log.info("cleaned expired scheduled job logs, cutoffTime={}, count={}", cutoffTime, expiredCount);
+        log.info("cleaned expired scheduled job logs, retentionDays={}, cutoffTime={}, count={}",
+            retentionDays, cutoffTime, expiredCount);
+    }
+
+    @Data
+    public static class CleanupParams {
+
+        private Integer retentionDays = JOB_LOG_RETENTION_DAYS;
+
+        private int retentionDaysOrDefault() {
+            return retentionDays == null || retentionDays < 1 ? JOB_LOG_RETENTION_DAYS : retentionDays;
+        }
     }
 }

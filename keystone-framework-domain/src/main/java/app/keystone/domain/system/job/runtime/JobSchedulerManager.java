@@ -113,6 +113,7 @@ public class JobSchedulerManager {
         jobLog.setJobName(job.getJobName());
         jobLog.setJobGroup(job.getJobGroup());
         jobLog.setInvokeTarget(job.getInvokeTarget());
+        jobLog.setJobParams(job.getJobParams());
         jobLog.setCronExpression(job.getCronExpression());
         jobLog.setTriggerType(triggerType.getValue());
         jobLog.setStartTime(startTime);
@@ -136,14 +137,14 @@ public class JobSchedulerManager {
                 return ExecutionResult.SKIPPED;
             }
             try {
-                jobInvokeUtil.invoke(job.getInvokeTarget());
+                jobInvokeUtil.invoke(job.getInvokeTarget(), job.getJobParams());
             } finally {
                 lock.unlock();
             }
             return ExecutionResult.SUCCESS;
         }
 
-        jobInvokeUtil.invoke(job.getInvokeTarget());
+        jobInvokeUtil.invoke(job.getInvokeTarget(), job.getJobParams());
         return ExecutionResult.SUCCESS;
     }
 

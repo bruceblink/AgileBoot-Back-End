@@ -26,7 +26,7 @@ class SysJobLogCleanupTaskTest {
         SysJobLogCleanupTask task = new SysJobLogCleanupTask(jobLogService);
         Instant earliestCutoff = Instant.now().minus(30, ChronoUnit.DAYS).minus(2, ChronoUnit.SECONDS);
 
-        task.cleanExpiredJobLogs();
+        task.cleanExpiredJobLogs(new SysJobLogCleanupTask.CleanupParams());
 
         Instant latestCutoff = Instant.now().minus(30, ChronoUnit.DAYS).plus(2, ChronoUnit.SECONDS);
         QueryWrapper<SysJobLogEntity> wrapper = captureCountWrapper(jobLogService);
@@ -39,12 +39,31 @@ class SysJobLogCleanupTaskTest {
     }
 
     @Test
+    void cleanExpiredJobLogs_shouldUseConfiguredRetentionDays() {
+        SysJobLogService jobLogService = mock(SysJobLogService.class);
+        when(jobLogService.count(any())).thenReturn(2L);
+        SysJobLogCleanupTask task = new SysJobLogCleanupTask(jobLogService);
+        SysJobLogCleanupTask.CleanupParams params = new SysJobLogCleanupTask.CleanupParams();
+        params.setRetentionDays(60);
+        Instant earliestCutoff = Instant.now().minus(60, ChronoUnit.DAYS).minus(2, ChronoUnit.SECONDS);
+
+        task.cleanExpiredJobLogs(params);
+
+        Instant latestCutoff = Instant.now().minus(60, ChronoUnit.DAYS).plus(2, ChronoUnit.SECONDS);
+        QueryWrapper<SysJobLogEntity> wrapper = captureCountWrapper(jobLogService);
+        wrapper.getSqlSegment();
+        Date cutoffTime = (Date) wrapper.getParamNameValuePairs().values().iterator().next();
+        assertFalse(cutoffTime.toInstant().isBefore(earliestCutoff));
+        assertFalse(cutoffTime.toInstant().isAfter(latestCutoff));
+    }
+
+    @Test
     void cleanExpiredJobLogs_shouldSkipRemoveWhenNoExpiredLogsExist() {
         SysJobLogService jobLogService = mock(SysJobLogService.class);
         when(jobLogService.count(any())).thenReturn(0L);
         SysJobLogCleanupTask task = new SysJobLogCleanupTask(jobLogService);
 
-        task.cleanExpiredJobLogs();
+        task.cleanExpiredJobLogs(new SysJobLogCleanupTask.CleanupParams());
 
         verify(jobLogService, never()).remove(any());
     }

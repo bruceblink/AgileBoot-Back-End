@@ -235,9 +235,11 @@ public enum ErrorCode implements ErrorCodeInterface {
 
         JOB_INVOKE_BEAN_NOT_FOUND(11202, "调用目标Bean不存在：{}", "Business.JOB_INVOKE_BEAN_NOT_FOUND"),
 
-        JOB_INVOKE_METHOD_NOT_FOUND(11203, "调用目标方法不存在或不是无参方法：{}", "Business.JOB_INVOKE_METHOD_NOT_FOUND"),
+        JOB_INVOKE_METHOD_NOT_FOUND(11203, "调用目标方法不存在或参数签名不支持：{}", "Business.JOB_INVOKE_METHOD_NOT_FOUND"),
 
         JOB_EXECUTE_FAILED(11204, "任务执行失败：{}", "Business.JOB_EXECUTE_FAILED"),
+
+        JOB_PARAMS_INVALID(11205, "任务参数无效：{}", "Business.JOB_PARAMS_INVALID"),
 
         ;
 

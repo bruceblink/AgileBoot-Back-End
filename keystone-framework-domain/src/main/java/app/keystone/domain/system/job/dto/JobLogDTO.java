@@ -22,6 +22,7 @@ public class JobLogDTO {
             jobName = entity.getJobName();
             jobGroup = entity.getJobGroup();
             invokeTarget = entity.getInvokeTarget();
+            jobParams = entity.getJobParams();
             cronExpression = entity.getCronExpression();
             triggerType = entity.getTriggerType();
             triggerTypeStr = BasicEnumUtil.getDescriptionByValue(JobTriggerTypeEnum.class, entity.getTriggerType());
@@ -41,6 +42,7 @@ public class JobLogDTO {
     private String jobName;
     private String jobGroup;
     private String invokeTarget;
+    private String jobParams;
     private String cronExpression;
     private Integer triggerType;
     private String triggerTypeStr;

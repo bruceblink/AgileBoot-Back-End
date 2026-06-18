@@ -18,7 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 class JobInvokeUtilTest {
 
     @Test
-    void getAvailableInvokeTargets_shouldListAnnotatedAndScheduledNoArgMethods() {
+    void getAvailableInvokeTargets_shouldListAnnotatedAndScheduledMethodsWithZeroOrOneParam() {
         try (AnnotationConfigApplicationContext context = newContext()) {
             JobInvokeUtil util = new JobInvokeUtil(context);
 
@@ -31,7 +31,8 @@ class JobInvokeUtilTest {
             assertTrue(targets.stream().anyMatch(target -> target.getInvokeTarget().equals("sampleJob.report()")
                 && target.getName().equals("report")
                 && target.getGroup().equals("scheduled")));
-            assertFalse(targets.stream().anyMatch(target -> target.getInvokeTarget().equals("sampleJob.withArgs()")));
+            assertTrue(targets.stream().anyMatch(target -> target.getInvokeTarget().equals("sampleJob.withParams()")));
+            assertFalse(targets.stream().anyMatch(target -> target.getInvokeTarget().equals("sampleJob.withTooManyArgs()")));
             assertFalse(targets.stream().anyMatch(target -> target.getInvokeTarget().equals("sampleJob.plain()")));
         }
     }
@@ -69,6 +70,42 @@ class JobInvokeUtilTest {
         }
     }
 
+    @Test
+    void invoke_shouldCallConfiguredBeanMethodWithJsonParams() {
+        try (AnnotationConfigApplicationContext context = newContext()) {
+            JobInvokeUtil util = new JobInvokeUtil(context);
+            SampleJob sampleJob = context.getBean(SampleJob.class);
+
+            util.invoke("sampleJob.withParams()", "{\"retentionDays\":60}");
+
+            assertEquals(60, sampleJob.params.retentionDays);
+        }
+    }
+
+    @Test
+    void validateInvokeTarget_shouldRejectInvalidJsonParams() {
+        try (AnnotationConfigApplicationContext context = newContext()) {
+            JobInvokeUtil util = new JobInvokeUtil(context);
+
+            ApiException exception = assertThrows(ApiException.class,
+                () -> util.validateInvokeTarget("sampleJob.withParams()", "{\"retentionDays\":\"abc\"}"));
+
+            assertSame(ErrorCode.Business.JOB_PARAMS_INVALID, exception.getErrorCode());
+        }
+    }
+
+    @Test
+    void validateInvokeTarget_shouldRejectMalformedJsonParamsForNoArgMethod() {
+        try (AnnotationConfigApplicationContext context = newContext()) {
+            JobInvokeUtil util = new JobInvokeUtil(context);
+
+            ApiException exception = assertThrows(ApiException.class,
+                () -> util.validateInvokeTarget("sampleJob.clean()", "{bad-json"));
+
+            assertSame(ErrorCode.Business.JOB_PARAMS_INVALID, exception.getErrorCode());
+        }
+    }
+
     private AnnotationConfigApplicationContext newContext() {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
         context.registerBean("sampleJob", SampleJob.class);
@@ -79,6 +116,7 @@ class JobInvokeUtilTest {
     static class SampleJob {
 
         private int cleanCount;
+        private SampleParams params;
 
         @JobTask(name = "Clean data", group = "maintenance", description = "Remove expired data")
         public void clean() {
@@ -90,10 +128,28 @@ class JobInvokeUtilTest {
         }
 
         @JobTask
-        public void withArgs(String value) {
+        public void withParams(SampleParams params) {
+            this.params = params;
+        }
+
+        @JobTask
+        public void withTooManyArgs(String value, String other) {
         }
 
         public void plain() {
+        }
+    }
+
+    static class SampleParams {
+
+        private int retentionDays;
+
+        public int getRetentionDays() {
+            return retentionDays;
+        }
+
+        public void setRetentionDays(int retentionDays) {
+            this.retentionDays = retentionDays;
         }
     }
 }

@@ -114,12 +114,12 @@ public class JobApplicationService {
         BasicEnumUtil.fromValue(JobStatusEnum.class, command.getStatus());
         BasicEnumUtil.fromValue(YesOrNoEnum.class, command.getConcurrent());
         validateCron(command.getCronExpression());
-        jobInvokeUtil.validateInvokeTarget(command.getInvokeTarget());
+        jobInvokeUtil.validateInvokeTarget(command.getInvokeTarget(), command.getJobParams());
     }
 
     private void validateJob(SysJobEntity entity) {
         validateCron(entity.getCronExpression());
-        jobInvokeUtil.validateInvokeTarget(entity.getInvokeTarget());
+        jobInvokeUtil.validateInvokeTarget(entity.getInvokeTarget(), entity.getJobParams());
     }
 
     private void validateCron(String cronExpression) {

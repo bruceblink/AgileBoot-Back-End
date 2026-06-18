@@ -41,6 +41,10 @@ public class SysJobEntity extends BaseEntity<SysJobEntity> {
     @TableField("invoke_target")
     private String invokeTarget;
 
+    @ApiModelProperty("任务参数JSON")
+    @TableField("job_params")
+    private String jobParams;
+
     @ApiModelProperty("Cron执行表达式")
     @TableField("cron_expression")
     private String cronExpression;

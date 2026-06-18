@@ -20,6 +20,7 @@ public class JobDTO {
             jobName = entity.getJobName();
             jobGroup = entity.getJobGroup();
             invokeTarget = entity.getInvokeTarget();
+            jobParams = entity.getJobParams();
             cronExpression = entity.getCronExpression();
             concurrent = entity.getConcurrent();
             concurrentStr = BasicEnumUtil.getDescriptionByValue(YesOrNoEnum.class, entity.getConcurrent());
@@ -34,6 +35,7 @@ public class JobDTO {
     private String jobName;
     private String jobGroup;
     private String invokeTarget;
+    private String jobParams;
     private String cronExpression;
     private Integer concurrent;
     private String concurrentStr;

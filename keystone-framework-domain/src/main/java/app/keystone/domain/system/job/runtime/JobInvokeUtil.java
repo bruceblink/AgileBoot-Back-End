@@ -3,6 +3,8 @@ package app.keystone.domain.system.job.runtime;
 import app.keystone.common.annotation.JobTask;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
+import app.keystone.common.utils.jackson.JacksonException;
+import app.keystone.common.utils.jackson.JacksonUtil;
 import app.keystone.domain.system.job.dto.JobInvokeTargetDTO;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -24,7 +26,7 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
- * Invokes a no-argument Spring bean method configured by a scheduled job.
+ * Invokes a Spring bean method configured by a scheduled job.
  * @author likanug
  */
 @Component
@@ -39,12 +41,18 @@ public class JobInvokeUtil {
     }
 
     public void validateInvokeTarget(String invokeTarget) {
+        validateInvokeTarget(invokeTarget, null);
+    }
+
+    public void validateInvokeTarget(String invokeTarget, String jobParams) {
         ParsedTarget target = parse(invokeTarget);
         Object bean = getBean(target.beanName());
         Method method = findInvokableMethod(bean, target.methodName());
-        if (method == null || method.getParameterCount() != 0) {
+        if (!isSupportedMethod(method)) {
             throw new ApiException(ErrorCode.Business.JOB_INVOKE_METHOD_NOT_FOUND, invokeTarget);
         }
+        validateJobParamsJson(jobParams);
+        resolveArguments(method, jobParams);
     }
 
     public List<JobInvokeTargetDTO> getAvailableInvokeTargets() {
@@ -58,15 +66,19 @@ public class JobInvokeUtil {
     }
 
     public void invoke(String invokeTarget) {
+        invoke(invokeTarget, null);
+    }
+
+    public void invoke(String invokeTarget, String jobParams) {
         ParsedTarget target = parse(invokeTarget);
         Object bean = getBean(target.beanName());
         Method method = findInvokableMethod(bean, target.methodName());
-        if (method == null || method.getParameterCount() != 0) {
+        if (!isSupportedMethod(method)) {
             throw new ApiException(ErrorCode.Business.JOB_INVOKE_METHOD_NOT_FOUND, invokeTarget);
         }
         try {
             ReflectionUtils.makeAccessible(method);
-            method.invoke(bean);
+            method.invoke(bean, resolveArguments(method, jobParams));
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new ApiException(e, ErrorCode.Business.JOB_EXECUTE_FAILED, e.getMessage());
         }
@@ -88,7 +100,7 @@ public class JobInvokeUtil {
     }
 
     private JobInvokeTargetDTO toCandidate(String beanName, Method method) {
-        if (method.getParameterCount() != 0 || Modifier.isStatic(method.getModifiers())) {
+        if (!isSupportedMethod(method) || Modifier.isStatic(method.getModifiers())) {
             return null;
         }
         JobTask jobTask = AnnotatedElementUtils.findMergedAnnotation(method, JobTask.class);
@@ -112,15 +124,48 @@ public class JobInvokeUtil {
     }
 
     private Method findInvokableMethod(Object bean, String methodName) {
-        Method method = ReflectionUtils.findMethod(bean.getClass(), methodName);
+        Method method = findSupportedMethod(bean.getClass(), methodName);
         if (method != null) {
             return method;
         }
-        method = ReflectionUtils.findMethod(AopUtils.getTargetClass(bean), methodName);
+        method = findSupportedMethod(AopUtils.getTargetClass(bean), methodName);
         if (method != null && method.getDeclaringClass().isInstance(bean)) {
             return method;
         }
         return null;
+    }
+
+    private Method findSupportedMethod(Class<?> type, String methodName) {
+        List<Method> methods = Arrays.stream(ReflectionUtils.getUniqueDeclaredMethods(type))
+            .filter(method -> method.getName().equals(methodName))
+            .filter(this::isSupportedMethod)
+            .toList();
+        return methods.size() == 1 ? methods.get(0) : null;
+    }
+
+    private boolean isSupportedMethod(Method method) {
+        return method != null && method.getParameterCount() <= 1;
+    }
+
+    private Object[] resolveArguments(Method method, String jobParams) {
+        if (method.getParameterCount() == 0) {
+            return new Object[0];
+        }
+        try {
+            Object argument = JacksonUtil.from(
+                StringUtils.hasText(jobParams) ? jobParams : "{}",
+                method.getGenericParameterTypes()[0]
+            );
+            return new Object[] {argument};
+        } catch (JacksonException e) {
+            throw new ApiException(e, ErrorCode.Business.JOB_PARAMS_INVALID, jobParams);
+        }
+    }
+
+    private void validateJobParamsJson(String jobParams) {
+        if (StringUtils.hasText(jobParams) && !JacksonUtil.isJson(jobParams)) {
+            throw new ApiException(ErrorCode.Business.JOB_PARAMS_INVALID, jobParams);
+        }
     }
 
     private ParsedTarget parse(String invokeTarget) {

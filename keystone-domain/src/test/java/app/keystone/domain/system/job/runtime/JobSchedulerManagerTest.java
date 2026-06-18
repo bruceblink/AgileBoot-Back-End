@@ -43,19 +43,20 @@ class JobSchedulerManagerTest {
         assertEquals(job.getJobName(), log.getJobName());
         assertEquals(job.getJobGroup(), log.getJobGroup());
         assertEquals(job.getInvokeTarget(), log.getInvokeTarget());
+        assertEquals(job.getJobParams(), log.getJobParams());
         assertEquals(JobTriggerTypeEnum.MANUAL.getValue(), log.getTriggerType());
         assertEquals(JobLogStatusEnum.SUCCESS.getValue(), log.getStatus());
         assertEquals("任务执行成功", log.getJobMessage());
         assertNotNull(log.getStartTime());
         assertNotNull(log.getEndTime());
         assertNotNull(log.getDurationMs());
-        verify(jobInvokeUtil).invoke(job.getInvokeTarget());
+        verify(jobInvokeUtil).invoke(job.getInvokeTarget(), job.getJobParams());
     }
 
     @Test
     void runOnce_shouldRecordFailureLogAndRethrow() {
         SysJobEntity job = job();
-        doThrow(new IllegalStateException("boom")).when(jobInvokeUtil).invoke(job.getInvokeTarget());
+        doThrow(new IllegalStateException("boom")).when(jobInvokeUtil).invoke(job.getInvokeTarget(), job.getJobParams());
 
         assertThrows(IllegalStateException.class, () -> manager.runOnce(job));
 
@@ -80,6 +81,7 @@ class JobSchedulerManagerTest {
         job.setJobName("demo");
         job.setJobGroup("DEFAULT");
         job.setInvokeTarget("demoJobTask.printHeartbeat()");
+        job.setJobParams("{\"retentionDays\":60}");
         job.setCronExpression("0 * * * * *");
         job.setConcurrent(1);
         return job;

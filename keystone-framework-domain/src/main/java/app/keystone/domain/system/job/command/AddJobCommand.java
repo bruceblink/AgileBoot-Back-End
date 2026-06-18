@@ -27,6 +27,9 @@ public class AddJobCommand {
     @Schema(description = "调用目标，可从 /system/jobs/invoke-targets 获取候选，格式 springBean.method()")
     private String invokeTarget;
 
+    @Schema(description = "任务参数JSON，目标方法有一个参数对象时使用")
+    private String jobParams;
+
     @NotBlank
     @Schema(description = "Cron执行表达式")
     private String cronExpression;

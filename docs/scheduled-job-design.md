@@ -19,7 +19,8 @@ Keystone 定时作业用于把后台周期性任务从代码中的固定 `@Sched
 | 任务定义管理 | 新增、修改、删除、查询 `sys_job` |
 | 任务启停 | 修改任务状态后动态注册或取消调度 |
 | 立即运行 | 通过管理端手动触发一次任务 |
-| 调用目标发现 | 扫描 `@JobTask` 和 `@Scheduled` 无参方法，返回候选列表 |
+| 调用目标发现 | 扫描 `@JobTask` 和 `@Scheduled` 方法，返回候选列表 |
+| 任务参数 | `sys_job.job_params` 保存 JSON 参数，支持目标方法接收一个参数对象 |
 | 运行历史 | 每次自动调度、手动执行、失败、并发跳过写入 `sys_job_log` |
 | 操作审计 | 新增、修改、启停、立即运行、删除进入 `sys_operation_log` |
 | 前端辅助 | 调用目标下拉选择，点击任务编号查看运行日志 |
@@ -29,7 +30,6 @@ Keystone 定时作业用于把后台周期性任务从代码中的固定 `@Sched
 | 非目标 | 原因 |
 | --- | --- |
 | 分布式任务锁 | 当前运行态注册表是单 JVM 内存结构，多节点部署时需要单独设计分布式锁 |
-| 带参数方法调用 | 任务入口限定为无参方法，避免把任意参数反射调用暴露给管理端 |
 | Cron 在线解析器 | 只做后端 Cron 语法校验，不在后端提供复杂表达式解释 |
 | 调度历史清理策略 | 当前只记录运行历史，后续可按保留天数或最大条数增加清理任务 |
 | 任务依赖编排 | 不支持 DAG、前置任务、失败重试编排 |
@@ -38,8 +38,9 @@ Keystone 定时作业用于把后台周期性任务从代码中的固定 `@Sched
 
 | 概念 | 说明 |
 | --- | --- |
-| 任务定义 | `sys_job` 中的一条记录，描述任务名称、调用目标、Cron、并发策略、状态 |
-| 调用目标 | Spring Bean 无参方法，格式为 `springBean.method()` |
+| 任务定义 | `sys_job` 中的一条记录，描述任务名称、调用目标、任务参数、Cron、并发策略、状态 |
+| 调用目标 | Spring Bean 方法，格式为 `springBean.method()` |
+| 任务参数 | `job_params` 中保存的 JSON，目标方法有一个参数对象时由后端反序列化传入 |
 | 候选目标 | 后端扫描得到的可选调用目标，前端用于下拉选择 |
 | 运行日志 | `sys_job_log` 中的一条执行记录 |
 | 操作日志 | `sys_operation_log` 中的一条管理操作审计记录 |
@@ -84,6 +85,7 @@ keystone-infrastructure
 | `job_name` | 任务名称 |
 | `job_group` | 任务组名 |
 | `invoke_target` | 调用目标，格式 `springBean.method()` |
+| `job_params` | 任务参数 JSON，可为空；目标方法接收一个参数对象时由后端反序列化传入 |
 | `cron_expression` | Spring Cron 表达式 |
 | `concurrent` | 是否允许并发执行，`1` 允许，`0` 禁止 |
 | `status` | 任务状态，`1` 正常，`0` 暂停 |
@@ -102,6 +104,7 @@ keystone-infrastructure
 | `job_name` | 执行时任务名称快照 |
 | `job_group` | 执行时任务组快照 |
 | `invoke_target` | 执行时调用目标快照 |
+| `job_params` | 执行时任务参数 JSON 快照 |
 | `cron_expression` | 执行时 Cron 快照 |
 | `trigger_type` | 触发类型，`1` 自动调度，`2` 手动执行 |
 | `status` | 执行状态，`1` 成功，`0` 失败，`2` 跳过 |
@@ -151,9 +154,10 @@ keystone-infrastructure
 
 `JobInvokeUtil` 扫描 Spring 容器中的 Bean 方法，满足以下条件的方法会出现在候选列表：
 
-1. 方法无参数。
+1. 方法无参数，或只有一个参数对象。
 2. 方法不是静态方法。
 3. 方法标注了 `@JobTask`，或标注了 `@Scheduled` / `@Schedules`。
+4. 同一个 Bean 中没有同名可调度方法。
 
 推荐使用 `@JobTask` 作为数据库调度任务入口：
 
@@ -198,7 +202,7 @@ public class DemoJobTask {
 ```text
 SysJobController
   -> JobApplicationService.validateJob
-      -> 校验状态、并发值、Cron 表达式、调用目标
+      -> 校验状态、并发值、Cron 表达式、调用目标、任务参数 JSON
   -> 保存 sys_job
   -> JobSchedulerManager.schedule(job)
       -> 先 cancel 旧任务
@@ -226,7 +230,9 @@ TaskScheduler 触发
   -> JobSchedulerManager.runSafely
   -> runWithLog(job, AUTO)
   -> invoke(job)
-  -> 写 sys_job_log
+      -> 无参方法直接调用
+      -> 单参数方法将 sys_job.job_params 反序列化为参数对象后调用
+  -> 写 sys_job_log，包含 job_params 执行快照
 ```
 
 自动执行失败时：
@@ -291,12 +297,14 @@ sys_job_log.job_message = 任务正在执行，本次触发已跳过
 
 ## 11. 安全与约束
 
-1. 任务方法必须是无参方法。
-2. 任务方法应由 Spring 容器管理，调用目标 Bean 必须存在。
-3. 推荐只把明确允许被管理端调度的方法标注为 `@JobTask`。
-4. 运行方法内部应自行处理业务幂等，尤其是通知、同步、清理类任务。
-5. 不建议把 HTTP 请求参数、用户输入或动态脚本直接拼接成调用目标。
-6. 任务日志保存异常栈摘要，不应主动写入敏感数据。
+1. 任务方法必须是无参方法，或只接收一个参数对象。
+2. 参数必须保存为 JSON，后端会在保存任务前校验是否能反序列化为目标参数类型。
+3. 同一个 Bean 中不要定义同名可调度方法，否则 `springBean.method()` 无法唯一定位。
+4. 任务方法应由 Spring 容器管理，调用目标 Bean 必须存在。
+5. 推荐只把明确允许被管理端调度的方法标注为 `@JobTask`。
+6. 运行方法内部应自行处理业务幂等，尤其是通知、同步、清理类任务。
+7. 不建议把 HTTP 请求参数、用户输入或动态脚本直接拼接成调用目标。
+8. 任务日志保存异常栈摘要和参数快照，不应主动写入敏感数据。
 
 ## 12. 已知限制与后续演进
 
@@ -306,6 +314,6 @@ sys_job_log.job_message = 任务正在执行，本次触发已跳过
 | 历史清理 | 增加任务日志保留天数配置和清理任务 |
 | 失败重试 | 在任务定义中增加重试次数、重试间隔 |
 | 告警通知 | 对连续失败、耗时过长、跳过过多增加告警 |
-| 参数化任务 | 引入任务配置 JSON 字段，由任务方法自行读取配置 |
+| 参数表单化 | 基于参数对象生成前端动态表单，替代手写 JSON |
 | 权限细化 | 运行日志可拆出 `system:job:log` 权限 |
 

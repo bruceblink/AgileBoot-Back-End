@@ -20,7 +20,7 @@
 | --- | --- |
 | 强实时任务 | Cron 调度不是实时消息队列 |
 | 长事务任务 | 容易阻塞调度线程和数据库连接 |
-| 需要复杂参数的任务 | 当前调用入口只支持无参方法 |
+| 需要复杂运行时输入的任务 | 定时任务参数适合稳定配置，不适合作为每次执行动态输入 |
 | 多步骤编排 | 当前不支持 DAG、补偿、依赖关系 |
 | 必须全局单实例运行的任务 | 多节点部署时当前锁不是分布式锁 |
 
@@ -29,7 +29,7 @@
 ```text
 1. 定义任务 Bean
 2. 添加 @JobTask 注解
-3. 保证方法无参、可重复执行、异常可观测
+3. 保证方法无参或只接收一个参数对象、可重复执行、异常可观测
 4. 编写单元测试或集成测试
 5. 启动后在管理端选择调用目标
 6. 配置 Cron、并发策略、状态
@@ -109,9 +109,10 @@ public void refreshDeviceDictionaryCache() {
 任务方法必须满足：
 
 1. `public` 或可反射访问。
-2. 无参数。
+2. 无参数，或只接收一个参数对象。
 3. 非静态方法。
 4. 所在类是 Spring Bean。
+5. 同一个 Bean 中不要定义同名可调度方法。
 
 允许：
 
@@ -129,12 +130,36 @@ public void cleanByDay(int days) {
 }
 ```
 
-如果确实需要参数，建议使用以下方式之一：
+如果需要参数，请使用参数对象，并在管理端“任务参数”中填写 JSON：
 
-1. 从系统配置表读取参数。
-2. 从业务配置表读取参数。
-3. 为不同参数创建不同任务方法。
-4. 后续扩展 `sys_job` 增加配置 JSON 字段，由任务方法按 `jobId` 读取配置。
+```java
+@JobTask(name = "按天清理", group = "系统")
+public void cleanByDay(CleanByDayParams params) {
+    int days = params.daysOrDefault();
+}
+
+public static class CleanByDayParams {
+    private Integer days = 30;
+
+    public Integer getDays() {
+        return days;
+    }
+
+    public void setDays(Integer days) {
+        this.days = days;
+    }
+
+    public int daysOrDefault() {
+        return days == null || days < 1 ? 30 : days;
+    }
+}
+```
+
+```json
+{
+  "days": 60
+}
+```
 
 ## 7. Bean 命名规范
 
@@ -170,14 +195,15 @@ scanOverdueWorkOrders()
 2. 点击“添加任务”。
 3. 填写任务名称和任务组。
 4. 在“调用目标”中选择 `@JobTask` 暴露的方法。
-5. 填写 Cron 表达式。
-6. 选择是否允许并发。
-7. 设置状态：
+5. 如果目标方法接收参数对象，在“任务参数”中填写 JSON，例如 `{"retentionDays":60}`。
+6. 填写 Cron 表达式。
+7. 选择是否允许并发。
+8. 设置状态：
    - `正常`：保存后立即注册调度。
    - `暂停`：只保存定义，不注册调度。
-8. 保存。
-9. 可点击“执行”手动验证。
-10. 点击任务编号查看运行日志。
+9. 保存。
+10. 可点击“执行”手动验证。
+11. 点击任务编号查看运行日志。
 
 ## 9. Cron 配置参考
 
@@ -322,7 +348,7 @@ keystone-domain/src/test/java/app/keystone/domain/system/job/runtime/JobSchedule
 
 1. 类是否有 `@Component`、`@Service` 等 Spring Bean 注解。
 2. Bean 是否在 `app.keystone.*` 扫描范围内。
-3. 方法是否无参。
+3. 方法是否无参，或只接收一个参数对象。
 4. 方法是否标注 `@JobTask`。
 5. 应用是否重启或重新加载。
 
@@ -349,9 +375,10 @@ demoJobTask.printHeartbeat()
 检查：
 
 1. 方法名是否拼写正确。
-2. 方法是否无参数。
-3. 方法是否在目标 Bean 类上。
-4. 如果使用代理，方法是否能被代理对象访问。
+2. 方法是否无参，或只接收一个参数对象。
+3. 同一个 Bean 中是否存在同名可调度方法。
+4. 方法是否在目标 Bean 类上。
+5. 如果使用代理，方法是否能被代理对象访问。
 
 ### 15.4 任务没有自动执行
 
@@ -392,6 +419,7 @@ demoJobTask.printHeartbeat()
 | 打印心跳日志 | `demoJobTask.printHeartbeat()` | 验证任务能触发 |
 | 模拟缓存刷新 | `demoJobTask.refreshDemoCache()` | 验证业务型无参任务 |
 | 模拟耗时任务 | `demoJobTask.simulateLongRunningJob()` | 验证禁止并发配置 |
+| 清理定时任务运行日志 | `sysJobLogCleanupTask.cleanExpiredJobLogs()` | 验证参数化任务，参数示例 `{"retentionDays":60}` |
 
 这些任务无业务副作用，可用于本地验证定时任务管理页面和运行日志功能。
 
@@ -401,7 +429,7 @@ demoJobTask.printHeartbeat()
 
 1. Bean 名称固定且符合命名规范。
 2. 方法已添加 `@JobTask`。
-3. 方法无参数。
+3. 方法无参，或只接收一个参数对象。
 4. 任务逻辑幂等。
 5. 异常不会被静默吞掉。
 6. 处理大数据量时有批次控制。
