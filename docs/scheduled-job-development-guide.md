@@ -42,12 +42,15 @@
 
 ```text
 keystone-infrastructure/src/main/java/app/keystone/infrastructure/schedule
-keystone-domain/src/main/java/app/keystone/domain/{module}/job
+keystone-framework-domain/src/main/java/app/keystone/domain/system/job/task
+<business-app-domain>/src/main/java/.../{module}/job
 ```
 
 如果任务只是基础设施类维护动作，例如清理临时文件、刷新公共缓存，可以放在 `keystone-infrastructure`。
 
-如果任务明显属于某个业务领域，例如工单超时扫描、设备状态同步，可以放在对应领域模块下。
+如果任务属于 Keystone 框架系统能力，例如清理 `sys_job_log`，放在 `keystone-framework-domain`。
+
+如果任务明显属于某个业务领域，例如工单超时扫描、设备状态同步，应放在消费应用自己的领域模块下，不放回开源框架模块。当前开源仓库中的 `keystone-domain` 仅作为下游扩展模块占位。
 
 ## 4. 标准代码模板
 
@@ -336,8 +339,9 @@ public void cleanExpiredFiles() {
 现有参考测试：
 
 ```text
-keystone-domain/src/test/java/app/keystone/domain/system/job/runtime/JobInvokeUtilTest.java
-keystone-domain/src/test/java/app/keystone/domain/system/job/runtime/JobSchedulerManagerTest.java
+keystone-framework-domain/src/test/java/app/keystone/domain/system/job/runtime/JobInvokeUtilTest.java
+keystone-framework-domain/src/test/java/app/keystone/domain/system/job/runtime/JobSchedulerManagerTest.java
+keystone-framework-domain/src/test/java/app/keystone/domain/system/job/task/SysJobLogCleanupTaskTest.java
 ```
 
 ## 15. 排查指南
@@ -347,7 +351,7 @@ keystone-domain/src/test/java/app/keystone/domain/system/job/runtime/JobSchedule
 检查：
 
 1. 类是否有 `@Component`、`@Service` 等 Spring Bean 注解。
-2. Bean 是否在 `app.keystone.*` 扫描范围内。
+2. Bean 是否在当前应用组件扫描范围内，或由 starter 自动配置加载。
 3. 方法是否无参，或只接收一个参数对象。
 4. 方法是否标注 `@JobTask`。
 5. 应用是否重启或重新加载。

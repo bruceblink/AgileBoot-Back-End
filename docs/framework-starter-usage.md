@@ -16,6 +16,8 @@ keystone-framework-spring-boot-starter
 
 业务模块不属于 starter。具体业务代码和业务迁移仍由下游应用单独引入。
 
+消费应用不需要再通过 `@ComponentScan("app.keystone.*")` 扫描整个仓库。引入 starter 后，框架 controller、领域服务和基础设施组件由自动配置加载；应用自己的包仍由本应用的 `@SpringBootApplication` 默认扫描范围负责。
+
 ## 环境要求
 
 - Java 17+
@@ -202,6 +204,8 @@ app.keystone.infrastructure
 
 注意：当前仍保留历史包名，外部应用不要定义同名类或同路径控制器，避免 Bean 或路由冲突。
 
+自动配置包含系统管理 Web 层，例如用户、角色、菜单、日志、监控、定时任务等 controller。Keystone 主应用已经删除 `keystone-admin` 中重复的系统监控 controller，`/monitor/**` 由 `keystone-framework-admin` 提供。
+
 ## Keystone 主应用使用方式
 
 Keystone 主应用已经接入 starter：
@@ -212,6 +216,16 @@ dependencies {
     implementation project(':keystone-domain')
 }
 ```
+
+启动类只保留 Spring Boot 默认扫描：
+
+```java
+@SpringBootApplication
+public class KeystoneAdminApplication {
+}
+```
+
+不要在主应用中重新添加 `@ComponentScan(basePackages = "app.keystone.*")`。全仓扫描会掩盖 starter 自动配置问题，也可能把下游扩展模块中尚未明确暴露的组件误装配进运行时。
 
 主应用加载框架迁移：
 
@@ -229,6 +243,12 @@ spring:
 
 ```powershell
 .\gradlew.bat :keystone-framework-spring-boot-starter:test
+```
+
+验证 starter 自动配置和主应用接入：
+
+```powershell
+.\gradlew.bat :keystone-framework-spring-boot-starter:test :keystone-framework-domain:test :keystone-framework-admin:test :keystone-admin:test :keystone-admin:compileJava
 ```
 
 验证发布：
@@ -281,4 +301,17 @@ keystone:
   framework:
     admin:
       enabled: false
+```
+
+### 引入 starter 后系统接口 404
+
+检查应用是否只引入了 `keystone-framework-spring-boot-starter`，而不是只引入了 `keystone-common` 或 `keystone-infrastructure`。还需要确认没有关闭：
+
+```yaml
+keystone:
+  framework:
+    domain:
+      enabled: true
+    admin:
+      enabled: true
 ```

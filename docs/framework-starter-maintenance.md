@@ -62,6 +62,7 @@ src/main/resources/db/migrate/mysql
 - `domain/common`
 - `domain/system`
 - 系统用户、角色、菜单、部门、岗位、字典、日志、通知、定时任务等框架领域能力
+- 系统定时任务运行时、运行日志清理任务和相关单元测试
 
 自动配置：
 
@@ -82,6 +83,7 @@ KeystoneFrameworkDomainAutoConfiguration
 - `admin/controller/common`
 - `admin/controller/system`
 - `admin/customize`
+- 系统监控、日志、用户、角色、菜单、定时任务等框架 controller
 
 自动配置：
 
@@ -94,6 +96,8 @@ KeystoneFrameworkAdminAutoConfiguration
 - `keystone-admin`
 - 业务 controller
 - 业务 application service
+
+`keystone-admin` 不应再保留同路径的框架 controller 副本。例如 `/monitor/**` 由 `keystone-framework-admin` 提供，主应用中不要再新增 `app.keystone.admin.controller.system.MonitorController`。
 
 ### keystone-framework-spring-boot-starter
 
@@ -113,6 +117,8 @@ starter 模块可以放少量测试，用于验证依赖链、自动配置和资
 
 保留为空的下游扩展模块。开源分支不在该模块内放置业务领域代码或业务迁移资源。
 
+当前 `src/main/java` 应保持无框架运行时代码。框架领域代码、框架定时任务和框架单元测试必须放在 `keystone-framework-domain`。如果下游应用需要自己的业务能力，应放在消费应用自己的领域模块和迁移路径中。
+
 ### keystone-admin
 
 保留 Keystone 可执行应用入口。
@@ -130,6 +136,8 @@ implementation project(':keystone-domain')
 classpath:db/migrate/common
 classpath:db/migrate/mysql
 ```
+
+主应用启动类只保留 `@SpringBootApplication`。不要重新添加 `@ComponentScan(basePackages = "app.keystone.*")`，否则会绕过 starter 自动配置边界，导致重复 controller 或隐藏自动配置缺失问题。
 
 ## 自动配置维护规则
 
@@ -159,6 +167,27 @@ keystone:
     admin:
       enabled: true
 ```
+
+## 系统导出维护规则
+
+系统管理导出接口必须使用无分页查询方法，不能复用分页列表结果。分页列表只返回当前页，导出接口需要导出筛选条件下的完整集合。
+
+当前约定：
+
+```text
+SysUserController.exportUserByExcel -> UserApplicationService.exportUsers
+SysRoleController.export -> RoleApplicationService.exportRoles
+SysLogsController.loginInfosExcel -> LogApplicationService.exportLoginInfos
+SysLogsController.operationLogsExcel -> LogApplicationService.exportOperationLogs
+ConfigApplicationService.exportConfigs
+```
+
+维护要求：
+
+- 新增系统导出接口时，在 application service 中提供明确的 `export...` 方法。
+- `export...` 方法使用 `list(...)` 或专门的无分页 mapper 方法，不调用 `page(...)`。
+- 需要稳定排序的日志类导出必须补充主排序字段之外的 ID 倒序，例如 `login_time, info_id`。
+- 对应测试放在 `keystone-framework-domain/src/test/java/app/keystone/domain/system/SystemExportApplicationServiceTest.java`。
 
 ## 发布维护
 
@@ -285,6 +314,9 @@ jar tf keystone-domain\build\libs\keystone-domain-3.6.1.jar | Select-String "db/
 ```text
 keystone-framework-admin/src/test/java/app/keystone/framework/admin/autoconfigure/KeystoneFrameworkAdminAutoConfigurationTest.java
 keystone-framework-domain/src/test/java/app/keystone/framework/domain/autoconfigure/KeystoneFrameworkDomainAutoConfigurationTest.java
+keystone-framework-domain/src/test/java/app/keystone/domain/system/SystemExportApplicationServiceTest.java
+keystone-framework-domain/src/test/java/app/keystone/domain/system/job/runtime/JobInvokeUtilTest.java
+keystone-framework-domain/src/test/java/app/keystone/domain/system/job/runtime/JobSchedulerManagerTest.java
 keystone-framework-spring-boot-starter/src/test/java/app/keystone/framework/starter/KeystoneFrameworkStarterDependencyTest.java
 ```
 

@@ -1,6 +1,6 @@
 ﻿# Keystone
 
-[![Release](https://img.shields.io/badge/Release-V3.6.0-green.svg)](https://github.com/bruceblink/Keystone)
+[![Release](https://img.shields.io/badge/Release-V3.6.1-green.svg)](https://github.com/bruceblink/Keystone)
 [![JDK](https://img.shields.io/badge/JDK-25-green.svg)](https://github.com/bruceblink/Keystone)
 [![Spring%20Boot](https://img.shields.io/badge/Spring%20Boot-3.5.13-blue.svg)](https://github.com/bruceblink/Keystone)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -32,9 +32,12 @@
 
 ```text
 keystone-admin           # 管理后台接口
+keystone-framework-admin # 框架 Web/API 层自动配置
+keystone-framework-domain # 框架领域服务、系统管理、定时任务
+keystone-framework-spring-boot-starter # 框架聚合 starter
 keystone-common          # 通用基础能力
 keystone-infrastructure  # 配置与基础设施
-keystone-domain          # 核心业务领域
+keystone-domain          # 下游应用扩展模块，占位承载业务扩展
 ```
 
 ## ⚡ 30 秒开始
@@ -196,8 +199,10 @@ docker compose down -v
   - [keystone-infrastructure/src/main/resources/db/migrate/common/V3_3_0__flyway_baseline_marker.sql](keystone-infrastructure/src/main/resources/db/migrate/common/V3_3_0__flyway_baseline_marker.sql) — Flyway 基线标记
   - [keystone-infrastructure/src/main/resources/db/migrate/mysql/V3_3_1__init_core_schema_data.sql](keystone-infrastructure/src/main/resources/db/migrate/mysql/V3_3_1__init_core_schema_data.sql) — 核心结构与初始化数据
   - [keystone-infrastructure/src/main/resources/db/migrate/mysql/V3_3_2__init_dict_schema_data.sql](keystone-infrastructure/src/main/resources/db/migrate/mysql/V3_3_2__init_dict_schema_data.sql) — 字典结构与初始化数据
-  - [keystone-infrastructure/src/main/resources/db/migrate/h2/keystone_schema.sql](keystone-infrastructure/src/main/resources/db/migrate/h2/keystone_schema.sql) — H2 测试 schema
-  - [keystone-infrastructure/src/main/resources/db/migrate/h2/keystone_data.sql](keystone-infrastructure/src/main/resources/db/migrate/h2/keystone_data.sql) — H2 测试 data
+  - [keystone-admin/src/test/resources/db/migrate/h2/keystone_schema.sql](keystone-admin/src/test/resources/db/migrate/h2/keystone_schema.sql) — admin H2 测试 schema
+  - [keystone-admin/src/test/resources/db/migrate/h2/keystone_data.sql](keystone-admin/src/test/resources/db/migrate/h2/keystone_data.sql) — admin H2 测试 data
+  - [keystone-domain/src/test/resources/db/migrate/h2/keystone_schema.sql](keystone-domain/src/test/resources/db/migrate/h2/keystone_schema.sql) — domain H2 集成测试 schema
+  - [keystone-domain/src/test/resources/db/migrate/h2/keystone_data.sql](keystone-domain/src/test/resources/db/migrate/h2/keystone_data.sql) — domain H2 集成测试 data
 - Flyway SQL 命名规范：
   - MySQL 迁移脚本统一放在 `keystone-infrastructure/src/main/resources/db/migrate/mysql/`
   - 文件名格式必须为 `V<版本号>__<描述>.sql`，例如 `V3_4_0__add_user_profile_table.sql`
@@ -207,6 +212,8 @@ docker compose down -v
   - 已执行过的 Flyway 脚本不要重命名、不要改版本号；如需继续演进，新增更高版本脚本
   - 脚本内容不得写死数据库名（例如 `use keystone;`），应始终作用于当前 datasource 指向的库
 - 数据库密码加密：[DATABASE_PASSWORD_ENCRYPTION_GUIDE.md](DATABASE_PASSWORD_ENCRYPTION_GUIDE.md)
+- 框架 starter 使用说明：[docs/framework-starter-usage.md](docs/framework-starter-usage.md)
+- 框架 starter 维护文档：[docs/framework-starter-maintenance.md](docs/framework-starter-maintenance.md)
 - Keylo 对接说明（含可选启用、统一 `/login` 后端 Keylo 凭证鉴权、用户新增同步注册）：见 [docs/项目说明.md](docs/项目说明.md) 的“Keylo 集成与用户注册流程”章节
 
 ## 🤝 贡献

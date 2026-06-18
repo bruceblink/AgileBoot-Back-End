@@ -4,7 +4,7 @@
 
 第一条低风险边界是 admin Web 层。当前 `keystone-admin` 模块同时包含框架接口和业务接口，但 `controller/system`、`controller/common`、`customize` 这些包主要依赖系统领域服务和公共基础设施，可以在不修改请求路径和 Java 包名的前提下拆到独立模块。
 
-完整拆成 Spring Boot starter 是可行的，但需要分阶段推进。当前框架代码已经隔离到独立 Gradle 模块，可以在仓库内独立开发；同时已增加 starter 聚合模块，后续应用可以依赖统一的框架入口，而不需要逐个装配框架子模块。
+完整拆成 Spring Boot starter 是可行的，当前已经进入可用阶段。框架代码已经隔离到独立 Gradle 模块，可以在仓库内独立开发；starter 聚合模块提供统一的框架入口，消费应用不需要逐个装配框架子模块。
 
 相关文档：
 
@@ -27,6 +27,11 @@
 - 下游应用的业务迁移由消费方自行提供，框架 starter 传递依赖不携带业务表迁移。
 - 将 H2 集成测试 schema/data 移出 infrastructure 主资源，改为 admin/domain 测试资源。
 - 将 `keystone-admin` 调整为依赖 `keystone-framework-spring-boot-starter` 和扩展模块 `keystone-domain`。
+- `keystone-admin` 启动类移除全仓 `@ComponentScan("app.keystone.*")`，框架组件由 starter 自动配置装配。
+- 删除 `keystone-admin` 中重复的系统监控 controller，`/monitor/**` 由 `keystone-framework-admin` 提供。
+- 将定时任务运行日志清理任务和定时任务运行时相关测试迁入 `keystone-framework-domain`。
+- 系统导出接口改为调用无分页 `export...` 方法，避免只导出当前分页。
+- `keystone-domain/src/main/java` 当前保持为空，作为下游扩展模块边界。
 - 移除 `domain/common/cache` 对具体业务实体的直接依赖，改为通过通用缓存名称查找。
 - 暂时保持 Java 包名不变，确保 Spring 组件扫描、路由映射和现有 import 稳定。
 - 保留 `keystone-admin` 作为可执行应用入口。

@@ -22,6 +22,7 @@ Keystone 定时作业用于把后台周期性任务从代码中的固定 `@Sched
 | 调用目标发现 | 扫描 `@JobTask` 和 `@Scheduled` 方法，返回候选列表 |
 | 任务参数 | `sys_job.job_params` 保存 JSON 参数，支持目标方法接收一个参数对象 |
 | 运行历史 | 每次自动调度、手动执行、失败、并发跳过写入 `sys_job_log` |
+| 运行历史清理 | 内置 `sysJobLogCleanupTask.cleanExpiredJobLogs()`，默认清理 30 天前的运行日志 |
 | 操作审计 | 新增、修改、启停、立即运行、删除进入 `sys_operation_log` |
 | 前端辅助 | 调用目标下拉选择，点击任务编号查看运行日志 |
 
@@ -31,7 +32,7 @@ Keystone 定时作业用于把后台周期性任务从代码中的固定 `@Sched
 | --- | --- |
 | 分布式任务锁 | 当前运行态注册表是单 JVM 内存结构，多节点部署时需要单独设计分布式锁 |
 | Cron 在线解析器 | 只做后端 Cron 语法校验，不在后端提供复杂表达式解释 |
-| 调度历史清理策略 | 当前只记录运行历史，后续可按保留天数或最大条数增加清理任务 |
+| 复杂调度历史保留策略 | 当前提供基础 30 天清理任务；按任务分组、最大条数或多租户维度的保留策略后续单独设计 |
 | 任务依赖编排 | 不支持 DAG、前置任务、失败重试编排 |
 
 ## 3. 关键概念
@@ -51,7 +52,7 @@ Keystone 定时作业用于把后台周期性任务从代码中的固定 `@Sched
 ## 4. 模块结构
 
 ```text
-keystone-admin
+keystone-framework-admin
   app.keystone.admin.controller.system.SysJobController
 
 keystone-common
@@ -59,13 +60,14 @@ keystone-common
   app.keystone.common.enums.common.JobLogStatusEnum
   app.keystone.common.enums.common.JobTriggerTypeEnum
 
-keystone-domain
+keystone-framework-domain
   app.keystone.domain.system.job.JobApplicationService
   app.keystone.domain.system.job.db.SysJobEntity
   app.keystone.domain.system.job.db.SysJobLogEntity
   app.keystone.domain.system.job.runtime.JobInvokeUtil
   app.keystone.domain.system.job.runtime.JobSchedulerManager
   app.keystone.domain.system.job.runtime.JobStartupRunner
+  app.keystone.domain.system.job.task.SysJobLogCleanupTask
 
 keystone-infrastructure
   db/migrate/mysql/V3_5_46__add_dict_and_job_management.sql
