@@ -11,13 +11,9 @@ import app.keystone.domain.system.job.command.AddJobCommand;
 import app.keystone.domain.system.job.command.UpdateJobCommand;
 import app.keystone.domain.system.job.command.UpdateJobStatusCommand;
 import app.keystone.domain.system.job.db.SysJobEntity;
-import app.keystone.domain.system.job.db.SysJobLogEntity;
-import app.keystone.domain.system.job.db.SysJobLogService;
 import app.keystone.domain.system.job.db.SysJobService;
 import app.keystone.domain.system.job.dto.JobDTO;
 import app.keystone.domain.system.job.dto.JobInvokeTargetDTO;
-import app.keystone.domain.system.job.dto.JobLogDTO;
-import app.keystone.domain.system.job.query.JobLogQuery;
 import app.keystone.domain.system.job.query.JobQuery;
 import app.keystone.domain.system.job.runtime.JobInvokeUtil;
 import app.keystone.domain.system.job.runtime.JobSchedulerManager;
@@ -39,7 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class JobApplicationService {
 
     private final SysJobService jobService;
-    private final SysJobLogService jobLogService;
     private final JobSchedulerManager jobSchedulerManager;
     private final JobInvokeUtil jobInvokeUtil;
 
@@ -51,12 +46,6 @@ public class JobApplicationService {
 
     public JobDTO getJobInfo(Long jobId) {
         return new JobDTO(loadJob(jobId));
-    }
-
-    public PageDTO<JobLogDTO> getJobLogList(JobLogQuery query) {
-        Page<SysJobLogEntity> page = jobLogService.page(query.toPage(), query.toQueryWrapper());
-        List<JobLogDTO> records = page.getRecords().stream().map(JobLogDTO::new).collect(Collectors.toList());
-        return new PageDTO<>(records, page.getTotal());
     }
 
     public List<JobInvokeTargetDTO> getInvokeTargets() {
