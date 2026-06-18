@@ -24,13 +24,24 @@ public class OperationLogQuery extends AbstractPageQuery<SysOperationLogEntity> 
     @Override
     public QueryWrapper<SysOperationLogEntity> addQueryCondition() {
         QueryWrapper<SysOperationLogEntity> queryWrapper = new QueryWrapper<SysOperationLogEntity>()
-            .like(businessType!=null, "business_type", likeValue(businessType))
+            .like(businessType != null, "business_type", likeValue(businessType))
             .eq(status != null, "status", status)
             .like(StringUtils.isNotEmpty(username), "username", likeValue(username))
             .like(StringUtils.isNotEmpty(requestModule), "request_module", likeValue(requestModule));
 
         this.timeRangeColumn = "operation_time";
+        if (StringUtils.isEmpty(orderColumn) || StringUtils.isEmpty(orderDirection)) {
+            queryWrapper.orderByDesc("operation_time", "operation_id");
+        }
 
         return queryWrapper;
+    }
+
+    @Override
+    public void addSortCondition(QueryWrapper<SysOperationLogEntity> queryWrapper) {
+        super.addSortCondition(queryWrapper);
+        if (queryWrapper != null && ("operationTime".equals(orderColumn) || "operation_time".equals(orderColumn))) {
+            queryWrapper.orderByDesc("operation_id");
+        }
     }
 }
