@@ -214,6 +214,7 @@ docker compose down -v
 - 数据库密码加密：[DATABASE_PASSWORD_ENCRYPTION_GUIDE.md](DATABASE_PASSWORD_ENCRYPTION_GUIDE.md)
 - 框架 starter 使用说明：[docs/framework-starter-usage.md](docs/framework-starter-usage.md)
 - 框架 starter 维护文档：[docs/framework-starter-maintenance.md](docs/framework-starter-maintenance.md)
+- Starter 示例项目：[my-keystone-starter-demo](https://github.com/bruceblink/my-keystone-starter-demo)
 - Keylo 对接说明（含可选启用、统一 `/login` 后端 Keylo 凭证鉴权、用户新增同步注册）：见 [docs/项目说明.md](docs/项目说明.md) 的“Keylo 集成与用户注册流程”章节
 
 ## 🤝 贡献

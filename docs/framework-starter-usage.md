@@ -1,5 +1,10 @@
 # Keystone Framework Starter 使用说明
 
+## Starter 示例项目
+
+如果你想先看一个完整可运行的 starter 集成示例，请使用官方仓库：  
+[https://github.com/bruceblink/my-keystone-starter-demo](https://github.com/bruceblink/my-keystone-starter-demo)
+
 ## 适用范围
 
 `keystone-framework-spring-boot-starter` 是 Keystone 框架能力的聚合依赖，用于给 Spring Boot 应用提供系统管理、认证授权、基础设施配置、框架领域服务和系统数据库迁移。
