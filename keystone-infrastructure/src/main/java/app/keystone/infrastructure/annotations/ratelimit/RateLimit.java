@@ -3,6 +3,7 @@ package app.keystone.infrastructure.annotations.ratelimit;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.common.utils.ServletHolderUtil;
+import app.keystone.common.utils.ip.IpUtil;
 import app.keystone.infrastructure.user.AuthenticationUtils;
 import app.keystone.infrastructure.user.app.AppLoginUser;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
@@ -66,7 +67,7 @@ public @interface RateLimit {
         IP {
             @Override
             public String generateCombinedKey(RateLimit rateLimiter) {
-                String clientIP = ServletHolderUtil.getRequest().getRemoteAddr();
+                String clientIP = IpUtil.getClientIp(ServletHolderUtil.getRequest());
                 return rateLimiter.key() + clientIP;
             }
         },

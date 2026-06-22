@@ -4,6 +4,7 @@ package app.keystone.admin.controller.system;
 import app.keystone.common.core.base.BaseController;
 import app.keystone.common.core.dto.ResponseDTO;
 import app.keystone.common.core.page.PageDTO;
+import app.keystone.common.utils.ip.IpUtil;
 import app.keystone.common.utils.poi.CustomExcelUtil;
 import app.keystone.domain.common.command.BulkOperationCommand;
 import app.keystone.domain.system.log.LogApplicationService;
@@ -88,7 +89,7 @@ public class SysLogsController extends BaseController {
     public ResponseDTO<Void> addOperationLog(@Valid @RequestBody AddOperationLogCommand command,
         HttpServletRequest request) {
         SystemLoginUser loginUser = AuthenticationUtils.getSystemLoginUser();
-        logApplicationService.addOperationLog(command, loginUser, request.getRemoteAddr(), request.getRequestURI(),
+        logApplicationService.addOperationLog(command, loginUser, IpUtil.getClientIp(request), request.getRequestURI(),
             request.getMethod());
         return ResponseDTO.ok();
     }

@@ -1,5 +1,6 @@
 package app.keystone.common.utils.ip;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -63,6 +64,60 @@ public class IpUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public static String getClientIp(HttpServletRequest request) {
+        if (request == null) {
+            return "";
+        }
+
+        String clientIp = firstValidIp(request.getHeader("X-Forwarded-For"));
+        if (clientIp != null) {
+            return clientIp;
+        }
+
+        clientIp = firstValidIp(request.getHeader("X-Real-IP"));
+        if (clientIp != null) {
+            return clientIp;
+        }
+
+        clientIp = firstValidIp(request.getHeader("Proxy-Client-IP"));
+        if (clientIp != null) {
+            return clientIp;
+        }
+
+        clientIp = firstValidIp(request.getHeader("WL-Proxy-Client-IP"));
+        return clientIp == null ? request.getRemoteAddr() : clientIp;
+    }
+
+    private static String firstValidIp(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        String[] candidates = value.split(",");
+        for (String candidate : candidates) {
+            String ip = normalizeIp(candidate);
+            if (isValidIpv4(ip) || isValidIpv6(ip)) {
+                return ip;
+            }
+        }
+        return null;
+    }
+
+    private static String normalizeIp(String value) {
+        String ip = value == null ? "" : value.trim();
+        if (ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            return "";
+        }
+        if (ip.startsWith("[") && ip.contains("]")) {
+            return ip.substring(1, ip.indexOf(']'));
+        }
+        int lastColon = ip.lastIndexOf(':');
+        if (lastColon > 0 && ip.indexOf(':') == lastColon && ip.contains(".")) {
+            return ip.substring(0, lastColon);
+        }
+        return ip;
     }
 
 }

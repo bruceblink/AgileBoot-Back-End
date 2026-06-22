@@ -22,6 +22,7 @@ import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.common.exception.error.ErrorCode.Business;
 import app.keystone.common.utils.ServletHolderUtil;
 import app.keystone.common.utils.i18n.MessageUtils;
+import app.keystone.common.utils.ip.IpUtil;
 import app.keystone.domain.common.cache.CacheCenter;
 import app.keystone.domain.common.cache.LocalCacheService;
 import app.keystone.domain.common.cache.RedisCacheService;
@@ -336,7 +337,7 @@ public class LoginService {
 
         LambdaUpdateWrapper<SysUserEntity> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(SysUserEntity::getUserId, loginUser.getUserId())
-            .set(SysUserEntity::getLoginIp, ServletHolderUtil.getRequest().getRemoteAddr())
+            .set(SysUserEntity::getLoginIp, IpUtil.getClientIp(ServletHolderUtil.getRequest()))
             .set(SysUserEntity::getLoginDate, new Date());
         userService.update(updateWrapper);
         if (CacheCenter.userCache() != null) {

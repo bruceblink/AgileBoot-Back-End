@@ -3,6 +3,7 @@ package app.keystone.common.utils.ip;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 class IpUtilTest {
 
@@ -36,6 +37,29 @@ class IpUtilTest {
         Assertions.assertTrue(localHost2);
         Assertions.assertTrue(localHost4);
         Assertions.assertFalse(notLocalHost);
+    }
+
+    @Test
+    void getClientIpShouldPreferFirstForwardedIp() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Forwarded-For", "203.0.113.10, 172.27.0.1");
+        request.setRemoteAddr("172.27.0.1");
+
+        Assertions.assertEquals("203.0.113.10", IpUtil.getClientIp(request));
+    }
+
+    @Test
+    void getClientIpShouldFallbackToRealIpAndRemoteAddr() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Forwarded-For", "unknown");
+        request.addHeader("X-Real-IP", "198.51.100.20");
+        request.setRemoteAddr("172.27.0.1");
+
+        Assertions.assertEquals("198.51.100.20", IpUtil.getClientIp(request));
+
+        MockHttpServletRequest noHeaderRequest = new MockHttpServletRequest();
+        noHeaderRequest.setRemoteAddr("172.27.0.1");
+        Assertions.assertEquals("172.27.0.1", IpUtil.getClientIp(noHeaderRequest));
     }
 
 }
