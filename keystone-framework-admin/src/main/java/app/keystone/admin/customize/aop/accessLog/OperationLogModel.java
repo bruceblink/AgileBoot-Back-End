@@ -1,6 +1,7 @@
 package app.keystone.admin.customize.aop.accessLog;
 
 import app.keystone.common.utils.ServletHolderUtil;
+import app.keystone.common.utils.ip.IpUtil;
 import app.keystone.common.utils.jackson.JacksonUtil;
 import app.keystone.infrastructure.user.AuthenticationUtils;
 import app.keystone.infrastructure.user.web.SystemLoginUser;
@@ -33,7 +34,7 @@ public class OperationLogModel extends SysOperationLogEntity {
 
     public void fillOperatorInfo() {
         // 获取当前的用户
-        String ip = request.getRemoteAddr();
+        String ip = IpUtil.getClientIp(request);
         setOperatorIp(ip);
         SystemLoginUser loginUser = AuthenticationUtils.getSystemLoginUser();
         if (loginUser != null) {

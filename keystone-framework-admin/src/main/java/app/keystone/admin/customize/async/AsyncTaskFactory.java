@@ -2,6 +2,7 @@ package app.keystone.admin.customize.async;
 
 import app.keystone.common.enums.common.LoginStatusEnum;
 import app.keystone.common.utils.ServletHolderUtil;
+import app.keystone.common.utils.ip.IpUtil;
 import app.keystone.common.utils.ip.IpRegionUtil;
 import app.keystone.domain.system.log.db.SysLoginInfoEntity;
 import app.keystone.domain.system.log.db.SysLoginInfoService;
@@ -41,7 +42,7 @@ public class AsyncTaskFactory {
         final UserAgent userAgent = UserAgent.parseUserAgentString(
             ServletHolderUtil.getRequest().getHeader("User-Agent"));
         final String browser = userAgent.getBrowser() != null ? userAgent.getBrowser().getName() : "";
-        final String ip = ServletHolderUtil.getRequest().getRemoteAddr();
+        final String ip = IpUtil.getClientIp(ServletHolderUtil.getRequest());
         final String address = IpRegionUtil.getBriefLocationByIp(ip);
         final String os = userAgent.getOperatingSystem() != null ? userAgent.getOperatingSystem().getName() : "";
 

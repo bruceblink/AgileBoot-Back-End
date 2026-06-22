@@ -1,6 +1,7 @@
 package app.keystone.infrastructure.user.base;
 
 import app.keystone.common.utils.ServletHolderUtil;
+import app.keystone.common.utils.ip.IpUtil;
 import app.keystone.common.utils.ip.IpRegionUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import eu.bitwalker.useragentutils.UserAgent;
@@ -54,7 +55,7 @@ public class BaseLoginUser implements UserDetails {
      */
     public void fillLoginInfo() {
         UserAgent userAgent = UserAgent.parseUserAgentString(ServletHolderUtil.getRequest().getHeader("User-Agent"));
-        String ip = ServletHolderUtil.getRequest().getRemoteAddr();
+        String ip = IpUtil.getClientIp(ServletHolderUtil.getRequest());
 
         this.getLoginInfo().setIpAddress(ip);
         this.getLoginInfo().setLocation(IpRegionUtil.getBriefLocationByIp(ip));
