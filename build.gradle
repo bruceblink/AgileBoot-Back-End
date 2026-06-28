@@ -279,7 +279,7 @@ configure([
     ))
 
     signing {
-        required { signingRequired || signingKey }
+        required = { signingRequired || signingKey }
         if (signingKey) {
             useInMemoryPgpKeys(signingKey, signingPassword)
         }
