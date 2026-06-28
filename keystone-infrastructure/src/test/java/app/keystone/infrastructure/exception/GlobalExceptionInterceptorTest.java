@@ -76,9 +76,11 @@ class GlobalExceptionInterceptorTest {
     }
 
     @Test
-    void handleTypeMismatchShouldReturnParameterError() {
+    void handleTypeMismatchShouldReturnParameterError() throws NoSuchMethodException {
+        Method method = TestController.class.getDeclaredMethod("getUser", Long.class);
+        MethodParameter parameter = new MethodParameter(method, 0);
         MethodArgumentTypeMismatchException exception = new MethodArgumentTypeMismatchException("%", Long.class,
-            "userId", null, new NumberFormatException("%"));
+            "userId", parameter, new NumberFormatException("%"));
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/system/users/%");
 
         ResponseDTO<?> response = interceptor.handleInvalidParameterException(exception, request);
@@ -92,11 +94,19 @@ class GlobalExceptionInterceptorTest {
         @SuppressWarnings("unused")
         void add(Object command) {
         }
+
+        @SuppressWarnings("unused")
+        void getUser(Long userId) {
+        }
     }
 
     private static class ValidationTarget {
 
-        @NotBlank(message = "名称不能为空")
         private String name = "";
+
+        @NotBlank(message = "名称不能为空")
+        public String getName() {
+            return name;
+        }
     }
 }

@@ -63,7 +63,7 @@ public class SysPostController extends BaseController {
      * @param response http响应
      * @param query 查询参数
      * @author Kevin Zhang
-     * @date 2023-10-02
+     * 创建于 2023-10-02。
      */
     @Operation(summary = "职位列表导出")
     @AccessLog(title = "岗位管理", businessType = BusinessTypeEnum.EXPORT)

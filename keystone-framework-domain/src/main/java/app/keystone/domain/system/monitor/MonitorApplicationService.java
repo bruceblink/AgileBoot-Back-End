@@ -57,7 +57,7 @@ public class MonitorApplicationService {
             String property = commandStats.getProperty(key);
 
             CommandStatusDTO commonStatus = new CommandStatusDTO();
-            commonStatus.setName(StringUtils.removeStart(key, "cmdstat_"));
+            commonStatus.setName(removePrefix(key, "cmdstat_"));
             commonStatus.setValue(extractCalls(property));
 
             cacheInfo.getCommandStats().add(commonStatus);
@@ -98,7 +98,7 @@ public class MonitorApplicationService {
     }
 
     private String getLoginUserTokenId(String redisKey) {
-        return StringUtils.removeStart(redisKey, CacheKeyEnum.LOGIN_USER_KEY.prefix());
+        return removePrefix(redisKey, CacheKeyEnum.LOGIN_USER_KEY.prefix());
     }
 
     public ServerInfo getServerInfo() {
@@ -123,6 +123,13 @@ public class MonitorApplicationService {
         }
 
         return property.substring(start, end);
+    }
+
+    private String removePrefix(String value, String prefix) {
+        if (value == null || prefix == null || !value.startsWith(prefix)) {
+            return value;
+        }
+        return value.substring(prefix.length());
     }
 
 

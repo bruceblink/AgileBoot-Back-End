@@ -38,7 +38,7 @@ public class PostApplicationService {
      * @param query 查询条件
      * @return 满足查询条件的岗位列表
      * @author Kevin Zhang
-     * @date 2023-10-02
+     * 创建于 2023-10-02。
      */
     public List<PostDTO> getPostListAll(PostQuery query) {
         List<SysPostEntity> all = postService.list(query.toQueryWrapper());

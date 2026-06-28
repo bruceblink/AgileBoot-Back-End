@@ -12,7 +12,6 @@ import app.keystone.domain.system.menu.db.SysMenuService;
 import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 
 /**
@@ -90,10 +89,17 @@ public class MenuModel extends SysMenuEntity {
 
     public void checkExternalLink() {
         if (Objects.equals(getMenuType(), MenuTypeEnum.OUTSIDE_LINK_REDIRECT.getValue())
-            && !(StringUtils.startsWithIgnoreCase(getPath(), "http://")
-            || StringUtils.startsWithIgnoreCase(getPath(), "https://"))) {
+            && !(startsWithIgnoreCase(getPath(), "http://")
+            || startsWithIgnoreCase(getPath(), "https://"))) {
             throw new ApiException(ErrorCode.Business.MENU_EXTERNAL_LINK_MUST_BE_HTTP);
         }
+    }
+
+    private boolean startsWithIgnoreCase(String value, String prefix) {
+        return value != null
+            && prefix != null
+            && value.length() >= prefix.length()
+            && value.regionMatches(true, 0, prefix, 0, prefix.length());
     }
 
 
