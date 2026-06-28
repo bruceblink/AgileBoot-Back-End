@@ -2,7 +2,6 @@ package app.keystone.admin.controller.common;
 
 import app.keystone.admin.customize.service.login.LoginService;
 import app.keystone.admin.customize.service.login.LoginService.LoginResult;
-import app.keystone.admin.customize.service.login.command.KeyloLoginCommand;
 import app.keystone.admin.customize.service.login.command.LoginCommand;
 import app.keystone.admin.customize.service.login.command.RefreshTokenCommand;
 import app.keystone.admin.customize.service.login.dto.CaptchaDTO;
@@ -100,19 +99,10 @@ public class LoginController {
      * @param loginCommand 登录信息
      * @return 结果
      */
-    @Operation(summary = "登录", description = "统一登录入口：根据 keystone.auth.mode 决定本地认证或 Keylo 凭证认证")
+    @Operation(summary = "登录", description = "使用 Keystone 本地账号密码认证")
     @PostMapping("/login")
     public ResponseDTO<TokenDTO> login(@RequestBody LoginCommand loginCommand) {
         LoginResult loginResult = loginService.login(loginCommand);
-        SystemLoginUser loginUser = AuthenticationUtils.getSystemLoginUser();
-        CurrentLoginUserDTO currentUserDTO = userApplicationService.getLoginUserInfo(loginUser);
-        return ResponseDTO.ok(buildTokenDTO(loginResult, currentUserDTO));
-    }
-
-    @Operation(summary = "Keylo token 登录（兼容保留）", description = "兼容历史客户端，推荐统一使用 /login", deprecated = true)
-    @PostMapping("/login/keylo")
-    public ResponseDTO<TokenDTO> keyloLogin(@RequestBody KeyloLoginCommand keyloLoginCommand) {
-        LoginResult loginResult = loginService.keyloLogin(keyloLoginCommand);
         SystemLoginUser loginUser = AuthenticationUtils.getSystemLoginUser();
         CurrentLoginUserDTO currentUserDTO = userApplicationService.getLoginUserInfo(loginUser);
         return ResponseDTO.ok(buildTokenDTO(loginResult, currentUserDTO));
@@ -139,10 +129,6 @@ public class LoginController {
         tokenDTO.setExpiresIn(loginResult.getExpiresIn());
         tokenDTO.setRefreshExpiresIn(loginResult.getRefreshExpiresIn());
         tokenDTO.setCurrentUser(currentUserDTO);
-        tokenDTO.setKeyloAccessToken(loginResult.getKeyloAccessToken());
-        tokenDTO.setKeyloRefreshToken(loginResult.getKeyloRefreshToken());
-        tokenDTO.setKeyloExpiresIn(loginResult.getKeyloExpiresIn());
-        tokenDTO.setKeyloTokenType(loginResult.getKeyloTokenType());
         return tokenDTO;
     }
 

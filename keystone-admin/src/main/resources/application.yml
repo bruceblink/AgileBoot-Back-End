@@ -2,7 +2,7 @@
 # 主配置 - 服务器基础设置 + 环境 Profile 激活
 # 环境切换: SPRING_PROFILES_ACTIVE = dev | prod | test
 #   dev   本地开发（MySQL + 本地 Redis）
-#   prod  部署 / 容器运行（MySQL + Redis + Keylo）
+#   prod  部署 / 容器运行（MySQL + Redis）
 #   test  Docker MySQL 集成测试
 #
 # 公共配置统一放在 application-basic.yml（keystone-infrastructure 模块提供）

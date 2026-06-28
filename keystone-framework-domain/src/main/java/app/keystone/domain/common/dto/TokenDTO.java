@@ -22,12 +22,4 @@ public class TokenDTO {
 
     private CurrentLoginUserDTO currentUser;
 
-    private String keyloAccessToken;
-
-    private String keyloRefreshToken;
-
-    private Long keyloExpiresIn;
-
-    private String keyloTokenType;
-
 }

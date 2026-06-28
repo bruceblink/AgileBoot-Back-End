@@ -120,13 +120,13 @@ class SysUserServiceImplTest {
     @Rollback
     void testGetUserByExternalSubject() {
         SysUserEntity admin = userService.getUserByUserName("admin");
-        String externalSubject = "keylo-subject-test-001";
+        String externalSubject = "external-subject-test-001";
 
         admin.setExternalSubject(externalSubject);
         userService.updateById(admin);
 
         SysUserEntity mappedUser = userService.getUserByExternalSubject(externalSubject);
-        SysUserEntity nonExistUser = userService.getUserByExternalSubject("keylo-subject-not-exist");
+        SysUserEntity nonExistUser = userService.getUserByExternalSubject("external-subject-not-exist");
 
         Assertions.assertNotNull(mappedUser);
         Assertions.assertEquals(admin.getUserId(), mappedUser.getUserId());

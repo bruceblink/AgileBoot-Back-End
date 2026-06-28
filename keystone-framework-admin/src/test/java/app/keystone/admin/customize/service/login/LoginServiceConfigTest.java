@@ -8,10 +8,6 @@ import static org.mockito.Mockito.when;
 
 import app.keystone.admin.customize.async.AsyncTaskFactory;
 import app.keystone.admin.customize.service.login.dto.ConfigDTO;
-import app.keystone.admin.customize.service.login.keylo.KeyloCredentialVerifier;
-import app.keystone.admin.customize.service.login.keylo.KeyloLoginUserResolver;
-import app.keystone.admin.customize.service.login.keylo.KeyloProperties;
-import app.keystone.admin.customize.service.login.keylo.KeyloTokenVerifier;
 import app.keystone.common.enums.common.ConfigKeyEnum;
 import app.keystone.common.enums.dictionary.DictionaryData;
 import app.keystone.domain.common.cache.LocalCacheService;
@@ -41,10 +37,6 @@ class LoginServiceConfigTest {
             mock(AuthenticationManager.class),
             mock(SysUserService.class),
             dictApplicationService,
-            mock(KeyloTokenVerifier.class),
-            mock(KeyloCredentialVerifier.class),
-            mock(KeyloProperties.class),
-            mock(KeyloLoginUserResolver.class),
             mock(AsyncTaskFactory.class)
         );
         Map<String, List<DictionaryData>> dictionary = new LinkedHashMap<>();

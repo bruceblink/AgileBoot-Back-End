@@ -1,18 +1,12 @@
 package app.keystone.admin.customize.service.login;
 
 import app.keystone.admin.customize.async.AsyncTaskFactory;
-import app.keystone.admin.customize.service.login.command.KeyloLoginCommand;
 import app.keystone.admin.customize.service.login.command.LoginCommand;
 import app.keystone.admin.customize.service.login.command.RefreshTokenCommand;
 import app.keystone.admin.customize.service.login.dto.CaptchaDTO;
 import app.keystone.admin.customize.service.login.dto.ConfigDTO;
 import app.keystone.admin.customize.service.login.dto.RsaPublicKeyDTO;
 import app.keystone.admin.customize.service.login.TokenService.IssuedToken;
-import app.keystone.admin.customize.service.login.keylo.KeyloCredentialVerifier;
-import app.keystone.admin.customize.service.login.keylo.KeyloLoginUserResolver;
-import app.keystone.admin.customize.service.login.keylo.KeyloProperties;
-import app.keystone.admin.customize.service.login.keylo.KeyloTokenIdentity;
-import app.keystone.admin.customize.service.login.keylo.KeyloTokenVerifier;
 import app.keystone.common.config.KeystoneConfig;
 import app.keystone.common.constant.Constants.Captcha;
 import app.keystone.common.enums.common.ConfigKeyEnum;
@@ -45,7 +39,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -79,18 +72,7 @@ public class LoginService {
 
     private final DictApplicationService dictApplicationService;
 
-    private final KeyloTokenVerifier keyloTokenVerifier;
-
-    private final KeyloCredentialVerifier keyloCredentialVerifier;
-
-    private final KeyloProperties keyloProperties;
-
-    private final KeyloLoginUserResolver keyloLoginUserResolver;
-
     private final AsyncTaskFactory asyncTaskFactory;
-
-    @Value("${keystone.auth.mode}")
-    private String authMode;
 
     @Resource(name = "captchaProducer")
     private Producer captchaProducer;
@@ -107,14 +89,6 @@ public class LoginService {
     public LoginResult login(LoginCommand loginCommand) {
         if (isCaptchaOn()) {
             validateCaptcha(loginCommand.getUsername(), loginCommand.getCaptchaCode(), loginCommand.getCaptchaCodeKey());
-        }
-
-        if (!"local".equalsIgnoreCase(authMode) && keyloProperties.isEnabled()) {
-            return loginByKeyloCredential(loginCommand);
-        }
-
-        if ("keylo-only".equalsIgnoreCase(authMode)) {
-            throw new ApiException(Business.LOGIN_KEYLO_DISABLED);
         }
 
         Authentication authentication;
@@ -134,48 +108,7 @@ public class LoginService {
         SystemLoginUser loginUser = (SystemLoginUser) authentication.getPrincipal();
         IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser, isForceLogin(loginCommand));
         return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
-            issuedToken.getRefreshExpiresIn(), null, null, null, null);
-    }
-
-    public LoginResult keyloLogin(KeyloLoginCommand keyloLoginCommand) {
-        if (!keyloProperties.isLegacyTokenLoginEnabled()) {
-            throw new ApiException(Business.LOGIN_KEYLO_DISABLED);
-        }
-        if ("local".equalsIgnoreCase(authMode) || !keyloProperties.isEnabled()) {
-            throw new ApiException(Business.LOGIN_KEYLO_DISABLED);
-        }
-        if (keyloLoginCommand == null || !StringUtils.hasText(keyloLoginCommand.getAccessToken())) {
-            throw new ApiException(ErrorCode.Client.COMMON_REQUEST_PARAMETERS_INVALID, "accessToken is required");
-        }
-
-        log.warn("Deprecated /login/keylo endpoint was used. Please migrate clients to /login.");
-        KeyloTokenIdentity keyloIdentity = keyloTokenVerifier.verify(keyloLoginCommand.getAccessToken());
-        return buildTokenByKeyloIdentity(keyloIdentity, isForceLogin(keyloLoginCommand));
-    }
-
-    private LoginResult loginByKeyloCredential(LoginCommand loginCommand) {
-        if (loginCommand == null || !StringUtils.hasText(loginCommand.getUsername()) || !StringUtils.hasText(loginCommand.getPassword())) {
-            throw new ApiException(ErrorCode.Client.COMMON_REQUEST_PARAMETERS_INVALID, "username and password are required");
-        }
-
-        String password = decryptPassword(loginCommand.getPassword());
-        KeyloTokenIdentity keyloIdentity = keyloCredentialVerifier.verify(loginCommand.getUsername(), password);
-        return buildTokenByKeyloIdentity(keyloIdentity, isForceLogin(loginCommand));
-    }
-
-    private LoginResult buildTokenByKeyloIdentity(KeyloTokenIdentity keyloIdentity, boolean forceLogin) {
-        SystemLoginUser loginUser = buildLoginUserByKeyloIdentity(keyloIdentity);
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-            loginUser, null, loginUser.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        IssuedToken issuedToken = createTokenAndRecordLoginInfo(loginUser, forceLogin);
-        return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
-            issuedToken.getRefreshExpiresIn(), keyloIdentity.getAccessToken(), keyloIdentity.getRefreshToken(),
-            keyloIdentity.getExpiresIn(), keyloIdentity.getTokenType());
-    }
-
-    public SystemLoginUser buildLoginUserByKeyloIdentity(KeyloTokenIdentity keyloIdentity) {
-        return keyloLoginUserResolver.resolve(keyloIdentity);
+            issuedToken.getRefreshExpiresIn());
     }
 
     public LoginResult refreshToken(RefreshTokenCommand refreshTokenCommand) {
@@ -184,7 +117,7 @@ public class LoginService {
         }
         IssuedToken issuedToken = tokenService.refreshAccessToken(refreshTokenCommand.getRefreshToken());
         return new LoginResult(issuedToken.getToken(), issuedToken.getRefreshToken(), issuedToken.getExpiresIn(),
-            issuedToken.getRefreshExpiresIn(), null, null, null, null);
+            issuedToken.getRefreshExpiresIn());
     }
 
     public void logoutRefreshToken(RefreshTokenCommand refreshTokenCommand) {
@@ -209,10 +142,6 @@ public class LoginService {
         return loginCommand != null && Boolean.TRUE.equals(loginCommand.getForceLogin());
     }
 
-    private boolean isForceLogin(KeyloLoginCommand keyloLoginCommand) {
-        return keyloLoginCommand != null && Boolean.TRUE.equals(keyloLoginCommand.getForceLogin());
-    }
-
     @Data
     @AllArgsConstructor
     public static class LoginResult {
@@ -224,14 +153,6 @@ public class LoginService {
         private Long expiresIn;
 
         private Long refreshExpiresIn;
-
-        private String keyloAccessToken;
-
-        private String keyloRefreshToken;
-
-        private Long keyloExpiresIn;
-
-        private String keyloTokenType;
     }
 
     /**

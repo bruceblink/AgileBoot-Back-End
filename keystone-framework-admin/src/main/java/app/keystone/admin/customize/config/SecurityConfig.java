@@ -132,7 +132,7 @@ public class SecurityConfig {
             // 过滤请求
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(
-                        "/login", "/login/keylo", "/refresh-token", "/logout-refresh-token", "/register", "/getConfig",
+                        "/login", "/refresh-token", "/logout-refresh-token", "/register", "/getConfig",
                         "/health", "/captchaImage"
                     ).anonymous()
                     .requestMatchers("/login/rsa-public-key").permitAll()

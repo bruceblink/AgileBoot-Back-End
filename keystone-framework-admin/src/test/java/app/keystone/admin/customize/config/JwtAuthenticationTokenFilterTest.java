@@ -7,9 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import app.keystone.admin.customize.service.login.TokenService;
-import app.keystone.admin.customize.service.login.keylo.KeyloProperties;
-import app.keystone.admin.customize.service.login.keylo.KeyloTokenIdentity;
-import app.keystone.admin.customize.service.login.keylo.KeyloTokenVerifier;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.infrastructure.user.web.RoleInfo;
@@ -27,10 +24,6 @@ class JwtAuthenticationTokenFilterTest {
 
     private TokenService tokenService;
 
-    private KeyloProperties keyloProperties;
-
-    private KeyloTokenVerifier keyloTokenVerifier;
-
     private JwtAuthenticationTokenFilter filter;
 
     private FilterChain chain;
@@ -38,9 +31,7 @@ class JwtAuthenticationTokenFilterTest {
     @BeforeEach
     void setUp() {
         tokenService = Mockito.mock(TokenService.class);
-        keyloProperties = Mockito.mock(KeyloProperties.class);
-        keyloTokenVerifier = Mockito.mock(KeyloTokenVerifier.class);
-        filter = new JwtAuthenticationTokenFilter(tokenService, keyloProperties, keyloTokenVerifier);
+        filter = new JwtAuthenticationTokenFilter(tokenService);
         chain = Mockito.mock(FilterChain.class);
         SecurityContextHolder.clearContext();
     }
@@ -62,44 +53,19 @@ class JwtAuthenticationTokenFilterTest {
         filter.doFilter(request, response, chain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isEqualTo(loginUser);
-        verify(keyloTokenVerifier, never()).verify(Mockito.anyString());
         verify(chain).doFilter(request, response);
     }
 
     @Test
-    void shouldFallbackToKeyloAccessTokenWhenKeystoneTokenParsingFails() throws Exception {
-        MockHttpServletRequest request = requestWithBearer("keylo-access-token");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        when(tokenService.getTokenFromRequest(request)).thenReturn("keylo-access-token");
-        when(tokenService.getLoginUserByTokenSilently("keylo-access-token"))
-            .thenThrow(new ApiException(ErrorCode.Client.INVALID_TOKEN));
-        when(keyloProperties.isEnabled()).thenReturn(true);
-        when(keyloTokenVerifier.verify("keylo-access-token"))
-            .thenReturn(new KeyloTokenIdentity("service:sys_test", null, "keylo-access-token", null, null, "access"));
-
-        filter.doFilter(request, response, chain);
-
-        SystemLoginUser loginUser = (SystemLoginUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        assertThat(loginUser.getUsername()).isEqualTo("service:sys_test");
-        assertThat(loginUser.isAdmin()).isTrue();
-        assertThat(loginUser.getRoleInfo().getMenuPermissions()).contains(RoleInfo.ALL_PERMISSIONS);
-        verify(keyloTokenVerifier).verify("keylo-access-token");
-        verify(chain).doFilter(request, response);
-    }
-
-    @Test
-    void shouldRethrowKeyloTokenExceptionWhenKeyloFallbackFails() {
+    void shouldRethrowTokenExceptionWhenKeystoneTokenParsingFails() {
         MockHttpServletRequest request = requestWithBearer("invalid-token");
         MockHttpServletResponse response = new MockHttpServletResponse();
         ApiException original = new ApiException(ErrorCode.Client.INVALID_TOKEN);
-        ApiException keyloException = new ApiException(ErrorCode.Client.INVALID_TOKEN);
         when(tokenService.getTokenFromRequest(request)).thenReturn("invalid-token");
         when(tokenService.getLoginUserByTokenSilently("invalid-token")).thenThrow(original);
-        when(keyloProperties.isEnabled()).thenReturn(true);
-        when(keyloTokenVerifier.verify("invalid-token")).thenThrow(keyloException);
 
         assertThatThrownBy(() -> filter.doFilter(request, response, chain))
-            .isSameAs(keyloException);
+            .isSameAs(original);
     }
 
     @Test

@@ -2,10 +2,6 @@
 
 keystone:
   rsaPrivateKey: test-rsa-private-key
-  auth:
-    mode: local
-    keylo:
-      enabled: false
   datasource:
     password-encryption:
       encrypt-key-file: ${KEYSTONE_TEST_DATASOURCE_ENCRYPT_KEY_FILE:docker/.secrets/.database_password.key}

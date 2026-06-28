@@ -19,8 +19,6 @@ import app.keystone.domain.system.user.db.SysUserService;
 import app.keystone.domain.system.user.dto.UserDTO;
 import app.keystone.domain.system.user.dto.UserDetailDTO;
 import app.keystone.domain.system.user.dto.UserProfileDTO;
-import app.keystone.domain.system.user.keylo.KeyloUserProvisioningResult;
-import app.keystone.domain.system.user.keylo.KeyloUserProvisioningService;
 import app.keystone.domain.system.user.model.UserModel;
 import app.keystone.domain.system.user.model.UserModelFactory;
 import app.keystone.domain.system.user.query.SearchUserQuery;
@@ -50,8 +48,6 @@ public class UserApplicationService {
     private final SysPostService postService;
 
     private final UserModelFactory userModelFactory;
-
-    private final KeyloUserProvisioningService keyloUserProvisioningService;
 
     public PageDTO<UserDTO> getUserList(SearchUserQuery<SearchUserDO> query) {
         Page<SearchUserDO> userPage = userService.getUserList(query);
@@ -131,13 +127,6 @@ public class UserApplicationService {
         model.resetPassword(command.getPassword());
 
         model.insert();
-
-        KeyloUserProvisioningResult provisioningResult = keyloUserProvisioningService.provisionUser(command);
-        if (provisioningResult != null && !provisioningResult.isEmpty()) {
-            model.setExternalSubject(provisioningResult.getKeyloSubject());
-            model.setExternalUserId(provisioningResult.getKeyloUserId());
-            model.updateById();
-        }
     }
 
     public void updateUser(UpdateUserCommand command) {
@@ -172,7 +161,6 @@ public class UserApplicationService {
     public void resetUserPassword(ResetPasswordCommand command) {
         UserModel userModel = userModelFactory.loadById(command.getUserId());
 
-        keyloUserProvisioningService.resetPassword(userModel.getExternalUserId(), command.getPassword());
         userModel.resetPassword(command.getPassword());
         userModel.updateById();
 

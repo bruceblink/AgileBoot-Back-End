@@ -39,7 +39,6 @@ import app.keystone.domain.system.user.UserApplicationService;
 import app.keystone.domain.system.user.db.SearchUserDO;
 import app.keystone.domain.system.user.db.SysUserService;
 import app.keystone.domain.system.user.dto.UserDTO;
-import app.keystone.domain.system.user.keylo.KeyloUserProvisioningService;
 import app.keystone.domain.system.user.model.UserModelFactory;
 import app.keystone.domain.system.user.query.SearchUserQuery;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
@@ -53,7 +52,7 @@ class SystemExportApplicationServiceTest {
     void exportUsersShouldUseUnpagedQuery() {
         SysUserService userService = mock(SysUserService.class);
         UserApplicationService service = new UserApplicationService(userService, mock(SysRoleService.class),
-            mock(SysPostService.class), mock(UserModelFactory.class), mock(KeyloUserProvisioningService.class));
+            mock(SysPostService.class), mock(UserModelFactory.class));
         SearchUserDO user = new SearchUserDO();
         user.setUserId(1001L);
         user.setUsername("export-user");

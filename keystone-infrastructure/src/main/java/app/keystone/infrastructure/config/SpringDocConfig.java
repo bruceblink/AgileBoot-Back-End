@@ -28,7 +28,6 @@ public class SpringDocConfig {
         "/captchaImage",
         "/login/rsa-public-key",
         "/login",
-        "/login/keylo",
         "/register"
     );
 

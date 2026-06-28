@@ -21,7 +21,7 @@ public enum ErrorCode implements ErrorCodeInterface {
      * ---------------------------
      * 旧的设计的缺陷，比如内部错误码其实并不会很多  但是占用了1~9999的序列，其实是不必要的。
      * 而且错误码不一定位数一定要相同。比如腾讯的微信接口错误码的位数就并不相同。按照常理错误码的数量大小应该是：
-     * 内部错误码< 客户端错误码< 第三方错误码< 业务错误码
+     * 内部错误码、客户端错误码、第三方错误码、业务错误码依次递增
      * 所以我们应该尽可能的把错误码的数量留给业务错误码
      * ---------------------------
      * *******新的设计**********
@@ -98,21 +98,7 @@ public enum ErrorCode implements ErrorCodeInterface {
 
         LOGIN_CAPTCHA_CODE_NULL(10205, "验证码为空", "Business.LOGIN_CAPTCHA_CODE_NULL"),
 
-        LOGIN_KEYLO_DISABLED(10206, "Keylo登录未启用", "Business.LOGIN_KEYLO_DISABLED"),
-
-        LOGIN_KEYLO_SUBJECT_MISSING(10207, "Keylo token缺少主体标识", "Business.LOGIN_KEYLO_SUBJECT_MISSING"),
-
-        LOGIN_KEYLO_CONFIG_MISSING(10208, "Keylo配置缺失", "Business.LOGIN_KEYLO_CONFIG_MISSING"),
-
-        LOGIN_KEYLO_PROVISION_FAILED(10209, "Keylo用户注册失败：{}", "Business.LOGIN_KEYLO_PROVISION_FAILED"),
-
         LOGIN_ACCOUNT_ALREADY_LOGGED_IN(10210, "该账号已经登录", "Business.LOGIN_ACCOUNT_ALREADY_LOGGED_IN"),
-
-        KEYLO_SERVICE_CLIENT_REGISTER_FAILED(10211, "Keylo服务客户端注册失败：{}", "Business.KEYLO_SERVICE_CLIENT_REGISTER_FAILED"),
-
-        KEYLO_SERVICE_CLIENT_QUERY_FAILED(10212, "Keylo服务客户端查询失败：{}", "Business.KEYLO_SERVICE_CLIENT_QUERY_FAILED"),
-
-        KEYLO_SERVICE_CLIENT_UPDATE_FAILED(10213, "Keylo服务客户端修改失败：{}", "Business.KEYLO_SERVICE_CLIENT_UPDATE_FAILED"),
 
         UPLOAD_FILE_TYPE_NOT_ALLOWED(10401, "不允许上传的文件类型，仅允许：{}", "Business.UPLOAD_FILE_TYPE_NOT_ALLOWED"),
 

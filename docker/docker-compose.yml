@@ -96,8 +96,6 @@ services:
       SPRING_DATA_REDIS_PASSWORD_FILE: /run/secrets/.redis_password.enc
       KEYSTONE_REDIS_ENCRYPT_KEY_FILE: /run/secrets/.redis_password.key
       KEYSTONE_RSA_PRIVATE_KEY: ${KEYSTONE_RSA_PRIVATE_KEY:?KEYSTONE_RSA_PRIVATE_KEY is required}
-      KEYSTONE_AUTH_MODE: ${KEYSTONE_AUTH_MODE:-local}
-      KEYSTONE_AUTH_KEYLO_ENABLED: ${KEYSTONE_AUTH_KEYLO_ENABLED:-false}
       DRUID_USERNAME: ${DRUID_USERNAME:-keystone}
       DRUID_PASSWORD: ${DRUID_PASSWORD:-}
       LOG_PATH: /app/logs

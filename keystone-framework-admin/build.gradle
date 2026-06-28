@@ -1,6 +1,5 @@
 dependencies {
     api project(':keystone-framework-domain')
-    api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-mysql'
 
