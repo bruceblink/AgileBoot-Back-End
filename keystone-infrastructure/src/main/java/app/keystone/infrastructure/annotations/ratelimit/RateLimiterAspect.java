@@ -4,7 +4,6 @@ import app.keystone.infrastructure.annotations.ratelimit.implementation.MapRateL
 import app.keystone.infrastructure.annotations.ratelimit.implementation.RedisRateLimitChecker;
 import java.lang.reflect.Method;
 import java.util.Objects;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -35,7 +34,7 @@ public class RateLimiterAspect {
         Method method = signature.getMethod();
         log.debug("当前限流方法:{}", method.toGenericString());
 
-        if (Objects.requireNonNull(rateLimiter.cacheType()) == RateLimit.CacheType.Map) {
+        if (Objects.requireNonNull(rateLimiter.cacheType()).isLocal()) {
             mapRateLimitChecker.check(rateLimiter);
         } else {
             redisRateLimitChecker.check(rateLimiter);

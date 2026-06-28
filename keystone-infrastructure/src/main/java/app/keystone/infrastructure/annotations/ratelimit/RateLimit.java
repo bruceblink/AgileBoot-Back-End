@@ -1,12 +1,5 @@
 package app.keystone.infrastructure.annotations.ratelimit;
 
-import app.keystone.common.exception.ApiException;
-import app.keystone.common.exception.error.ErrorCode;
-import app.keystone.common.utils.ServletHolderUtil;
-import app.keystone.common.utils.ip.IpUtil;
-import app.keystone.infrastructure.user.AuthenticationUtils;
-import app.keystone.infrastructure.user.app.AppLoginUser;
-import app.keystone.infrastructure.user.web.SystemLoginUser;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -54,55 +47,30 @@ public @interface RateLimit {
         /**
          * 默认策略全局限流  不区分IP和用户
          */
-        GLOBAL{
-            @Override
-            public String generateCombinedKey(RateLimit rateLimiter) {
-                return rateLimiter.key() + this.name();
-            }
-        },
+        GLOBAL,
 
         /**
          * 根据请求者IP进行限流
          */
-        IP {
-            @Override
-            public String generateCombinedKey(RateLimit rateLimiter) {
-                String clientIP = IpUtil.getClientIp(ServletHolderUtil.getRequest());
-                return rateLimiter.key() + clientIP;
-            }
-        },
+        IP,
 
         /**
          * 按Web用户限流
          */
-        SYSTEM_USER {
-            @Override
-            public String generateCombinedKey(RateLimit rateLimiter) {
-                SystemLoginUser loginUser = AuthenticationUtils.getSystemLoginUser();
-                if (loginUser == null) {
-                    throw new ApiException(ErrorCode.Client.COMMON_NO_AUTHORIZATION);
-                }
-                return rateLimiter.key() + loginUser.getUsername();
-            }
-        },
+        SYSTEM_USER,
 
         /**
          * 按App用户限流
          */
-        APP_USER {
-            @Override
-            public String generateCombinedKey(RateLimit rateLimiter) {
-                AppLoginUser loginUser = AuthenticationUtils.getAppLoginUser();
-                if (loginUser == null) {
-                    throw new ApiException(ErrorCode.Client.COMMON_NO_AUTHORIZATION);
-                }
-                return rateLimiter.key() + loginUser.getUsername();
-            }
-        };
+        APP_USER;
 
-
-        public abstract String generateCombinedKey(RateLimit rateLimiter);
-
+        /**
+         * @deprecated use {@link RateLimitKeyGenerator#generate(RateLimit)}
+         */
+        @Deprecated(since = "3.6.2", forRemoval = false)
+        public String generateCombinedKey(RateLimit rateLimiter) {
+            return RateLimitKeyGenerator.generate(rateLimiter);
+        }
     }
 
     enum CacheType {
@@ -115,8 +83,17 @@ public @interface RateLimit {
         /**
          * 使用map做缓存
          */
-        Map
+        LOCAL,
 
+        /**
+         * @deprecated use {@link #LOCAL}
+         */
+        @Deprecated(since = "3.6.2", forRemoval = false)
+        Map;
+
+        public boolean isLocal() {
+            return this == LOCAL || this == Map;
+        }
     }
 
 }

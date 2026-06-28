@@ -11,13 +11,15 @@ import static org.mockito.Mockito.when;
 class RateLimitTypeTest {
 
     @Test
+    @SuppressWarnings("deprecation")
     void testCombinedKey() {
         RateLimit mockLimit = mock(RateLimit.class);
         when(mockLimit.key()).thenReturn("Test");
+        when(mockLimit.limitType()).thenReturn(LimitType.GLOBAL);
 
         String combinedKey = LimitType.GLOBAL.generateCombinedKey(mockLimit);
 
-        Assertions.assertEquals("TestGLOBAL", combinedKey);
+        Assertions.assertEquals("Test:GLOBAL:GLOBAL", combinedKey);
     }
 
 }

@@ -3,6 +3,7 @@ package app.keystone.infrastructure.annotations.ratelimit.implementation;
 import app.keystone.common.exception.ApiException;
 import app.keystone.common.exception.error.ErrorCode;
 import app.keystone.infrastructure.annotations.ratelimit.RateLimit;
+import app.keystone.infrastructure.annotations.ratelimit.RateLimitKeyGenerator;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class RedisRateLimitChecker extends AbstractRateLimitChecker{
+public class RedisRateLimitChecker extends AbstractRateLimitChecker {
 
     private final RedisTemplate<Object, Object> redisTemplate;
 
@@ -25,8 +26,10 @@ public class RedisRateLimitChecker extends AbstractRateLimitChecker{
 
     @Override
     public void check(RateLimit rateLimiter) {
+        validate(rateLimiter);
+
         int maxCount = rateLimiter.maxCount();
-        String combineKey = rateLimiter.limitType().generateCombinedKey(rateLimiter);
+        String combineKey = RateLimitKeyGenerator.generate(rateLimiter);
 
         Long currentCount;
         try {
@@ -41,7 +44,7 @@ public class RedisRateLimitChecker extends AbstractRateLimitChecker{
             throw new ApiException(ErrorCode.Internal.GET_CACHE_FAILED);
         }
 
-        if (currentCount.intValue() > maxCount) {
+        if (currentCount > maxCount) {
             throw new ApiException(ErrorCode.Client.COMMON_REQUEST_TOO_OFTEN);
         }
 
