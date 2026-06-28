@@ -146,6 +146,9 @@ spring:
 keystone:
   file-base-dir: ./data
   rsaPrivateKey: ${KEYSTONE_RSA_PRIVATE_KEY:}
+  rate-limit:
+    backend: redis
+    fallback-to-local: false
 ```
 
 ## 数据库迁移
@@ -169,6 +172,21 @@ spring:
       - classpath:db/migrate/mysql
       - classpath:db/migrate/app/mysql
 ```
+
+## 限流配置
+
+框架接口通过 `@RateLimit` 声明限流规则。注解不选择 Redis 或本地内存，后端由全局配置控制：
+
+```yaml
+keystone:
+  rate-limit:
+    backend: redis
+    fallback-to-local: false
+```
+
+`backend=redis` 是生产默认，适合多实例部署。`backend=local` 只建议用于本地开发或单实例场景。`fallback-to-local=false` 是生产推荐值，避免 Redis 故障时全局限流静默退化为每节点限流。
+
+完整设计见 [Keystone 限流设计](rate-limit-design.md)。
 
 ## 自动配置开关
 
