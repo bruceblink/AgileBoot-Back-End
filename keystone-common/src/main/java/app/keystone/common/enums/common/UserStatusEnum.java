@@ -42,6 +42,6 @@ public enum UserStatusEnum implements DictionaryEnum<Integer> {
 
     @Override
     public String cssTag() {
-        return null;
+        return cssTag;
     }
 }
