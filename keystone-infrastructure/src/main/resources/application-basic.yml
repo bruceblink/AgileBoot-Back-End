@@ -160,3 +160,8 @@ keystone:
       encrypt-key-file: ${KEYSTONE_REDIS_ENCRYPT_KEY_FILE:}
   frontend:
     url: ${KEYSTONE_FRONTEND_URL:http://localhost:80}
+  rate-limit:
+    # redis: shared production limiter; local: single-node/dev limiter.
+    backend: ${KEYSTONE_RATE_LIMIT_BACKEND:redis}
+    # Production default is false to avoid silently weakening cluster-wide limits.
+    fallback-to-local: ${KEYSTONE_RATE_LIMIT_FALLBACK_TO_LOCAL:false}

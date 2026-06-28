@@ -13,27 +13,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * @author likanug
+ * Local JVM fixed-window rate limit checker.
  */
 @Component
 @Slf4j
-public class MapRateLimitChecker extends AbstractRateLimitChecker {
+public class LocalRateLimitChecker extends AbstractRateLimitChecker {
 
     /**
-     * 最大仅支持4096个key   超出这个key  限流将可能失效
+     * At most 4096 active keys are retained. Older keys may be evicted.
      */
     private final Cache<String, FixedWindowCounter> cache = CacheBuilder.newBuilder().maximumSize(4096).build();
 
     private final Ticker ticker;
 
-    public MapRateLimitChecker() {
+    public LocalRateLimitChecker() {
         this(Ticker.systemTicker());
     }
 
-    MapRateLimitChecker(Ticker ticker) {
+    LocalRateLimitChecker(Ticker ticker) {
         this.ticker = Objects.requireNonNull(ticker, "ticker must not be null");
     }
-
 
     @Override
     public void check(RateLimit rateLimit) {

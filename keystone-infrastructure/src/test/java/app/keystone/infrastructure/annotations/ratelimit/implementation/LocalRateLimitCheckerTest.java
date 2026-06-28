@@ -13,11 +13,11 @@ import com.google.common.base.Ticker;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
-class MapRateLimitCheckerTest {
+class LocalRateLimitCheckerTest {
 
     private final ManualTicker ticker = new ManualTicker();
 
-    private final MapRateLimitChecker checker = new MapRateLimitChecker(ticker);
+    private final LocalRateLimitChecker checker = new LocalRateLimitChecker(ticker);
 
     @Test
     void check_shouldAllowMaxCountInsideFixedWindow() {

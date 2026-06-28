@@ -17,7 +17,6 @@ import app.keystone.domain.system.menu.dto.RouterDTO;
 import app.keystone.domain.system.user.UserApplicationService;
 import app.keystone.domain.system.user.command.AddUserCommand;
 import app.keystone.infrastructure.annotations.ratelimit.RateLimit;
-import app.keystone.infrastructure.annotations.ratelimit.RateLimit.CacheType;
 import app.keystone.infrastructure.annotations.ratelimit.RateLimit.LimitType;
 import app.keystone.infrastructure.annotations.ratelimit.RateLimitKey;
 import app.keystone.infrastructure.user.AuthenticationUtils;
@@ -65,8 +64,7 @@ public class LoginController {
      *
      * @return 配置信息
      */
-    @RateLimit(key = RateLimitKey.PREFIX, time = 10, maxCount = 5, cacheType = RateLimit.CacheType.REDIS,
-            limitType = RateLimit.LimitType.GLOBAL)
+    @RateLimit(key = RateLimitKey.PREFIX, time = 10, maxCount = 5, limitType = RateLimit.LimitType.GLOBAL)
     @GetMapping("/getConfig")
     public ResponseDTO<ConfigDTO> getConfig() {
         ConfigDTO configDTO = loginService.getConfig();
@@ -77,8 +75,7 @@ public class LoginController {
      * 生成验证码
      */
     @Operation(summary = "验证码")
-    @RateLimit(key = RateLimitKey.LOGIN_CAPTCHA_KEY, time = 10, maxCount = 10, cacheType = CacheType.REDIS,
-        limitType = LimitType.IP)
+    @RateLimit(key = RateLimitKey.LOGIN_CAPTCHA_KEY, time = 10, maxCount = 10, limitType = LimitType.IP)
     @GetMapping("/captchaImage")
     public ResponseDTO<CaptchaDTO> getCaptchaImg() {
         CaptchaDTO captchaImg = loginService.generateCaptchaImg();
@@ -86,8 +83,7 @@ public class LoginController {
     }
 
     @Operation(summary = "获取 Keystone RSA 公钥", description = "客户端使用该公钥加密 /login 密码，并可用于验签 Keystone RS256 JWT")
-    @RateLimit(key = RateLimitKey.LOGIN_RSA_PUBLIC_KEY, time = 60, maxCount = 60, cacheType = CacheType.REDIS,
-        limitType = LimitType.IP)
+    @RateLimit(key = RateLimitKey.LOGIN_RSA_PUBLIC_KEY, time = 60, maxCount = 60, limitType = LimitType.IP)
     @GetMapping("/login/rsa-public-key")
     public ResponseDTO<RsaPublicKeyDTO> getRsaPublicKey() {
         return ResponseDTO.ok(loginService.getRsaPublicKey());

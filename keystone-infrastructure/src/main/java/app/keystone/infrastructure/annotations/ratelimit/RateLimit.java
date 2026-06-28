@@ -36,13 +36,6 @@ public @interface RateLimit {
      */
     LimitType limitType() default LimitType.GLOBAL;
 
-    /**
-     * 限流使用的缓存类型
-     */
-    CacheType cacheType() default CacheType.REDIS;
-
-
-
     enum LimitType {
         /**
          * 默认策略全局限流  不区分IP和用户
@@ -62,38 +55,7 @@ public @interface RateLimit {
         /**
          * 按App用户限流
          */
-        APP_USER;
-
-        /**
-         * @deprecated use {@link RateLimitKeyGenerator#generate(RateLimit)}
-         */
-        @Deprecated(since = "3.6.2", forRemoval = false)
-        public String generateCombinedKey(RateLimit rateLimiter) {
-            return RateLimitKeyGenerator.generate(rateLimiter);
-        }
-    }
-
-    enum CacheType {
-
-        /**
-         * 使用redis做缓存
-         */
-        REDIS,
-
-        /**
-         * 使用map做缓存
-         */
-        LOCAL,
-
-        /**
-         * @deprecated use {@link #LOCAL}
-         */
-        @Deprecated(since = "3.6.2", forRemoval = false)
-        Map;
-
-        public boolean isLocal() {
-            return this == LOCAL || this == Map;
-        }
+        APP_USER
     }
 
 }
