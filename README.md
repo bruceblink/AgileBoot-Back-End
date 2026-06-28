@@ -14,7 +14,7 @@
 - 🚀 **上手快**：模块化清晰，业务代码可快速落地
 - 🔐 **安全默认**：Spring Security + JWT 认证授权，敏感配置强制环境变量注入
 - 🧩 **可扩展**：分层架构，便于二开和团队协作
-- 🧪 **质量可控**：单元测试 + 集成测试覆盖关键链路（136 个测试全部通过）
+- 🧪 **质量可控**：单元测试 + 集成测试覆盖关键链路
 - 🛠️ **工程友好**：支持 Docker 本地环境，文档完善
 - 📚 **数据字典**：内置字典类型 + 字典数据管理，支持 Redis 缓存
 
@@ -120,15 +120,12 @@ docker compose logs -f mysql
 ```bash
 cd docker
 cp .env.example .env
-# 编辑 .env，按需修改密码、端口、登录模式等
+# 编辑 .env，按需修改密码、端口等
 ```
 
 当前约定：
 
 - Docker 运行时统一使用 `SPRING_DATA_REDIS_*`，不再使用旧的 `SPRING_REDIS_*`
-- `KEYSTONE_AUTH_MODE` / `KEYSTONE_AUTH_KEYLO_ENABLED` 控制后端登录模式
-- Keylo 服务地址、issuer、JWKS、audience 和凭证登录地址由 `application-basic.yml` 统一提供默认值；如需覆盖，使用 `docker/app/config/application-prod.yml` 等 Spring 配置文件，避免 Docker Compose 与 Spring 配置双入口产生歧义
-- `KEYLO_LEGACY_TOKEN_LOGIN_ENABLED=false` 可关闭兼容保留的 `/login/keylo`
 - `SPRING_PROFILES_ACTIVE` 默认为 `prod`，容器运行时走部署配置
 
 #### 生成 Keystone RSA 密钥对
@@ -186,11 +183,6 @@ docker compose down -v
 - Redis: `localhost:6379` / Pass: `12345`
 - Profile: `dev`（通过 `spring.profiles.group` 自动附带 `basic`）
 
-如需启用 Keylo 登录，请显式设置：
-
-- `KEYSTONE_AUTH_MODE=mixed`
-- `KEYSTONE_AUTH_KEYLO_ENABLED=true`
-
 ## 📚 文档入口
 
 - 完整工程文档：[docs/项目说明.md](docs/项目说明.md)
@@ -215,7 +207,6 @@ docker compose down -v
 - 框架 starter 使用说明：[docs/framework-starter-usage.md](docs/framework-starter-usage.md)
 - 框架 starter 维护文档：[docs/framework-starter-maintenance.md](docs/framework-starter-maintenance.md)
 - Starter 示例项目：[my-keystone-starter-demo](https://github.com/bruceblink/my-keystone-starter-demo)
-- Keylo 对接说明（含可选启用、统一 `/login` 后端 Keylo 凭证鉴权、用户新增同步注册）：见 [docs/项目说明.md](docs/项目说明.md) 的“Keylo 集成与用户注册流程”章节
 
 ## 🤝 贡献
 

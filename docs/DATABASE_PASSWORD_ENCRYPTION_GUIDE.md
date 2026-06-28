@@ -122,7 +122,7 @@ java DataSourcePasswordEncryptor <encryptKey> <plainPassword>
 secret:v1:aes-256-gcm:...
 ```
 
-也可以使用 Keylo 仓库的 `scripts/secret_tool.py` 或其他项目中的 `scripts/encrypt_db_password.py` 生成同一格式密文。
+也可以使用其他项目中的 `scripts/secret_tool.py` 或 `scripts/encrypt_db_password.py` 生成同一格式密文。
 
 ## 4. 配置示例
 

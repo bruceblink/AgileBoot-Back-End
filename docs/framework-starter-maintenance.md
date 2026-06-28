@@ -47,7 +47,7 @@ src/main/resources/db/migrate/common
 src/main/resources/db/migrate/mysql
 ```
 
-这里的 `mysql` 目录只放系统/框架迁移，例如 `sys_*` 表、系统菜单、系统字典、服务客户端。
+这里的 `mysql` 目录只放系统/框架迁移，例如 `sys_*` 表、系统菜单、系统字典。
 
 不应放入：
 

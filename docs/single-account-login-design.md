@@ -14,13 +14,12 @@ Keystone 使用无状态 JWT 承载 tokenId，并把真实登录用户信息缓�
 2. 第二次登录默认不踢掉仍在线的旧 access 会话，而是拒绝新登录。
 3. 正常退出、监控页强退、token 过期都要正确释放或失效账号占用状态。
 4. Redis 中残留的过期账号占用标记不应永久阻塞登录。
-5. 本地登录、mixed/Keylo 凭证登录、`/login/keylo` 兼容入口都走同一套限制。
+5. 本地登录入口走同一套限制。
 
 ## 非目标
 
-1. 不限制直接携带 Keylo accessToken 访问受保护接口的临时主体。该路径不是 Keystone 登录会话，不写入 `login_tokens:`。
-2. 不实现静默的“新登录踢掉仍在线的旧登录”。当前语义是“已有在线 access 会话时先拒绝新登录，用户确认后才允许显式接管”。
-3. 不做多端类型区分，例如 PC、移动端分别允许一个会话。
+1. 不实现静默的“新登录踢掉仍在线的旧登录”。当前语义是“已有在线 access 会话时先拒绝新登录，用户确认后才允许显式接管”。
+2. 不做多端类型区分，例如 PC、移动端分别允许一个会话。
 
 ## Redis Key 设计
 
@@ -37,7 +36,7 @@ Keystone 维护两类登录缓存：
 
 ## 登录流程
 
-`LoginService` 在本地认证或 Keylo 认证成功后，会调用 `TokenService#createTokenAndPutUserInCache` 创建 Keystone token。
+`LoginService` 在本地认证成功后，会调用 `TokenService#createTokenAndPutUserInCache` 创建 Keystone token。
 
 核心流程：
 
@@ -108,7 +107,7 @@ Keystone JWT 是有明确过期时间的令牌。Redis 中 `login_tokens:{tokenI
 | 类 | 职责 |
 | --- | --- |
 | `TokenService` | Keystone token 创建、解析、账号占用、登录态释放 |
-| `LoginService` | 本地/Keylo 登录入口，认证成功后创建 Keystone token 并记录登录信息 |
+| `LoginService` | 本地登录入口，认证成功后创建 Keystone token 并记录登录信息 |
 | `SecurityConfig` | `/logout` 成功处理，委托 `TokenService` 释放登录态 |
 | `MonitorController` | 在线用户强退，委托 `TokenService` 释放登录态 |
 | `RedisCacheService` | 暴露 `loginUserCache` 和 `loginAccountCache` |
@@ -126,14 +125,13 @@ Keystone JWT 是有明确过期时间的令牌。Redis 中 `login_tokens:{tokenI
 
 登录链路回归覆盖：
 
-1. `LoginServiceKeyloLoginTest`
-2. `LoginServiceRsaPublicKeyTest`
-3. `SecurityConfigSwaggerAccessTest`
+1. `LoginServiceRsaPublicKeyTest`
+2. `SecurityConfigSwaggerAccessTest`
 
 建议提交前执行：
 
 ```bash
-./gradlew.bat :keystone-admin:test --tests app.keystone.admin.customize.service.login.TokenServiceTest --tests app.keystone.admin.customize.service.login.LoginServiceKeyloLoginTest --tests app.keystone.admin.customize.service.login.LoginServiceRsaPublicKeyTest --tests app.keystone.admin.customize.config.SecurityConfigSwaggerAccessTest
+./gradlew.bat :keystone-admin:test --tests app.keystone.admin.customize.service.login.TokenServiceTest --tests app.keystone.admin.customize.service.login.LoginServiceRsaPublicKeyTest --tests app.keystone.admin.customize.config.SecurityConfigSwaggerAccessTest
 ```
 
 ## 运维说明

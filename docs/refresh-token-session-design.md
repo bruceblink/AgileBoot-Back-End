@@ -83,7 +83,7 @@ refresh token 可以使用 JWT，但 Keystone 更适合使用随机字符串加�
 
 1. 不恢复只延长 Redis TTL 的“伪续期”方案。
 2. 不支持同一账号多端同时在线。桌面客户端和 Web 客户端仍共享同一个账号占用。
-3. 不把 Keylo accessToken 直接访问 Keystone API 的临时主体纳入 Keystone refresh token 会话；只有 Keystone 登录流程签发的会话参与刷新。
+3. 只有 Keystone 登录流程签发的会话参与刷新。
 
 ## Token 类型
 
@@ -176,7 +176,7 @@ login_tokens:{currentTokenId}
 
 ## 登录流程
 
-1. 本地认证、Keylo 凭证认证或 `/login/keylo` 兼容 token 认证成功后，构建 `SystemLoginUser`。
+1. 本地认证成功后，构建 `SystemLoginUser`。
 2. 检查 `login_accounts:{accountId}`：
    - 不存在：允许创建新 refresh token 会话。
    - 存在：读取 `login_refresh_tokens:{refreshTokenId}`。
@@ -226,9 +226,7 @@ login_tokens:{currentTokenId}
 
 1. `forceLogin=true` 只能在对应登录入口认证通过后生效；它不是独立的强退接口。
 2. 服务端不能因为旧 access 会话仍在线就自动覆盖旧会话；但旧 access 会话已不存在时，可清理残留 refresh 会话并创建新登录。
-3. 直接携带 Keylo accessToken 访问受保护接口的临时主体不属于 Keystone refresh 会话，不能触发接管。
-4. `/login/keylo` 是兼容登录入口，会签发 Keystone refresh 会话；只有请求显式携带 `forceLogin=true` 且 Keylo token 校验通过后，才允许接管旧 Keystone 会话。
-5. 如果启用了验证码，第一次登录失败后验证码已被消费；客户端应重新获取验证码并让用户再次提交强制登录请求。
+3. 如果启用了验证码，第一次登录失败后验证码已被消费；客户端应重新获取验证码并让用户再次提交强制登录请求。
 
 ## 刷新接口
 
