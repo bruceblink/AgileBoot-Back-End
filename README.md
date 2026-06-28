@@ -1,6 +1,6 @@
 ﻿# Keystone
 
-[![Release](https://img.shields.io/badge/Release-V3.6.1-green.svg)](https://github.com/bruceblink/Keystone)
+[![Release](https://img.shields.io/badge/Release-V3.6.2-green.svg)](https://github.com/bruceblink/Keystone)
 [![JDK](https://img.shields.io/badge/JDK-25-green.svg)](https://github.com/bruceblink/Keystone)
 [![Spring%20Boot](https://img.shields.io/badge/Spring%20Boot-3.5.13-blue.svg)](https://github.com/bruceblink/Keystone)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

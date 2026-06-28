@@ -232,7 +232,7 @@ configure([
 ```gradle
 allprojects {
     group = 'app.keystone'
-    version = '3.6.1'
+    version = '3.6.2'
 }
 ```
 
@@ -269,9 +269,9 @@ keystone-infrastructure/src/main/resources/db/migrate/mysql
 
 ```powershell
 .\gradlew.bat :keystone-infrastructure:jar :keystone-domain:jar
-jar tf keystone-infrastructure\build\libs\keystone-infrastructure-3.6.1.jar | Select-String "db/migrate"
-jar tf keystone-infrastructure\build\libs\keystone-infrastructure-3.6.1.jar | Select-String "business"
-jar tf keystone-domain\build\libs\keystone-domain-3.6.1.jar | Select-String "db/migrate"
+jar tf keystone-infrastructure\build\libs\keystone-infrastructure-3.6.2.jar | Select-String "db/migrate"
+jar tf keystone-infrastructure\build\libs\keystone-infrastructure-3.6.2.jar | Select-String "business"
+jar tf keystone-domain\build\libs\keystone-domain-3.6.2.jar | Select-String "db/migrate"
 ```
 
 期望：

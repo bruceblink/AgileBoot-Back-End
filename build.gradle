@@ -8,7 +8,7 @@ def springBootBom = 'org.springframework.boot:spring-boot-dependencies:3.5.13'
 
 allprojects {
     group = 'app.keystone'
-    version = '3.6.1'
+    version = '3.6.2'
 }
 
 tasks.register('resetDbIntegrationDatabases', Exec) {

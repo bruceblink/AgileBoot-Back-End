@@ -37,7 +37,7 @@ keystone-framework-spring-boot-starter
 ```text
 groupId: app.keystone
 artifactId: keystone-framework-spring-boot-starter
-version: 3.6.1
+version: 3.6.2
 ```
 
 ## 发布到本地 Maven 仓库
@@ -51,11 +51,11 @@ version: 3.6.1
 发布后本地 Maven 仓库应存在：
 
 ```text
-~/.m2/repository/app/keystone/keystone-common/3.6.1
-~/.m2/repository/app/keystone/keystone-infrastructure/3.6.1
-~/.m2/repository/app/keystone/keystone-framework-domain/3.6.1
-~/.m2/repository/app/keystone/keystone-framework-admin/3.6.1
-~/.m2/repository/app/keystone/keystone-framework-spring-boot-starter/3.6.1
+~/.m2/repository/app/keystone/keystone-common/3.6.2
+~/.m2/repository/app/keystone/keystone-infrastructure/3.6.2
+~/.m2/repository/app/keystone/keystone-framework-domain/3.6.2
+~/.m2/repository/app/keystone/keystone-framework-admin/3.6.2
+~/.m2/repository/app/keystone/keystone-framework-spring-boot-starter/3.6.2
 ```
 
 ## Gradle 接入
@@ -69,7 +69,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'app.keystone:keystone-framework-spring-boot-starter:3.6.1'
+    implementation 'app.keystone:keystone-framework-spring-boot-starter:3.6.2'
 }
 ```
 
@@ -99,7 +99,7 @@ dependencies {
 <dependency>
     <groupId>app.keystone</groupId>
     <artifactId>keystone-framework-spring-boot-starter</artifactId>
-    <version>3.6.1</version>
+    <version>3.6.2</version>
 </dependency>
 ```
 
@@ -365,7 +365,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'app.keystone:keystone-framework-spring-boot-starter:3.6.1'
+    implementation 'app.keystone:keystone-framework-spring-boot-starter:3.6.2'
     runtimeOnly 'com.mysql:mysql-connector-j'
 }
 
