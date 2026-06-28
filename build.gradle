@@ -200,6 +200,17 @@ configure([
     def publicationDescription = frameworkPublicationDescriptions[publicationName]
 
     apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+
+    java {
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    tasks.withType(Javadoc).configureEach {
+        options.encoding = 'UTF-8'
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
 
     publishing {
         publications {
@@ -215,17 +226,67 @@ configure([
                 }
 
                 pom {
-                    name = publicationName
+                    name = "app.keystone:${publicationName}"
                     description = publicationDescription
                     url = 'https://github.com/bruceblink/Keystone'
+                    inceptionYear = '2022'
                     licenses {
                         license {
                             name = 'MIT License'
-                            url = 'https://opensource.org/licenses/MIT'
+                            url = 'https://opensource.org/license/mit/'
+                            distribution = 'repo'
                         }
+                    }
+                    developers {
+                        developer {
+                            id = 'bruceblink'
+                            name = 'bruceblink'
+                            organization = 'bruceblink'
+                            organizationUrl = 'https://github.com/bruceblink'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:https://github.com/bruceblink/Keystone.git'
+                        developerConnection = 'scm:git:ssh://git@github.com/bruceblink/Keystone.git'
+                        url = 'https://github.com/bruceblink/Keystone'
                     }
                 }
             }
         }
+
+        repositories {
+            maven {
+                name = findProperty('keystonePublishRepositoryName') ?: 'keystone'
+                url = uri(findProperty('keystonePublishUrl')
+                    ?: System.getenv('KEYSTONE_PUBLISH_URL')
+                    ?: "${rootProject.buildDir}/maven-repository")
+                def publishUsername = findProperty('keystonePublishUsername') ?: System.getenv('KEYSTONE_PUBLISH_USERNAME')
+                def publishPassword = findProperty('keystonePublishPassword') ?: System.getenv('KEYSTONE_PUBLISH_PASSWORD')
+                if (publishUsername && publishPassword) {
+                    credentials {
+                        username = publishUsername
+                        password = publishPassword
+                    }
+                }
+            }
+        }
+    }
+
+    def signingKey = findProperty('signingInMemoryKey') ?: System.getenv('SIGNING_IN_MEMORY_KEY')
+    def signingPassword = findProperty('signingInMemoryKeyPassword') ?: System.getenv('SIGNING_IN_MEMORY_KEY_PASSWORD')
+    def signingRequired = Boolean.parseBoolean(String.valueOf(
+        findProperty('keystoneSigningRequired') ?: System.getenv('KEYSTONE_SIGNING_REQUIRED') ?: 'false'
+    ))
+
+    signing {
+        required { signingRequired || signingKey }
+        if (signingKey) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
+        sign publishing.publications.mavenJava
+    }
+
+    tasks.withType(org.gradle.plugins.signing.Sign).configureEach {
+        onlyIf { signingRequired || signingKey }
     }
 }

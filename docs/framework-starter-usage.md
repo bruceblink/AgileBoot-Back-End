@@ -45,7 +45,7 @@ version: 3.6.1
 开发联调时先在 Keystone 仓库发布 framework 制品：
 
 ```powershell
-.\gradlew.bat :keystone-common:publishToMavenLocal :keystone-infrastructure:publishToMavenLocal :keystone-framework-domain:publishToMavenLocal :keystone-framework-admin:publishToMavenLocal :keystone-framework-spring-boot-starter:publishToMavenLocal
+.\gradlew.bat publishToMavenLocal
 ```
 
 发布后本地 Maven 仓库应存在：
@@ -74,6 +74,24 @@ dependencies {
 ```
 
 使用内部 Maven 仓库时，把 `mavenLocal()` 替换为内部仓库地址。
+
+## 发布到远程 Maven 仓库
+
+远程发布仓库、凭证和签名通过 Gradle 属性或环境变量注入，不写入源码仓库。
+
+示例：
+
+```powershell
+.\gradlew.bat publish `
+  -PkeystonePublishUrl=https://maven.example.com/releases `
+  -PkeystonePublishUsername=$env:MAVEN_USERNAME `
+  -PkeystonePublishPassword=$env:MAVEN_PASSWORD `
+  -PsigningInMemoryKey="$env:SIGNING_IN_MEMORY_KEY" `
+  -PsigningInMemoryKeyPassword="$env:SIGNING_IN_MEMORY_KEY_PASSWORD" `
+  -PkeystoneSigningRequired=true
+```
+
+未配置 `keystonePublishUrl` 时，`publish` 会发布到 `build/maven-repository`，便于本地检查远程发布产物结构。
 
 ## Maven 接入
 
@@ -128,10 +146,6 @@ spring:
 keystone:
   file-base-dir: ./data
   rsaPrivateKey: ${KEYSTONE_RSA_PRIVATE_KEY:}
-  auth:
-    mode: ${KEYSTONE_AUTH_MODE:local}
-    keylo:
-      enabled: ${KEYSTONE_AUTH_KEYLO_ENABLED:false}
 ```
 
 ## 数据库迁移
@@ -143,7 +157,7 @@ classpath:db/migrate/common
 classpath:db/migrate/mysql
 ```
 
-这些迁移主要初始化 `sys_*` 系统表、系统字典、系统菜单、服务客户端等框架数据。
+这些迁移主要初始化 `sys_*` 系统表、系统字典、系统菜单等框架数据。
 
 业务迁移不在 starter 中。下游应用如果有自己的业务表，应使用自己的迁移路径，例如：
 
