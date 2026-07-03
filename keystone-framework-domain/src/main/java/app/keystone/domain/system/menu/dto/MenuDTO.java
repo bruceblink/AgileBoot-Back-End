@@ -24,6 +24,7 @@ public class MenuDTO {
             this.menuName = entity.getMenuName();
             this.routerName = entity.getRouterName();
             this.path = entity.getPath();
+            this.permission = entity.getPermission();
             this.status = entity.getStatus();
             this.isButton = entity.getIsButton();
             this.statusStr = BasicEnumUtil.getDescriptionByValue(StatusEnum.class, entity.getStatus());
@@ -54,6 +55,8 @@ public class MenuDTO {
     private String routerName;
 
     private String path;
+
+    private String permission;
 
     private Integer rank;
 
