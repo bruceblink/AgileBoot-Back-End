@@ -25,8 +25,6 @@ public class MetaDTO {
     private Boolean showParent;
     // 页面级别权限设置
     private List<String> roles;
-    // 按钮级别权限设置
-    private List<String> auths;
     // 需要内嵌的iframe链接地址
     private String frameSrc;
     /**
