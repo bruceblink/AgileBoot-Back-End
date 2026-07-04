@@ -2,6 +2,7 @@ package app.keystone.domain.system.user;
 
 import app.keystone.common.core.page.PageDTO;
 import app.keystone.domain.common.cache.CacheCenter;
+import app.keystone.domain.common.cache.SpringCacheTemplate;
 import app.keystone.domain.common.command.BulkOperationCommand;
 import app.keystone.domain.common.dto.CurrentLoginUserDTO;
 import app.keystone.domain.system.post.dto.PostDTO;
@@ -94,7 +95,7 @@ public class UserApplicationService {
 
         userModel.updateById();
 
-        CacheCenter.userCache().delete(userModel.getUserId());
+        evictUserCache(userModel.getUserId());
     }
 
     public UserDetailDTO getUserDetailInfo(Long userId) {
@@ -139,7 +140,7 @@ public class UserApplicationService {
         model.checkFieldRelatedEntityExist();
         model.updateById();
 
-        CacheCenter.userCache().delete(model.getUserId());
+        evictUserCache(model.getUserId());
     }
 
     public void deleteUsers(SystemLoginUser loginUser, BulkOperationCommand<Long> command) {
@@ -155,7 +156,7 @@ public class UserApplicationService {
         userModel.modifyPassword(command);
         userModel.updateById();
 
-        CacheCenter.userCache().delete(userModel.getUserId());
+        evictUserCache(userModel.getUserId());
     }
 
     public void resetUserPassword(ResetPasswordCommand command) {
@@ -164,7 +165,7 @@ public class UserApplicationService {
         userModel.resetPassword(command.getPassword());
         userModel.updateById();
 
-        CacheCenter.userCache().delete(userModel.getUserId());
+        evictUserCache(userModel.getUserId());
     }
 
     public void changeUserStatus(ChangeStatusCommand command) {
@@ -173,7 +174,7 @@ public class UserApplicationService {
         userModel.setStatus(command.getStatus());
         userModel.updateById();
 
-        CacheCenter.userCache().delete(userModel.getUserId());
+        evictUserCache(userModel.getUserId());
     }
 
     public void updateUserAvatar(UpdateUserAvatarCommand command) {
@@ -182,7 +183,14 @@ public class UserApplicationService {
         userModel.setAvatar(command.getAvatar());
         userModel.updateById();
 
-        CacheCenter.userCache().delete(userModel.getUserId());
+        evictUserCache(userModel.getUserId());
+    }
+
+    private void evictUserCache(Long userId) {
+        SpringCacheTemplate<SysUserEntity> userCache = CacheCenter.userCache();
+        if (userCache != null) {
+            userCache.delete(userId);
+        }
     }
 
 
