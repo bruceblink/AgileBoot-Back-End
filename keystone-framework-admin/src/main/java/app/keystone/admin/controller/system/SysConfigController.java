@@ -93,7 +93,7 @@ public class SysConfigController extends BaseController {
      * 刷新参数缓存
      */
     @Operation(summary = "刷新配置缓存")
-    @PreAuthorize("@permission.has('system:config:remove')")
+    @PreAuthorize("@permission.has('system:config:refresh')")
     @AccessLog(title = "参数管理", businessType = BusinessTypeEnum.CLEAN)
     @DeleteMapping("/configs/cache")
     public ResponseDTO<Void> refreshCache() {

@@ -1,3 +1,10 @@
+UPDATE sys_menu
+SET menu_name = '刷新缓存',
+    permission = 'system:config:refresh',
+    meta_info = '{"title":"刷新缓存"}'
+WHERE is_button = 1
+  AND permission = 'system:config:remove';
+
 DELETE rm
 FROM sys_role_menu rm
 JOIN sys_menu m ON m.menu_id = rm.menu_id
